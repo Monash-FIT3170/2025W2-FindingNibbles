@@ -13,3 +13,4 @@ Kehan Ranasinghe - kehanran51423@gmail.com
 Dhruv P Redhu - redhudhruvpoojari@gmail.com
 Clare Ahn - ahnclare110@gmail.com
 Isabella Moffat - isabellakmoffat@gmail.com
+Jeremia Yovinus - jeremiayo@gmail.com
