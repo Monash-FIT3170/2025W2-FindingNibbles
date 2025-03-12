@@ -5,3 +5,4 @@ Jack Moses - mosesjack@gmail.com
 Blake Matheson - blake.matheson3@gmail.com
 Oliver Sirota - oliver.sirota@gmail.com
 Lachlan MacPhee - github@lachlanmacphee.com
+Charles Liu - charlesliu004@gmail.com
