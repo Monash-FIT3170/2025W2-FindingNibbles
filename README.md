@@ -10,3 +10,4 @@ Charles Liu - charlesliu004@gmail.com
 Chance Wong - wong.chance232@gmail.com
 Max Zhuang - maxzhuang12@gmail.com
 Kehan Ranasinghe - kehanran51423@gmail.com
+Dhruv P Redhu - redhudhruvpoojari@gmail.com
