@@ -8,3 +8,4 @@ Oliver Sirota - oliver.sirota@gmail.com
 Lachlan MacPhee - github@lachlanmacphee.com
 Charles Liu - charlesliu004@gmail.com
 Chance Wong - wong.chance232@gmail.com
+Max Zhuang - maxzhuang12@gmail.com
