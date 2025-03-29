@@ -13,41 +13,26 @@ erDiagram
     MEALPLANDISH {}
     USERCALORIELOG {}
 
-    USER ||--o{ USERLOCATION : has
-    USER ||--o{ USERDIETARY : has
-    USER ||--o{ USERMEALPLAN : has
+    USER ||--o{ USERLOCATION : resides_at
+    USER ||--o{ USERDIETARY : requires
+    USER ||--o{ USERMEALPLAN : plans
     USER ||--o{ USERCALORIELOG : logs
     USER ||--o{ RESTAURANTREVIEW : writes
     
-    DIETARYRESTRICTION ||--o{ USERDIETARY : includes
-    DIETARYRESTRICTION ||--o{ DISHDIETARY : applies_to
-    
-    USERDIETARY }o--|| USER : belongs_to
     USERDIETARY }o--|| DIETARYRESTRICTION : is_for
     
     RESTAURANT ||--o{ DISH : serves
     RESTAURANT ||--o{ RESTAURANTCUISINE : offers
-    RESTAURANT ||--o{ RESTAURANTREVIEW : reviewed_by
 
-    RESTAURANTREVIEW }o--|| USER : written_by
-    RESTAURANTREVIEW }o--|| RESTAURANT : rates
+    RESTAURANTREVIEW }o--|| RESTAURANT : has
 
     CUISINE ||--o{ DISH : includes
     CUISINE ||--o{ RESTAURANTCUISINE : associated_with
 
-    RESTAURANTCUISINE }o--|| RESTAURANT : for
-    RESTAURANTCUISINE }o--|| CUISINE : type_of
-
     DISH ||--o{ DISHDIETARY : may_have
     DISH ||--o{ MEALPLANDISH : part_of
 
-    DISHDIETARY }o--|| DISH : applies_to
     DISHDIETARY }o--|| DIETARYRESTRICTION : restricts
 
     USERMEALPLAN ||--o{ MEALPLANDISH : contains
-    USERMEALPLAN }o--|| USER : created_by
 
-    MEALPLANDISH }o--|| USERMEALPLAN : belongs_to
-    MEALPLANDISH }o--|| DISH : includes
-
-    USERCALORIELOG }o--|| USER : tracked_by
