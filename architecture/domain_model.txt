@@ -1,38 +1,28 @@
 erDiagram
     USER {}
-    USERLOCATION {}
-    DIETARYRESTRICTION {}
-    USERDIETARY {}
+    LOCATION {}
+    DIETARY {}
+    RECIPE {}
     RESTAURANT {}
-    RESTAURANTREVIEW {}
+    REVIEW {}
     CUISINE {}
-    RESTAURANTCUISINE {}
     DISH {}
-    DISHDIETARY {}
-    USERMEALPLAN {}
-    MEALPLANDISH {}
-    USERCALORIELOG {}
+    MEAL_PLAN {}
+    CALORIE_LOG {}
 
-    USER ||--o{ USERLOCATION : resides_at
-    USER ||--o{ USERDIETARY : requires
-    USER ||--o{ USERMEALPLAN : plans
-    USER ||--o{ USERCALORIELOG : logs
-    USER ||--o{ RESTAURANTREVIEW : writes
-    
-    USERDIETARY }o--|| DIETARYRESTRICTION : is_for
-    
-    RESTAURANT ||--o{ DISH : serves
-    RESTAURANT ||--o{ RESTAURANTCUISINE : offers
+    USER ||--o{ LOCATION : resides_at
+    USER }o--o{ DIETARY : requires
+    USER ||--o{ RECIPE : makes
+    USER ||--o{ MEAL_PLAN : plans
+    USER ||--o{ CALORIE_LOG : logs
+    USER ||--o{ REVIEW : writes
 
-    RESTAURANTREVIEW }o--|| RESTAURANT : has
+    REVIEW }o--|| RESTAURANT : has
 
     CUISINE ||--o{ DISH : includes
-    CUISINE ||--o{ RESTAURANTCUISINE : associated_with
 
-    DISH ||--o{ DISHDIETARY : may_have
-    DISH ||--o{ MEALPLANDISH : part_of
+    DISH ||--o{ DIETARY : may_have
+    MEAL_PLAN ||--|{ DISH : contains
 
-    DISHDIETARY }o--|| DIETARYRESTRICTION : restricts
-
-    USERMEALPLAN ||--o{ MEALPLANDISH : contains
-
+    RESTAURANT ||--o{ DISH : serves
+    RESTAURANT }|--|{ CUISINE : offers
