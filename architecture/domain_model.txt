@@ -20,9 +20,13 @@ erDiagram
     REVIEW }o--|| RESTAURANT : has
 
     CUISINE ||--o{ DISH : includes
-
+    CALORIE_LOG ||--|{ DISH : calculates_from
+    RECIPE ||--o{ DIETARY : may_have
+    RECIPE ||--|| DISH : makes
     DISH ||--o{ DIETARY : may_have
     MEAL_PLAN ||--|{ DISH : contains
 
+    RESTAURANT ||--|| LOCATION : located_at
     RESTAURANT ||--o{ DISH : serves
     RESTAURANT }|--|{ CUISINE : offers
+    
