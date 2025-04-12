@@ -8,11 +8,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { LocalAuthGuard } from 'src/auth/local-auth.guard';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { LocalAuthGuard } from 'src/auth/strategies/local/local-auth.guard';
+import { JwtAuthGuard } from 'src/auth/strategies/jwt/jwt-auth.guard';
 import { AuthService } from 'src/auth/auth.service';
 import { User } from 'generated/prisma';
-import { RegisterDto } from 'src/auth/types';
+import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,6 +30,7 @@ export class AuthController {
   @Post('login')
   login(@Request() req: ExpressRequest & { user: User }) {
     // The LocalAuthGuard will have already validated the user and populated req.user
+    // The full user object is not returned in the response
     return this.authService.login(req.user);
   }
 

@@ -3,7 +3,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload, RegisterDto } from './types';
+import { JwtPayload } from 'src/auth/types';
+import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
 export class AuthService {
