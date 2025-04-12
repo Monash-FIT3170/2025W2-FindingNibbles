@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { User } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
@@ -38,7 +38,21 @@ export class AuthService {
       name: user.name,
     };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
+  }
+
+  refreshToken(token: string) {
+    try {
+      const payload = this.jwtService.verify<JwtPayload>(token, {
+        ignoreExpiration: false,
+      });
+      return {
+        access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      };
+    } catch {
+      throw new BadRequestException('Invalid or expired refresh token.');
+    }
   }
 }

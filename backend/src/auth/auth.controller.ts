@@ -5,6 +5,7 @@ import {
   Request,
   UseGuards,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
@@ -30,6 +31,14 @@ export class AuthController {
   login(@Request() req: ExpressRequest & { user: User }) {
     // The LocalAuthGuard will have already validated the user and populated req.user
     return this.authService.login(req.user);
+  }
+
+  @Post('refresh')
+  refreshToken(@Body('refresh_token') refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required.');
+    }
+    return this.authService.refreshToken(refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
