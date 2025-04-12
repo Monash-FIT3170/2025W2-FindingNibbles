@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 // Do not convert to default import
 import * as Joi from 'joi';
@@ -28,6 +29,14 @@ import { UserModule } from './user/user.module';
         allowUnknown: true,
         abortEarly: false,
       },
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60, // Time to live in seconds
+          limit: 10, // Maximum number of requests per minute per IP
+        },
+      ],
     }),
     AuthModule,
     UserModule,
