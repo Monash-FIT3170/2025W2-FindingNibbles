@@ -2,6 +2,7 @@
 
 ```bash
 $ npm install
+$ npx prisma generate
 ```
 
 ## Compile and run the project
