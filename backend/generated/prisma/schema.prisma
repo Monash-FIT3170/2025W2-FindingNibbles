@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+model User {
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  passwordHash      String?
+  provider          String
+  providerId        String?
+  locations         UserLocation[]
+  userDietaries     UserDietary[]
+  mealPlans         UserMealPlan[]
+  calorieLogs       UserCalorieLog[]
+  restaurantReviews RestaurantReview[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@unique([provider, providerId])
+}
+
+model UserLocation {
+  id        Int    @id @default(autoincrement())
+  userId    Int
+  name      String // Home, Work, etc.
+  latitude  Float
+  longitude Float
+  user      User   @relation(fields: [userId], references: [id])
+}
+
+model DietaryRestriction {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  description   String?
+  userDietaries UserDietary[]
+  dishDietaries DishDietary[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model UserDietary {
+  userId    Int
+  dietaryId Int
+  user      User               @relation(fields: [userId], references: [id])
+  dietary   DietaryRestriction @relation(fields: [dietaryId], references: [id])
+
+  @@id([userId, dietaryId])
+}
+
+model Restaurant {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  address            String
+  latitude           Float?
+  longitude          Float?
+  dishes             Dish[]
+  restaurantCuisines RestaurantCuisine[]
+  restaurantReviews  RestaurantReview[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model RestaurantReview {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  restaurantId Int
+  rating       Int // Example: 1 to 5 stars
+  comment      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+}
+
+model Cuisine {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  description        String?
+  dishes             Dish[]
+  restaurantCuisines RestaurantCuisine[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model RestaurantCuisine {
+  restaurantId Int
+  cuisineId    Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  cuisine      Cuisine    @relation(fields: [cuisineId], references: [id])
+
+  @@id([restaurantId, cuisineId])
+}
+
+model Dish {
+  id             Int            @id @default(autoincrement())
+  name           String
+  description    String?
+  calories       Int?
+  price          Float?
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id])
+  restaurantId   Int
+  cuisine        Cuisine?       @relation(fields: [cuisineId], references: [id])
+  cuisineId      Int?
+  dishDietaries  DishDietary[]
+  mealPlanDishes MealPlanDish[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model DishDietary {
+  dishId    Int
+  dietaryId Int
+  dish      Dish               @relation(fields: [dishId], references: [id])
+  dietary   DietaryRestriction @relation(fields: [dietaryId], references: [id])
+
+  @@id([dishId, dietaryId])
+}
+
+model UserMealPlan {
+  id             Int            @id @default(autoincrement())
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+  date           DateTime
+  mealPlanDishes MealPlanDish[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model MealPlanDish {
+  mealPlanId Int
+  dishId     Int
+  mealPlan   UserMealPlan @relation(fields: [mealPlanId], references: [id])
+  dish       Dish         @relation(fields: [dishId], references: [id])
+
+  @@id([mealPlanId, dishId])
+}
+
+model UserCalorieLog {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  date      DateTime
+  calories  Int
+  createdAt DateTime @default(now())
+}
