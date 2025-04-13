@@ -1,9 +1,9 @@
 import * as bcrypt from 'bcrypt';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { User } from '@prisma/client';
+import { User } from 'generated/prisma';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/auth/types';
+import { GoogleUserData, JwtPayload } from 'src/auth/types';
 import { RegisterDto } from 'src/auth/dto/register.dto';
 
 @Injectable()
@@ -16,11 +16,25 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findOneByEmail(email);
     if (!user) return null;
+    if (!user.passwordHash) return null;
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (user && isPasswordValid) return user;
 
     return null;
+  }
+
+  async validateOrCreateGoogleUser(userData: GoogleUserData): Promise<User> {
+    const existingUser = await this.userService.findOneByEmail(userData.email);
+    if (existingUser) return existingUser;
+
+    return this.userService.create({
+      email: userData.email,
+      name: userData.name,
+      passwordHash: null, // No password for Google users
+      provider: 'google',
+      providerId: userData.id,
+    });
   }
 
   async register(registerDto: RegisterDto): Promise<User> {
@@ -29,6 +43,7 @@ export class AuthService {
       name: registerDto.name,
       email: registerDto.email,
       passwordHash,
+      provider: 'local',
     });
   }
 

@@ -20,7 +20,9 @@ model User {
   id                Int                @id @default(autoincrement())
   name              String
   email             String             @unique
-  passwordHash      String
+  passwordHash      String?
+  provider          String
+  providerId        String?
   locations         UserLocation[]
   userDietaries     UserDietary[]
   mealPlans         UserMealPlan[]
@@ -28,6 +30,7 @@ model User {
   restaurantReviews RestaurantReview[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  @@unique([provider, providerId])
 }
 
 model UserLocation {

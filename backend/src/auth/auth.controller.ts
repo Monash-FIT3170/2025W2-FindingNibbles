@@ -8,11 +8,12 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { LocalAuthGuard } from 'src/auth/strategies/local/local-auth.guard';
-import { JwtAuthGuard } from 'src/auth/strategies/jwt/jwt-auth.guard';
-import { AuthService } from 'src/auth/auth.service';
+import { LocalAuthGuard } from './strategies/local/local-auth.guard';
+import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
+import { GoogleAuthGuard } from './strategies/google/google-auth.guard';
+import { AuthService } from './auth.service';
 import { User } from 'generated/prisma';
-import { RegisterDto } from 'src/auth/dto/register.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +33,18 @@ export class AuthController {
   login(@Request() req: ExpressRequest & { user: User }) {
     // The LocalAuthGuard will have already validated the user and populated req.user
     // The full user object is not returned in the response
+    return this.authService.login(req.user);
+  }
+
+  @Get('login/google')
+  @UseGuards(GoogleAuthGuard)
+  async googleAuth() {
+    // Guard redirects to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  googleAuthRedirect(@Request() req: ExpressRequest & { user: User }) {
     return this.authService.login(req.user);
   }
 

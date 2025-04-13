@@ -3,3 +3,9 @@ export type JwtPayload = {
   email: string;
   name: string;
 };
+
+export interface GoogleUserData {
+  id: string;
+  email: string;
+  name: string;
+}
