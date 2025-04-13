@@ -26,4 +26,4 @@ Followed [this guide](https://docs.nestjs.com/recipes/passport) to implement
 
 11. For the authorised javascript origins, enter `http://localhost:3000`
 
-12. For the authorised redirect URIs, enter `http://localhost:3000/auth/google-redirect`
+12. For the authorised redirect URIs, enter `http://localhost:3000/api/auth/google/callback`
