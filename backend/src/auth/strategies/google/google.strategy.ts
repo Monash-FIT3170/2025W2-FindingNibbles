@@ -32,7 +32,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const lastName = profile.name?.familyName || '';
 
     if (!id || !email) {
-      done(new Error('No email provided from Google'), undefined);
+      done(new Error('No ID or email provided from Google'), undefined);
       return;
     }
 

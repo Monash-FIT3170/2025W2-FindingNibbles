@@ -13,6 +13,16 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async register(registerDto: RegisterDto): Promise<User> {
+    const passwordHash = await bcrypt.hash(registerDto.password, 10);
+    return this.userService.create({
+      name: registerDto.name,
+      email: registerDto.email,
+      passwordHash,
+      provider: 'local',
+    });
+  }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findOneByEmail(email);
     if (!user) return null;
@@ -34,16 +44,6 @@ export class AuthService {
       passwordHash: null, // No password for Google users
       provider: 'google',
       providerId: userData.id,
-    });
-  }
-
-  async register(registerDto: RegisterDto): Promise<User> {
-    const passwordHash = await bcrypt.hash(registerDto.password, 10);
-    return this.userService.create({
-      name: registerDto.name,
-      email: registerDto.email,
-      passwordHash,
-      provider: 'local',
     });
   }
 
