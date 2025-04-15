@@ -18,7 +18,10 @@ datasource db {
 
 model User {
   id                Int                @id @default(autoincrement())
-  name              String
+  firstName         String
+  lastName          String
+  verifyCode        Int?
+  isVerified        Boolean            @default(false)
   email             String             @unique
   passwordHash      String?
   provider          String
@@ -30,6 +33,7 @@ model User {
   restaurantReviews RestaurantReview[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+
   @@unique([provider, providerId])
 }
 

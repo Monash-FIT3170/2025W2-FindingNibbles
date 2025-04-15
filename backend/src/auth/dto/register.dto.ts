@@ -5,7 +5,10 @@ export class RegisterDto {
   email: string;
 
   @IsNotEmpty()
-  name: string;
+  firstName: string;
+
+  @IsNotEmpty()
+  lastName: string;
 
   @IsNotEmpty()
   @IsStrongPassword()

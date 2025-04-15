@@ -26,21 +26,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<void> {
-    const id = profile.id;
-    const email = profile.emails?.[0]?.value;
-    const firstName = profile.name?.givenName || '';
-    const lastName = profile.name?.familyName || '';
-
-    if (!id || !email) {
+    if (
+      !profile.id ||
+      !profile.emails?.[0]?.value ||
+      !profile.name?.givenName ||
+      !profile.name?.familyName
+    ) {
       done(new Error('No ID or email provided from Google'), undefined);
       return;
     }
 
-    const user = await this.authService.validateOrCreateGoogleUser({
-      id,
-      email,
-      name: `${firstName} ${lastName}`.trim(),
-    });
+    const user = await this.authService.validateOrCreateGoogleUser(profile);
 
     done(null, user);
   }
