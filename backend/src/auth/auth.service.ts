@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { User } from 'generated/prisma';
@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<User> {
-    const passwordHash = await bcrypt.hash(registerDto.password, 10);
+    const passwordHash = await argon2.hash(registerDto.password);
     return this.userService.create({
       name: registerDto.name,
       email: registerDto.email,
@@ -28,7 +28,7 @@ export class AuthService {
     if (!user) return null;
     if (!user.passwordHash) return null;
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    const isPasswordValid = await argon2.verify(user.passwordHash, password);
     if (user && isPasswordValid) return user;
 
     return null;
