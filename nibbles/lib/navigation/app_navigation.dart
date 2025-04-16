@@ -22,7 +22,7 @@ class _AppNavigationState extends State<AppNavigation> {
             currentPageIndex = index;
           });
         },
-        indicatorColor: Colors.redAccent,
+        indicatorColor: Colors.red[200],
         selectedIndex: currentPageIndex,
         destinations: const <Widget>[
           NavigationDestination(
