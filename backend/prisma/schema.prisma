@@ -66,29 +66,86 @@ model UserDietary {
 }
 
 model Restaurant {
-  id                 Int                 @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
+  place_id           String    @unique // Google Places ID
+
+  // Basic information (from Search API)
   name               String
-  address            String
-  latitude           Float?
-  longitude          Float?
-  dishes             Dish[]
+  vicinity           String?
+  latitude           Float
+  longitude          Float
+  businessStatus     String?
+  icon               String?
+  rating             Float?
+  userRatingsTotal   Int?
+  priceLevel         Int?
   restaurantCuisines RestaurantCuisine[]
+  
+  // Detailed information (from Details API)
+  hasDetails         Boolean   @default(false)  // Flag if we have detailed info
+  formattedAddress   String?
+  formattedPhoneNum  String?
+  intPhoneNum        String? // International phone number
+  website            String?
+  openingHours       Json?
+  photos             Photo[]
   restaurantReviews  RestaurantReview[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+
+  // Additional place details
+  dineIn             Boolean?
+  takeout            Boolean?
+  delivery           Boolean?
+  servesBreakfast    Boolean?
+  servesLunch        Boolean?
+  servesDinner       Boolean?
+  wheelchairAccessibleEntrance Boolean?
+  
+  // Metadata for our app
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  detailsUpdatedAt   DateTime?
+  viewCount          Int       @default(0)
+  favoriteCount      Int       @default(0)
+}
+
+model Photo {
+  id                 String    @id @default(uuid())
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId       Int
+  photoReference     String   // Google Places photo reference
+  height             Int
+  width              Int
+  htmlAttributions   String[]
+  createdAt          DateTime  @default(now())
 }
 
 model RestaurantReview {
-  id           Int      @id @default(autoincrement())
-  userId       Int
+  id           Int           @id @default(autoincrement())
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
   restaurantId Int
-  rating       Int // Example: 1 to 5 stars
-  comment      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 
-  user       User       @relation(fields: [userId], references: [id])
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  // Core review data
+  authorName   String?       // from Google or user's name
+  rating       Int
+  text         String?
+  time         DateTime?     // original timestamp (Google) or set by user
+
+  // Distinguish Google-sourced vs. user-submitted
+  source          ReviewSource  @default(LOCAL)
+  googleReviewId  String?       @unique
+  profile_photo_url String? // Google profile photo URL
+
+  // Optional relation to your application user for LOCAL reviews
+  user         User?         @relation(fields: [userId], references: [id])
+  userId       Int?
+
+  createdAt    DateTime      @default(now())
+}
+
+// Review source indicator
+enum ReviewSource {
+  GOOGLE
+  LOCAL
 }
 
 model Cuisine {
@@ -103,8 +160,8 @@ model Cuisine {
 
 model RestaurantCuisine {
   restaurantId Int
-  cuisineId    Int
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  cuisineId    Int
   cuisine      Cuisine    @relation(fields: [cuisineId], references: [id])
 
   @@id([restaurantId, cuisineId])
@@ -116,7 +173,6 @@ model Dish {
   description    String?
   calories       Int?
   price          Float?
-  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id])
   restaurantId   Int
   cuisine        Cuisine?       @relation(fields: [cuisineId], references: [id])
   cuisineId      Int?
