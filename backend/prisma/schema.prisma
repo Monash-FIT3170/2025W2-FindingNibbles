@@ -69,9 +69,7 @@ model Restaurant {
   id                 Int       @id @default(autoincrement())
   place_id           String    @unique // Google Places ID
 
-  // Basic information (from Search API)
   name               String
-  vicinity           String?
   latitude           Float
   longitude          Float
   businessStatus     String?
@@ -85,7 +83,6 @@ model Restaurant {
   hasDetails         Boolean   @default(false)  // Flag if we have detailed info
   formattedAddress   String?
   formattedPhoneNum  String?
-  intPhoneNum        String? // International phone number
   website            String?
   openingHours       Json?
   photos             Photo[]
