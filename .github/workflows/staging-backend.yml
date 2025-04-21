@@ -1,0 +1,118 @@
+name: Production CI/CD
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [dev]
+    paths:
+      - "backend/**"
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: ./backend
+        run: npm test
+
+      - name: Run e2e tests
+        working-directory: ./backend
+        run: npm run test:e2e
+
+      - name: Run coverage tests
+        working-directory: ./backend
+        run: npm run test:cov
+
+      - name: Run linting
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Build application
+        working-directory: ./backend
+        run: npm run build
+
+  backend-deploy:
+    needs: backend-test
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/finding-nibbles-backend:latest
+
+      - name: Copy docker-compose file to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "./backend/docker-compose.yml,./backend/Caddyfile"
+          target: "~/backend"
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GITHUB_SHA,REGISTRY,IMAGE_NAME,DATABASE_URL
+          script: |
+            cd ~/backend
+            echo "Logging into GitHub Container Registry..."
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            echo "Pulling latest image..."
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+            echo "Creating .env file..."
+            cat > .env << EOL
+            NODE_ENV=staging
+            DATABASE_URL=${DATABASE_URL}
+            EOL
+
+            echo "Starting application..."
+            docker compose down
+            docker compose up -d
+
+            echo "Cleaning up old images..."
+            docker image prune -f
