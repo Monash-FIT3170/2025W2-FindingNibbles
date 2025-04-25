@@ -6,26 +6,38 @@ import {
   UseGuards,
   Body,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { LocalAuthGuard } from './strategies/local/local-auth.guard';
 import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
-import { GoogleAuthGuard } from './strategies/google/google-auth.guard';
 import { AuthService } from './auth.service';
 import { User } from 'generated/prisma';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyEmailDto } from './dto/verify.dto';
+import { UserService } from '../user/user.service';
+import { GoogleAuthGuard } from './strategies/google/google-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService,
+              private userService: UserService,
+  ) {}
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     // We might want to add some error handling to this endpoint for duplicate emails
+    console.log('📩 Incoming registration:', registerDto);
     const user = await this.authService.register(registerDto);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
+  }
+
+  @Post('verify')
+  async verify(@Body() verifyEmailDto: VerifyEmailDto) {
+    console.log('📩 Incoming verification:', verifyEmailDto);
+    return this.authService.verifyEmail(verifyEmailDto.email, verifyEmailDto.code);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -48,12 +60,17 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @Post('google/token')
+  loginWithGoogleToken(@Body('idToken') idToken: string) {
+    return this.authService.validateGoogleToken(idToken)
+  }
+
   @Post('refresh')
   refreshToken(@Body('refresh_token') refreshToken: string) {
     if (!refreshToken) {
-      throw new BadRequestException('Refresh token is required.');
+      throw new UnauthorizedException('Refresh token is required.');
     }
-    return this.authService.refreshToken(refreshToken);
+    return this.authService.refreshAccessToken(refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -61,4 +78,13 @@ export class AuthController {
   getProfile(@Request() req: ExpressRequest & { user: User }) {
     return req.user;
   }
+
+
+  @Post('new-verification')
+  async sendNewVerificationEmail(@Body('email') email: string) {
+    if (!email) {
+      throw new BadRequestException('Email is required.');
+    }
+    return this.authService.newValidationCode(email);
+}
 }

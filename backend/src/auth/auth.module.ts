@@ -1,18 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
-import { UserModule } from 'src/user/user.module';
+import { AuthService } from './auth.service';
+import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from 'src/auth/strategies/local/local.strategy';
-import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from 'src/auth/strategies/jwt/jwt.strategy';
-import { GoogleStrategy } from 'src/auth/strategies/google/google.strategy';
+import { LocalStrategy } from './strategies/local/local.strategy';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtStrategy } from './strategies/jwt/jwt.strategy';
+import { GoogleStrategy } from './strategies/google/google.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
+import { MailerModule } from '../mailer/mailer.module';
+import { OAuth2Client } from 'google-auth-library';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
+    MailerModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,8 +25,29 @@ import { AuthController } from './auth.controller';
       }),
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
-  exports: [AuthService],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    GoogleStrategy,
+    {
+      provide: OAuth2Client,
+      useFactory: (configService: ConfigService) => {
+        return new OAuth2Client(configService.get('GOOGLE_CLIENT_ID'));
+      },
+      inject: [ConfigService],
+    },
+    {
+      provide: 'REFRESH_SERVICE',
+      useFactory: (config: ConfigService) =>
+        new JwtService({
+          secret: config.get<string>('REFRESH_SECRET'),
+          signOptions: { expiresIn: '7d' },
+        }),
+      inject: [ConfigService],
+    },
+  ],
+  exports: [AuthService, 'REFRESH_SERVICE'],
   controllers: [AuthController],
 })
 export class AuthModule {}

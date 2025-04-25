@@ -1,13 +1,17 @@
 import * as argon2 from 'argon2';
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
-import { User } from 'generated/prisma';
+import { Injectable, BadRequestException, UnauthorizedException, Inject } from '@nestjs/common';
+import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/auth/strategies/jwt/jwt.strategy';
+import { JwtPayload } from './strategies/jwt/jwt.strategy';
 import { RegisterDto } from 'src/auth/dto/register.dto';
 import { Profile } from 'passport-google-oauth20';
 import { randomInt } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { MailerService } from '../mailer/mailer.service';
+import { OAuth2Client } from 'google-auth-library';
+import { AuthTokens } from './dto/tokens.dto';
+import { User } from 'generated/prisma';
+
 
 @Injectable()
 export class AuthService {
@@ -15,6 +19,9 @@ export class AuthService {
     private configService: ConfigService,
     private userService: UserService,
     private jwtService: JwtService,
+    private mailerService: MailerService,
+    private googleClient: OAuth2Client,
+    @Inject('REFRESH_SERVICE') private refreshJwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<User> {
@@ -24,12 +31,12 @@ export class AuthService {
     // If in development mode, log the verification code
     if (this.configService.get<string>('NODE_ENV') === 'development') {
       console.log(`Verification code for ${registerDto.email}: ${verifyCode}`);
-    } else {
-      // Email the verification code to the user
-      // await this.mailerService.sendVerificationEmail(
-      //   registerDto.email,
-      //   verifyCode,
-      // );
+    }
+
+    try {
+      await this.mailerService.sendVerificationEmail(registerDto.email, verifyCode);
+    } catch (err) {
+      console.error('Failed to send verification email:', err);
     }
 
     return this.userService.create({
@@ -43,16 +50,35 @@ export class AuthService {
     });
   }
 
-  async verifyEmail(email: string, code: number): Promise<User | null> {
+  async verifyEmail(email: string, code: number): Promise<AuthTokens| null> {
     const user = await this.userService.findOneByEmail(email);
+    
     if (!user) return null;
     if (user.isVerified) return null;
-    if (user?.verifyCode !== code) return null;
-
+    if (user.verifyCode !== Number(code)) return null;
     await this.userService.update(user.id, {
       isVerified: true,
       verifyCode: null,
     });
+
+    return this.login(user);
+  }
+
+  async newValidationCode(email: string): Promise<User | null> {
+    const user = await this.userService.findOneByEmail(email);
+    if (!user) return null;
+    if (user.isVerified) return null;
+    if (user.provider !== 'local') return null; // they should use their existing provider
+    if (user.providerId) return null; // they should use their existing provider
+    if (!user.verifyCode) return null;
+    const newCode = randomInt(10000000, 99999999);
+    user.verifyCode = newCode;
+    await this.userService.update(user.id, { verifyCode: newCode });
+    try {
+      await this.mailerService.sendNewVerificationEmail(email, newCode);
+    } catch (err) {
+      console.error('Failed to send new verification email:', err);
+    }
     return user;
   }
 
@@ -91,7 +117,7 @@ export class AuthService {
     });
   }
 
-  login(user: User) {
+  async login(user: User) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -99,21 +125,51 @@ export class AuthService {
       lastName: user.lastName,
     };
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
+      access_token: this.jwtService.sign(payload, { expiresIn: '45m' }),
+      refresh_token: this.refreshJwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 
-  refreshToken(token: string) {
+  async refreshAccessToken(token: string): Promise<{ access_token: string }> {
     try {
-      const payload = this.jwtService.verify<JwtPayload>(token, {
+      const { sub, email, firstName, lastName } =
+      this.jwtService.verify<JwtPayload>(token, {
         ignoreExpiration: false,
+        secret: this.configService.get<string>('REFRESH_SECRET'),
       });
-      return {
-        access_token: this.jwtService.sign(payload, { expiresIn: '15m' }),
-      };
-    } catch {
-      throw new BadRequestException('Invalid or expired refresh token.');
+      const access_token = this.jwtService.sign(
+        { sub, email, firstName, lastName },
+        { expiresIn: '45m' },
+      );
+      return { access_token };
+    } catch (error) {
+      console.error('❌ [AuthService] refreshAccessToken error:', error);
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
+
+  async validateGoogleToken(token: string): Promise<{ access_token: string; refresh_token: string } | null> {
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken: token,
+      audience: [
+        this.configService.get<string>('GOOGLE_CLIENT_ID_ANDROID') || '',
+        this.configService.get<string>('GOOGLE_CLIENT_ID_IOS') || '',
+      ],
+    });
+    const payload = ticket.getPayload();
+    if (!payload) return null;
+
+    const profile = {
+      id: payload.sub,
+      emails: [{ value: payload.email }],
+      name: {
+        givenName: payload.given_name,
+        familyName: payload.family_name,
+      },
+    } as Profile;
+      
+    const user = await this.validateOrCreateGoogleUser(profile);
+    return this.login(user);
+  }
+
 }
