@@ -113,6 +113,7 @@ class AuthService {
     }
   }
 
+  // have a script that deletes non verified accounts after 7 days
   Future<bool> deleteAccount(String email) async {
     try {
       print('Attempting to delete account for: $email');
