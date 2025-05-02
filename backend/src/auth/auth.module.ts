@@ -11,6 +11,12 @@ import { AuthController } from './auth.controller';
 import { MailerModule } from '../mailer/mailer.module';
 import { OAuth2Client } from 'google-auth-library';
 
+/**
+ * This module separates access and refresh token services:
+ * - Access Token Service: Issues short-lived tokens (60s) for authenticating API requests.
+ * - Refresh Token Service: Issues long-lived tokens (7d) for obtaining new access tokens.
+ * This separation enhances security, simplifies lifecycle management, and improves user experience.
+ */
 @Module({
   imports: [
     UserModule,
