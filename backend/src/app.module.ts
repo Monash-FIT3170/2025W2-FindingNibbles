@@ -31,6 +31,8 @@ import { MailerModule } from './mailer/mailer.module';
         GOOGLE_CLIENT_ID_IOS: Joi.string().required(),
         MAIL_USER: Joi.string().email().required(),
         MAIL_PASS: Joi.string().required(),
+        MAIL_HOST: Joi.string().required(),
+        MAIL_PORT: Joi.number().port().default(587),
       }),
       validationOptions: {
         allowUnknown: true,

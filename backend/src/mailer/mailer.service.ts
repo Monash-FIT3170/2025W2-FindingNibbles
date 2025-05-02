@@ -8,8 +8,8 @@ export class MailerService {
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
+      host: this.configService.get<string>('MAIL_HOST'),
+      port: this.configService.get<number>('MAIL_PORT'),
       secure: false, // true for 465, false for other ports
       auth: {
         user: this.configService.get<string>('MAIL_USER'),
@@ -39,7 +39,6 @@ export class MailerService {
         to: email,
         subject: 'Verify your email address',
         text: `Your verification code is ${code}.`,
-        html: `<p>Your verification code is <b>${code}</b>.</p>`,
       });
 
       console.log('✉️  Verification email sent: %s', info.messageId);
@@ -56,7 +55,6 @@ export class MailerService {
         to: email,
         subject: 'New verification code',
         text: `Your new verification code is ${code}.`,
-        html: `<p>Your new verification code is <b>${code}</b>.</p>`,
       });
       console.log('✉️  New verification email sent: %s', info.messageId);
     } catch (error) {
