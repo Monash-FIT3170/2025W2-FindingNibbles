@@ -21,8 +21,8 @@ export class AuthService {
     private jwtService: JwtService,
     private mailerService: MailerService,
     private googleClient: OAuth2Client,
-    @Inject('REFRESH_SERVICE') private refreshJwtService: JwtService,
   ) {}
+
 
   async register(registerDto: RegisterDto): Promise<User> {
     const passwordHash = await argon2.hash(registerDto.password);
@@ -126,7 +126,7 @@ export class AuthService {
     };
     return {
       access_token: this.jwtService.sign(payload, { expiresIn: '45m' }),
-      refresh_token: this.refreshJwtService.sign(payload, { expiresIn: '7d' }),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 

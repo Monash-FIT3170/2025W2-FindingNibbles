@@ -113,19 +113,6 @@ class AuthService {
     }
   }
 
-  // have a script that deletes non verified accounts after 7 days
-  Future<bool> deleteAccount(String email) async {
-    try {
-      print('Attempting to delete account for: $email');
-      final response = await _dio.post('auth/delete', data: {'email': email});
-      print('Account deletion response: ${response.statusCode}');
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Account deletion error: $e');
-      return false;
-    }
-  }
-
   Future<bool> newVerification(String email) async {
     try {
       print('Requesting new verification for: $email');
