@@ -27,7 +27,6 @@ import { OAuth2Client } from 'google-auth-library';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('AUTH_SECRET'),
-        signOptions: { expiresIn: '60s' },
       }),
     }),
   ],
@@ -43,17 +42,9 @@ import { OAuth2Client } from 'google-auth-library';
       },
       inject: [ConfigService],
     },
-    {
-      provide: 'REFRESH_SERVICE',
-      useFactory: (config: ConfigService) =>
-        new JwtService({
-          secret: config.get<string>('REFRESH_SECRET'),
-          signOptions: { expiresIn: '7d' },
-        }),
-      inject: [ConfigService],
-    },
+
   ],
-  exports: [AuthService, 'REFRESH_SERVICE'],
+  exports: [AuthService],
   controllers: [AuthController],
 })
 export class AuthModule {}
