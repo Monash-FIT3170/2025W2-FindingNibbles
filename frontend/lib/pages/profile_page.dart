@@ -1,17 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/widget/profile/cooking_appliances_widget.dart';
+import 'package:nibbles/widget/profile/dietary_requirements_widget.dart';
+import 'package:nibbles/widget/profile/logout_widget.dart';
+import 'package:nibbles/widget/profile/personal_menu_widget.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Card(
-      shadowColor: Colors.transparent,
-      margin: const EdgeInsets.all(8.0),
-      child: SizedBox.expand(
-        child: Center(
-          child: Text('Profile page', style: theme.textTheme.titleLarge),
+    return Scaffold(
+      backgroundColor: Color(0xFFAD2C50), // Background color
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Aligns content to the left
+            children: [
+              // Add a header with "Profile" text
+              Padding(
+                padding: const EdgeInsets.all(
+                  16.0,
+                ), // Adds spacing around the text
+                child: Text(
+                  'Profile',
+                  style: TextStyle(
+                    color: Colors.white, // White text color
+                    fontSize: 32, // Font size for the header
+                    fontWeight: FontWeight.bold, // Bold font weight
+                  ),
+                ),
+              ),
+              // Personal menu widget
+              PersonalMenuWidget(
+                onPersonalInfo: () {},
+                onFavourites: () {},
+                onMyReviews: () {},
+              ),
+              // Dietary requirements widget
+              DietaryRequirementsWidget(
+                tags: ['Vegan', 'Gluten Free', 'Peanut-allergic'],
+                onOpenSelector: () {},
+                onTagRemoved: (tag) {},
+              ),
+              // Cooking appliances widget
+              CookingAppliancesWidget(
+                appliances: [
+                  'Toaster',
+                  'Oven',
+                  'Stove',
+                  'Air-fryer',
+                  'Waffle-maker',
+                ],
+                onOpenSelector: () {},
+                onApplianceRemoved: (app) {},
+              ),
+              // Logout widget
+              LogoutWidget(onLogout: () {}),
+            ],
+          ),
         ),
       ),
     );
