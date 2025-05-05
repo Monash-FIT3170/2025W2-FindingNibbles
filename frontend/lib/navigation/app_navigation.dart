@@ -53,7 +53,7 @@ class _AppNavigationState extends State<AppNavigation> {
             const HomePage(),
             const RestaurantsPage(),
             const RecipesPage(),
-            const ProfilePage(),
+            ProfilePage(),
           ][currentPageIndex],
     );
   }

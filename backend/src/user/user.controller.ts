@@ -29,25 +29,25 @@ export class UserController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post('add-dietaryRestriction')
+    @Post('add-dietary-restriction')
     addDietaryRestriction(@Req() req: RequestUser,
                         @Body() dietaryId: number) {
         return this.userService.addDietaryRestriction(req.user.id, dietaryId);}
 
     @UseGuards(JwtAuthGuard)
-    @Post('remove-dietaryRestriction')
+    @Post('remove-dietary-restriction')
     removeDietaryRestriction(@Req() req: RequestUser,
                         @Body() dietaryId: number) {
         return this.userService.removeDietaryRestriction(req.user.id, dietaryId);}
 
     @UseGuards(JwtAuthGuard)
-    @Get('user-dietaryRestrictions')
+    @Get('dietary-restrictions')
     getUserDietaryRestrictions(@Req() req: RequestUser) {
         return this.userService.getDietaryRestrictions(req.user.id);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Post('create-dietaryRestriction')
+    @Post('create-dietary-restriction')
     createDietaryRestriction(@Req() req: RequestUser,
             @Body() dietaryRestriction: CreateDietaryRestrictionDto) {
         return this.userService.createUserSpecificDietaryRestriction(req.user.id, dietaryRestriction);
