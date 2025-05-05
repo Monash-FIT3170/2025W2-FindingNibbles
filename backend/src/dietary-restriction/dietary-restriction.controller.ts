@@ -16,19 +16,4 @@ export class DietaryRestrictionController {
   findAll() {
     return this.dietaryRestrictionService.findAll();
   }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.dietaryRestrictionService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDietaryRestrictionDto: UpdateDietaryRestrictionDto) {
-    return this.dietaryRestrictionService.update(+id, updateDietaryRestrictionDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.dietaryRestrictionService.remove(+id);
-  }
 }

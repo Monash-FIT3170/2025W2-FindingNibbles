@@ -7,7 +7,11 @@ import { Prisma } from 'generated/prisma';
 @Injectable()
 export class DietaryRestrictionService {
   constructor(private readonly db: DatabaseService) {}
-  create(newDietary: Prisma.DietaryRestrictionCreateInput) {
+  async create(newDietary: Prisma.DietaryRestrictionCreateInput) {
     return this.db.dietaryRestriction.create({ data: newDietary });
+  }
+
+  async findAll() {
+    return this.db.dietaryRestriction.findMany();
   }
 }
