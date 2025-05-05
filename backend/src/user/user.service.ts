@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { DietaryRestriction, Prisma } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
+import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
+import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService,
+              private readonly dietaryRestrictionService: DietaryRestrictionService
+              ) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
     return this.db.user.create({ data: createUserDto });
@@ -68,6 +72,65 @@ export class UserService {
       },
       include: {
         restaurant: true,
+      },
+    });
+  }
+
+  /**
+   * Add a dietary restriction to a user
+   * @param userId 
+   * @param dietaryId 
+   * @returns 
+   */
+  async addDietaryRestriction(userId: number, dietaryId: number) {
+    return this.db.userDietary.create({
+      data: {
+        userId,
+        dietaryId,
+      },
+    });
+  }
+
+  /**
+   * Remove a dietary restriction from a user
+   * @param userId 
+   * @param dietaryId 
+   * @returns 
+   */
+  async removeDietaryRestriction(userId: number, dietaryId: number) {
+    return this.db.userDietary.delete({
+      where: {
+        userId_dietaryId: {
+          userId,
+          dietaryId,
+        },
+      },
+    });
+  }
+
+  async getDietaryRestrictions(userId: number) {
+    return this.db.userDietary.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        dietary: true,
+      },
+    });
+  }
+
+  /**
+   * Get all dietary restrictions
+   * @returns 
+   */
+
+  async createUserSpecificDietaryRestriction(userId: number, dietaryInformation: CreateDietaryRestrictionDto)
+  {
+    const dietaryRestriction = await this.dietaryRestrictionService.create(dietaryInformation);
+    return this.db.userDietary.create({
+      data: {
+        userId,
+        dietaryId: dietaryRestriction.id,
       },
     });
   }

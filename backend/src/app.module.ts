@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
 import { RecipeModule } from './recipe/recipe.module';
+import { DietaryRestrictionModule } from './dietary-restriction/dietary-restriction.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { RecipeModule } from './recipe/recipe.module';
     UserModule,
     MailerModule,
     RecipeModule,
+    DietaryRestrictionModule,
   ],
 })
 export class AppModule {}
