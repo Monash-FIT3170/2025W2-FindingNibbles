@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'navigation/app_navigation.dart';
+import 'package:nibbles/pages/auth/title_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -12,7 +12,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(useMaterial3: true),
-      home: const AppNavigation(),
+      home: const TitlePage(),
     );
   }
 }
