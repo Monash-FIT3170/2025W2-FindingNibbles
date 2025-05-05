@@ -6,6 +6,7 @@ import { DatabaseModule } from '../database/database.module';
 @Module({
   controllers: [DietaryRestrictionController],
   providers: [DietaryRestrictionService],
-  imports: [DatabaseModule]
+  imports: [DatabaseModule],
+  exports: [DietaryRestrictionService],
 })
 export class DietaryRestrictionModule {}
