@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:nibbles/core/logger.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -15,44 +16,45 @@ class DioClient {
   );
 
   final _storage = FlutterSecureStorage();
+  final _logger = getLogger();
 
   DioClient._internal() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          print('📡 Interceptor triggered for: ${options.uri}');
+          _logger.d('📡 Interceptor triggered for: ${options.uri}');
           final token = await _storage.read(key: 'access_token');
           if (token != null) {
-            print('🔐 Using access token: $token');
+            _logger.d('🔐 Using access token: $token');
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);
         },
         onError: (e, handler) async {
-          print('🛑 onError called with status: ${e.response?.statusCode}');
-          print('⚠️ Intercepted error: ${e.response?.statusCode}');
+          _logger.d('🛑 onError called with status: ${e.response?.statusCode}');
+          _logger.d('⚠️ Intercepted error: ${e.response?.statusCode}');
           if (e.response != null) {
-            print('🚨 Dio error status code: ${e.response?.statusCode}');
-            print('🚨 Dio error data: ${e.response?.data}');
+            _logger.d('🚨 Dio error status code: ${e.response?.statusCode}');
+            _logger.d('🚨 Dio error data: ${e.response?.data}');
           }
           if (e.response?.statusCode == 400) {
-            print('🧩 Request caused 400 error');
-            print('🔍 Request path: ${e.requestOptions.path}');
-            print('📦 Request data: ${e.requestOptions.data}');
-            print('📨 Request headers: ${e.requestOptions.headers}');
+            _logger.d('🧩 Request caused 400 error');
+            _logger.d('🔍 Request path: ${e.requestOptions.path}');
+            _logger.d('📦 Request data: ${e.requestOptions.data}');
+            _logger.d('📨 Request headers: ${e.requestOptions.headers}');
           }
           if (e.response?.statusCode == 401) {
             final refreshToken = await _storage.read(key: 'refresh_token');
             if (refreshToken != null) {
               try {
-                print('🔁 Attempting token refresh...');
-                print('🔁 Using refresh token: $refreshToken');
+                _logger.d('🔁 Attempting token refresh...');
+                _logger.d('🔁 Using refresh token: $refreshToken');
                 final refreshResponse = await _dio.post(
                   'auth/refresh',
                   data: {'refresh_token': refreshToken},
                 );
                 final newAccessToken = refreshResponse.data['access_token'];
-                print('✅ New access token: $newAccessToken');
+                _logger.d('✅ New access token: $newAccessToken');
                 await _storage.write(
                   key: 'access_token',
                   value: newAccessToken,
@@ -62,7 +64,7 @@ class DioClient {
                 final clonedRequest = await _dio.fetch(e.requestOptions);
                 return handler.resolve(clonedRequest);
               } catch (refreshError) {
-                print('❌ Refresh failed: $refreshError');
+                _logger.d('❌ Refresh failed: $refreshError');
                 return handler.reject(refreshError as DioException);
               }
             }
