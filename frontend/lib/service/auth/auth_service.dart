@@ -2,10 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nibbles/core/dio_client.dart';
+import 'package:nibbles/core/logger.dart';
 
 class AuthService {
   final Dio _dio = DioClient().client;
   final _storage = FlutterSecureStorage();
+  final _logger = getLogger();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: 'to_do',
     scopes: ['email', 'profile'],
@@ -19,38 +21,38 @@ class AuthService {
 
   Future<bool> loginWithEmail(String email, String password) async {
     try {
-      print('Attempting login with email: $email');
+      _logger.d('Attempting login with email: $email');
       final response = await _dio.post(
         'auth/login',
         data: {'email': email, 'password': password},
       );
-      print('Received response: ${response.data}');
+      _logger.d('Received response: ${response.data}');
       await _saveTokens(response.data);
       return true;
     } catch (e) {
-      print('Login error: $e');
+      _logger.d('Login error: $e');
       return false;
     }
   }
 
   Future<bool> loginWithGoogle() async {
     try {
-      print('Attempting Google login');
+      _logger.d('Attempting Google login');
       final googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
-        print('Google sign-in was cancelled');
+        _logger.d('Google sign-in was cancelled');
         return false;
       }
 
       final googleAuth = await googleUser.authentication;
 
       if (googleAuth.idToken == null) {
-        print('Google idToken is null, cannot proceed');
+        _logger.d('Google idToken is null, cannot proceed');
         return false;
       }
 
-      print('Google idToken: ${googleAuth.idToken}');
+      _logger.d('Google idToken: ${googleAuth.idToken}');
 
       // Send id_token to your backend
       final response = await _dio.post(
@@ -58,12 +60,12 @@ class AuthService {
         data: {'idToken': googleAuth.idToken},
       );
 
-      print('Received response: ${response.data}');
+      _logger.d('Received response: ${response.data}');
       await _saveTokens(response.data);
       return true;
     } catch (e, stackTrace) {
-      print("Google login failed with error: $e");
-      print("Stack trace: $stackTrace");
+      _logger.d("Google login failed with error: $e");
+      _logger.d("Stack trace: $stackTrace");
       return false;
     }
   }
@@ -75,8 +77,8 @@ class AuthService {
     String password,
   ) async {
     try {
-      print('Attempting registration for: $email');
-      print(
+      _logger.d('Attempting registration for: $email');
+      _logger.d(
         'Registration payload: {email: $email, firstName: $firstName, lastName: $lastName, password: $password}',
       );
       final response = await _dio.post(
@@ -88,42 +90,42 @@ class AuthService {
           'password': password,
         },
       );
-      print('Registration response: ${response.data}');
+      _logger.d('Registration response: ${response.data}');
       return true;
     } catch (e) {
-      print('Registration error: $e');
+      _logger.d('Registration error: $e');
       return false;
     }
   }
 
   Future<bool> verifyEmail(String email, String code) async {
     try {
-      print('Verifying email: $email with code: $code');
+      _logger.d('Verifying email: $email with code: $code');
       final response = await _dio.post(
         'auth/verify',
         data: {'email': email, 'code': code},
       );
-      print('Verification response status: ${response.statusCode}');
-      print('Received response: ${response.data}');
+      _logger.d('Verification response status: ${response.statusCode}');
+      _logger.d('Received response: ${response.data}');
       await _saveTokens(response.data);
       return true;
     } catch (e) {
-      print('Verification error: $e');
+      _logger.d('Verification error: $e');
       return false;
     }
   }
 
   Future<bool> newVerification(String email) async {
     try {
-      print('Requesting new verification for: $email');
+      _logger.d('Requesting new verification for: $email');
       final response = await _dio.post(
         'auth/new-verification',
         data: {'email': email},
       );
-      print('New verification response: ${response.statusCode}');
+      _logger.d('New verification response: ${response.statusCode}');
       return response.statusCode == 201;
     } catch (e) {
-      print('New verification error: $e');
+      _logger.d('New verification error: $e');
       return false;
     }
   }
