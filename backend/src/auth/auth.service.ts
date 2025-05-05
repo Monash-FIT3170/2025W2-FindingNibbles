@@ -26,7 +26,7 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<User> {
     const passwordHash = await argon2.hash(registerDto.password);
-    const verifyCode = randomInt(10000000, 99999999);
+    const verifyCode = randomInt(100000, 999999);
 
     // If in development mode, log the verification code
     if (this.configService.get<string>('NODE_ENV') === 'development') {

@@ -129,4 +129,18 @@ class AuthService {
       return false;
     }
   }
+
+  /// Check whether the current user is still logged in by calling the protected /auth/check endpoint.
+  /// Returns true if the JWT is valid (HTTP 200), false otherwise.
+  Future<bool> checkLoginStatus() async {
+    try {
+      // Call the backend check endpoint with Authorization header
+      final response = await _dio.get('auth/check');
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Login status check failed: $e');
+      return false;
+    }
+  }
 }
