@@ -10,6 +10,8 @@ import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
 import { RecipeModule } from './recipe/recipe.module';
 import { DietaryRestrictionModule } from './dietary-restriction/dietary-restriction.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
+import { CuisineModule } from './cuisine/cuisine.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { DietaryRestrictionModule } from './dietary-restriction/dietary-restrict
     MailerModule,
     RecipeModule,
     DietaryRestrictionModule,
+    RestaurantModule,
+    CuisineModule,
   ],
 })
 export class AppModule {}

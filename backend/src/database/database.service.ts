@@ -1,5 +1,4 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-// goes back three levels from dist/src/database → dist → backend → generated/prisma
 import { PrismaClient } from '../../generated/prisma';
 
 @Injectable()
