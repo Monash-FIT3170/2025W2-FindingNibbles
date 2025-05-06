@@ -11,7 +11,9 @@ describe('DietaryRestrictionController', () => {
       providers: [DietaryRestrictionService],
     }).compile();
 
-    controller = module.get<DietaryRestrictionController>(DietaryRestrictionController);
+    controller = module.get<DietaryRestrictionController>(
+      DietaryRestrictionController,
+    );
   });
 
   it('should be defined', () => {

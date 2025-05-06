@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:nibbles/core/constants.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 
@@ -9,8 +10,7 @@ class AuthService {
   final _storage = FlutterSecureStorage();
   final _logger = getLogger();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId:
-        '1054514268037-m5797qhoes139be9tbph112nv1dseif6.apps.googleusercontent.com',
+    clientId: AppConstants.googleClientId,
     scopes: ['email', 'profile'],
   );
 

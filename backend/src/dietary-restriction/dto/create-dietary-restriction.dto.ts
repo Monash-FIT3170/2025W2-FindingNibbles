@@ -1,4 +1,4 @@
 export class CreateDietaryRestrictionDto {
-    name: string;
-    description: string;
+  name: string;
+  description: string;
 }
