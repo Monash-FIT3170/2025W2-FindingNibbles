@@ -8,6 +8,7 @@ import * as Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
+import { RecipeModule } from './recipe/recipe.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { MailerModule } from './mailer/mailer.module';
     }),
     AuthModule,
     UserModule,
-    MailerModule
+    MailerModule,
+    RecipeModule,
   ],
 })
 export class AppModule {}
