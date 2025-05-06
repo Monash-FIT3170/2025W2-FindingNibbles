@@ -72,7 +72,7 @@ export class AuthService {
     if (user.provider !== 'local') return null; // they should use their existing provider
     if (user.providerId) return null; // they should use their existing provider
     if (!user.verifyCode) return null;
-    const newCode = randomInt(10000000, 99999999);
+    const newCode = randomInt(100000, 999999);
     user.verifyCode = newCode;
     await this.userService.update(user.id, { verifyCode: newCode });
     try {

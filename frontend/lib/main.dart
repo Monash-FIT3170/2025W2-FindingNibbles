@@ -5,7 +5,7 @@ import 'package:nibbles/navigation/app_navigation.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
 class MainApp extends StatelessWidget {
