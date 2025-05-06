@@ -4,6 +4,15 @@ import 'package:nibbles/core/logger.dart';
 
 enum RecipeDifficulty { easy, medium, hard, any }
 
+// Model class for kitchen appliances
+class Appliance {
+  final int id;
+  final String name;
+  bool isSelected;
+
+  Appliance({required this.id, required this.name, this.isSelected = false});
+}
+
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
 
@@ -23,6 +32,56 @@ class _RecipesPageState extends State<RecipesPage> {
   bool useDietaries = false;
   bool includeAllIngredients = false;
   RecipeDifficulty selectedDifficulty = RecipeDifficulty.any;
+  List<Appliance> availableAppliances = [];
+  bool isLoadingAppliances = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAppliances();
+  }
+
+  // Fetch available appliances from the backend
+  Future<void> _fetchAppliances() async {
+    setState(() {
+      isLoadingAppliances = true;
+    });
+
+    try {
+      // Fetch user's appliances from the backend
+      final response = await dio.get('/user/appliance');
+      if (response.statusCode == 200) {
+        List<dynamic> appliancesData = response.data as List<dynamic>;
+        setState(() {
+          availableAppliances =
+              appliancesData.map((item) {
+                return Appliance(
+                  id: item['id'],
+                  name: item['name'],
+                  isSelected: appliances.contains(item['id']),
+                );
+              }).toList();
+        });
+      }
+    } catch (e) {
+      _logger.e('Failed to fetch appliances: ${e.toString()}');
+      // Show a snackbar with the error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load appliances: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoadingAppliances = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -43,6 +102,22 @@ class _RecipesPageState extends State<RecipesPage> {
   void _removeIngredient(String ingredient) {
     setState(() {
       ingredients.remove(ingredient);
+    });
+  }
+
+  // Toggle appliance selection and update the appliances list
+  void _toggleAppliance(Appliance appliance, StateSetter setDrawerState) {
+    setDrawerState(() {
+      appliance.isSelected = !appliance.isSelected;
+
+      // Update the appliances list based on selection
+      if (appliance.isSelected) {
+        if (!appliances.contains(appliance.id)) {
+          appliances.add(appliance.id);
+        }
+      } else {
+        appliances.remove(appliance.id);
+      }
     });
   }
 
@@ -67,61 +142,71 @@ class _RecipesPageState extends State<RecipesPage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDrawerState) {
             return DraggableScrollableSheet(
-              initialChildSize: 1,
-              minChildSize: 1,
-              maxChildSize: 1,
+              initialChildSize: 0.8,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
               builder: (context, scrollController) {
                 return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Kitchen Appliances',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 16),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _applianceInputController,
-                              decoration: const InputDecoration(
-                                hintText: 'Add an appliance',
-                                border: OutlineInputBorder(),
-                              ),
-                              onSubmitted: (value) {
-                                _addAppliance(value);
-                                setDrawerState(() {});
-                              },
-                            ),
+                          Text(
+                            'Kitchen Appliances',
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.add),
+                          TextButton.icon(
                             onPressed: () {
-                              _addAppliance(_applianceInputController.text);
-                              setDrawerState(() {});
+                              Navigator.pop(context);
                             },
+                            icon: const Icon(Icons.check),
+                            label: const Text('Done'),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Select appliances available in your kitchen:',
+                        style: TextStyle(fontSize: 16),
+                      ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: appliances.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text(appliances[index]),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  _removeAppliance(appliances[index]);
-                                  setDrawerState(() {});
+                      if (isLoadingAppliances)
+                        const Center(child: CircularProgressIndicator())
+                      else if (availableAppliances.isEmpty)
+                        const Center(
+                          child: Text(
+                            'No appliances found. Please try again later.',
+                          ),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.builder(
+                            controller: scrollController,
+                            itemCount: availableAppliances.length,
+                            itemBuilder: (context, index) {
+                              final appliance = availableAppliances[index];
+                              return CheckboxListTile(
+                                title: Text(appliance.name),
+                                value: appliance.isSelected,
+                                onChanged: (bool? value) {
+                                  _toggleAppliance(appliance, setDrawerState);
                                 },
-                              ),
-                            );
+                              );
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _fetchAppliances();
+                            Navigator.pop(context);
                           },
+                          child: const Text('Save Selection'),
                         ),
                       ),
                     ],
@@ -134,25 +219,6 @@ class _RecipesPageState extends State<RecipesPage> {
       },
     );
   }
-
-  // export class CreateRecipeDto {
-  //   @IsNotEmpty()
-  //   ingredients: string[];
-
-  //   @IsBoolean()
-  //   @IsNotEmpty()
-  //   useDietaries: boolean;
-
-  //   @ArrayNotEmpty()
-  //   kitchenAppliances: number[];
-
-  //   @IsBoolean()
-  //   @IsNotEmpty()
-  //   includeAllIngredients: boolean;
-
-  //   @IsIn(['easy', 'medium', 'hard', 'any'])
-  //   difficulty_level: 'easy' | 'medium' | 'hard' | 'any';
-  // }
 
   Future<void> _generateRecipes() async {
     try {
@@ -304,6 +370,49 @@ class _RecipesPageState extends State<RecipesPage> {
                       ),
                     ),
                   ),
+                  if (appliances.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selected Appliances:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 4.0,
+                            children:
+                                availableAppliances
+                                    .where((a) => appliances.contains(a.id))
+                                    .map(
+                                      (appliance) => Chip(
+                                        label: Text(appliance.name),
+                                        deleteIcon: const Icon(
+                                          Icons.clear,
+                                          size: 16,
+                                        ),
+                                        onDeleted: () {
+                                          setState(() {
+                                            _removeAppliance(appliance.id);
+                                            appliance.isSelected = false;
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
