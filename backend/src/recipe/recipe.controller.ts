@@ -1,15 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+} from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
+import { Prisma } from 'generated/prisma';
 
 @Controller('recipe')
 export class RecipeController {
   constructor(private readonly recipeService: RecipeService) {}
 
   @Post()
-  create(@Body() createRecipeDto: CreateRecipeDto) {
-    return this.recipeService.create(createRecipeDto);
+  async create(@Body() createRecipeDto: CreateRecipeDto) {
+    const generatedRecipe = await this.recipeService.generate(createRecipeDto);
+
+    const cuisine = await this.recipeService.validateAndGetCuisine(
+      generatedRecipe.cuisine,
+    );
+    if (!cuisine) {
+      throw new NotFoundException('Cuisine is not found.');
+    }
+    const recipe: Prisma.RecipeCreateInput = {
+      ...generatedRecipe,
+      ...createRecipeDto,
+      cuisineId: cuisine.id,
+    };
+
+    return this.recipeService.create(recipe);
   }
 
   @Get()
