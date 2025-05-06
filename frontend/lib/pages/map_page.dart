@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:async'; // Add this import
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -13,6 +14,7 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   late final MapController _mapController = MapController();
   LatLng? _currentPosition;
+  StreamSubscription<Position>? _positionStreamSubscription; // Add this line
 
   @override
   void initState() {
@@ -45,17 +47,21 @@ class _MapPageState extends State<MapPage> {
 
     // Get current position
     final position = await Geolocator.getCurrentPosition();
-    setState(() {
-      _currentPosition = LatLng(position.latitude, position.longitude);
-    });
-
-    // Listen for updates
-    Geolocator.getPositionStream().listen((Position pos) {
-      final newPos = LatLng(pos.latitude, pos.longitude);
+    if (mounted) {  // Add this check
       setState(() {
-        _currentPosition = newPos;
+        _currentPosition = LatLng(position.latitude, position.longitude);
       });
-      _mapController.move(newPos, _mapController.zoom);
+    }
+
+    // Listen for updates with proper subscription management
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position pos) {
+      final newPos = LatLng(pos.latitude, pos.longitude);
+      if (mounted) {  // Add this check
+        setState(() {
+          _currentPosition = newPos;
+        });
+        _mapController.move(newPos, _mapController.zoom);
+      }
     });
   }
 
@@ -84,6 +90,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
+    _positionStreamSubscription?.cancel();  // Add this line
     _mapController.dispose();
     super.dispose();
   }
