@@ -19,9 +19,3 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
-
-dependencies {
-    implementation 'com.google.android.gms:play-services-auth:20.7.0' // Or latest
-}
-
-apply plugin: 'com.google.gms.google-services'
