@@ -19,7 +19,6 @@ type RecipeGenerated = {
 @Injectable()
 export class RecipeService {
   constructor(private db: DatabaseService) {}
-
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated> {
     // TODO: call the llm here instead of this mock
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -74,8 +73,13 @@ export class RecipeService {
     return this.db.recipe.create({ data: recipe });
   }
 
-  findAll() {
-    return [];
+  async findAll() {
+    // return all the recipes in the database
+    return this.db.recipe.findMany({
+      include: {
+        cuisine: true,
+      },
+    });
   }
 
   findOne(id: number) {
