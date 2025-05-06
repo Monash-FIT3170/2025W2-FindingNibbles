@@ -20,6 +20,31 @@ async function main(): Promise<void> {
   console.log('Start seeding...');
 
   try {
+    // First, collect and create all unique cuisines
+    console.log('Creating cuisines...');
+    const uniqueCuisines = new Set<string>();
+
+    // Gather all unique cuisine names
+    restaurants.forEach((restaurant) => {
+      if (restaurant.cuisines && restaurant.cuisines.length > 0) {
+        restaurant.cuisines.forEach((cuisine) => uniqueCuisines.add(cuisine));
+      }
+    });
+
+    console.log(`Found ${uniqueCuisines.size} unique cuisines`);
+
+    // Create cuisines in database and track their IDs
+    const cuisineMap = new Map<string, number>();
+    for (const cuisineName of uniqueCuisines) {
+      const cuisine = await prisma.cuisine.upsert({
+        where: { name: cuisineName },
+        update: {}, // No updates needed if it exists
+        create: { name: cuisineName },
+      });
+      cuisineMap.set(cuisineName, cuisine.id);
+      console.log(`Created cuisine: ${cuisineName}`);
+    }
+
     // Create restaurants
     console.log('Creating restaurants...');
     for (const restaurant of restaurants) {
@@ -81,6 +106,21 @@ async function main(): Promise<void> {
                 htmlAttributions: photo.htmlAttributions,
               },
             });
+          }
+        }
+
+        // Add cuisine relationships
+        if (restaurant.cuisines && restaurant.cuisines.length > 0) {
+          for (const cuisineName of restaurant.cuisines) {
+            const cuisineId = cuisineMap.get(cuisineName);
+            if (cuisineId) {
+              await prisma.restaurantCuisine.create({
+                data: {
+                  restaurantId: createdRestaurant.id,
+                  cuisineId: cuisineId,
+                },
+              });
+            }
           }
         }
 
