@@ -1,17 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:nibbles/core/logger.dart';
-
-enum RecipeDifficulty { easy, medium, hard, any }
-
-// Model class for kitchen appliances
-class Appliance {
-  final int id;
-  final String name;
-  bool isSelected;
-
-  Appliance({required this.id, required this.name, this.isSelected = false});
-}
+import 'package:nibbles/service/appliance/appliance_service.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -21,13 +11,10 @@ class RecipesPage extends StatefulWidget {
 }
 
 class _RecipesPageState extends State<RecipesPage> {
-  final dio = Dio();
   final _logger = getLogger();
   final List<String> ingredients = [];
   final List<int> appliances = [];
   final TextEditingController _ingredientInputController =
-      TextEditingController();
-  final TextEditingController _applianceInputController =
       TextEditingController();
   bool useDietaries = false;
   bool includeAllIngredients = false;
@@ -35,34 +22,31 @@ class _RecipesPageState extends State<RecipesPage> {
   List<Appliance> availableAppliances = [];
   bool isLoadingAppliances = false;
 
+  // Services
+  final ApplianceService _applianceService = ApplianceService();
+  final RecipeService _recipeService = RecipeService();
+
   @override
   void initState() {
     super.initState();
     _fetchAppliances();
   }
 
-  // Fetch available appliances from the backend
+  // Fetch available appliances from the backend using ApplianceService
   Future<void> _fetchAppliances() async {
     setState(() {
       isLoadingAppliances = true;
     });
 
     try {
-      // Fetch user's appliances from the backend
-      final response = await dio.get('/user/appliance');
-      if (response.statusCode == 200) {
-        List<dynamic> appliancesData = response.data as List<dynamic>;
-        setState(() {
-          availableAppliances =
-              appliancesData.map((item) {
-                return Appliance(
-                  id: item['id'],
-                  name: item['name'],
-                  isSelected: appliances.contains(item['id']),
-                );
-              }).toList();
-        });
-      }
+      // Use the appliance service to fetch appliances
+      final fetchedAppliances = await _applianceService.fetchAppliances(
+        selectedAppliances: appliances,
+      );
+
+      setState(() {
+        availableAppliances = fetchedAppliances;
+      });
     } catch (e) {
       _logger.e('Failed to fetch appliances: ${e.toString()}');
       // Show a snackbar with the error
@@ -86,7 +70,6 @@ class _RecipesPageState extends State<RecipesPage> {
   @override
   void dispose() {
     _ingredientInputController.dispose();
-    _applianceInputController.dispose();
     super.dispose();
   }
 
@@ -121,16 +104,14 @@ class _RecipesPageState extends State<RecipesPage> {
     });
   }
 
-  void _addAppliance(int appliance) {
-    setState(() {
-      appliances.add(appliance);
-      _applianceInputController.clear();
-    });
-  }
-
   void _removeAppliance(int appliance) {
     setState(() {
       appliances.remove(appliance);
+      // Also update the selection state in the availableAppliances list
+      final index = availableAppliances.indexWhere((a) => a.id == appliance);
+      if (index >= 0) {
+        availableAppliances[index].isSelected = false;
+      }
     });
   }
 
@@ -220,23 +201,19 @@ class _RecipesPageState extends State<RecipesPage> {
     );
   }
 
+  // Generate recipes using RecipeService
   Future<void> _generateRecipes() async {
     try {
-      final response = await dio.post(
-        'recipe',
-        data: {
-          'ingredients': ingredients,
-          'useDietaries': useDietaries,
-          'kitchenAppliances': appliances,
-          'includeAllIngredients': includeAllIngredients,
-          'difficultyLevel': selectedDifficulty.name,
-        },
+      final recipeResults = await _recipeService.generateRecipes(
+        ingredients: ingredients,
+        useDietaries: useDietaries,
+        kitchenAppliances: appliances,
+        includeAllIngredients: includeAllIngredients,
+        difficultyLevel: selectedDifficulty,
       );
 
-      if (response.statusCode == 200) {
-        // TODO: Handle the recipes response
-        _logger.d(response.data);
-      }
+      // TODO: Handle the recipes response
+      _logger.d(recipeResults);
     } catch (e) {
       // Show error dialog
       showDialog(
