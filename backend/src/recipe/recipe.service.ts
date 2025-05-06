@@ -82,7 +82,11 @@ export class RecipeService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} recipe`;
+  async findOne(id: number) {
+    return this.db.recipe.findUnique({
+      where: {
+        id,
+      },
+    });
   }
 }
