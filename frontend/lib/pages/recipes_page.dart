@@ -15,12 +15,12 @@ class _RecipesPageState extends State<RecipesPage> {
   final dio = Dio();
   final _logger = getLogger();
   final List<String> ingredients = [];
-  final List<String> appliances = [];
+  final List<int> appliances = [];
   final TextEditingController _ingredientInputController =
       TextEditingController();
   final TextEditingController _applianceInputController =
       TextEditingController();
-  bool matchDietaryRequirements = false;
+  bool useDietaries = false;
   bool includeAllIngredients = false;
   RecipeDifficulty selectedDifficulty = RecipeDifficulty.any;
 
@@ -46,16 +46,14 @@ class _RecipesPageState extends State<RecipesPage> {
     });
   }
 
-  void _addAppliance(String appliance) {
-    if (appliance.isNotEmpty) {
-      setState(() {
-        appliances.add(appliance);
-        _applianceInputController.clear();
-      });
-    }
+  void _addAppliance(int appliance) {
+    setState(() {
+      appliances.add(appliance);
+      _applianceInputController.clear();
+    });
   }
 
-  void _removeAppliance(String appliance) {
+  void _removeAppliance(int appliance) {
     setState(() {
       appliances.remove(appliance);
     });
@@ -137,16 +135,35 @@ class _RecipesPageState extends State<RecipesPage> {
     );
   }
 
+  // export class CreateRecipeDto {
+  //   @IsNotEmpty()
+  //   ingredients: string[];
+
+  //   @IsBoolean()
+  //   @IsNotEmpty()
+  //   useDietaries: boolean;
+
+  //   @ArrayNotEmpty()
+  //   kitchenAppliances: number[];
+
+  //   @IsBoolean()
+  //   @IsNotEmpty()
+  //   includeAllIngredients: boolean;
+
+  //   @IsIn(['easy', 'medium', 'hard', 'any'])
+  //   difficulty_level: 'easy' | 'medium' | 'hard' | 'any';
+  // }
+
   Future<void> _generateRecipes() async {
     try {
       final response = await dio.post(
-        'recipes',
+        'recipe',
         data: {
           'ingredients': ingredients,
-          'appliances': appliances,
-          'matchDietaryRequirements': matchDietaryRequirements,
+          'useDietaries': useDietaries,
+          'kitchenAppliances': appliances,
           'includeAllIngredients': includeAllIngredients,
-          'difficulty': selectedDifficulty.name,
+          'difficultyLevel': selectedDifficulty.name,
         },
       );
 
@@ -235,10 +252,10 @@ class _RecipesPageState extends State<RecipesPage> {
                 children: [
                   SwitchListTile(
                     title: const Text('Match Dietary Requirements'),
-                    value: matchDietaryRequirements,
+                    value: useDietaries,
                     onChanged: (bool value) {
                       setState(() {
-                        matchDietaryRequirements = value;
+                        useDietaries = value;
                       });
                     },
                   ),
