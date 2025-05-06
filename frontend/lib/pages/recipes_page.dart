@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:nibbles/core/logger.dart';
 
 enum RecipeDifficulty { easy, medium, hard, any }
 
@@ -12,6 +13,7 @@ class RecipesPage extends StatefulWidget {
 
 class _RecipesPageState extends State<RecipesPage> {
   final dio = Dio();
+  final _logger = getLogger();
   final List<String> ingredients = [];
   final List<String> appliances = [];
   final TextEditingController _ingredientInputController =
@@ -138,7 +140,7 @@ class _RecipesPageState extends State<RecipesPage> {
   Future<void> _generateRecipes() async {
     try {
       final response = await dio.post(
-        'http://localhost:3000/recipes',
+        'recipes',
         data: {
           'ingredients': ingredients,
           'appliances': appliances,
@@ -150,7 +152,7 @@ class _RecipesPageState extends State<RecipesPage> {
 
       if (response.statusCode == 200) {
         // TODO: Handle the recipes response
-        print(response.data);
+        _logger.d(response.data);
       }
     } catch (e) {
       // Show error dialog
