@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 
 class Appliance {
@@ -11,52 +10,60 @@ class Appliance {
 }
 
 class ApplianceService {
-  final Dio _dio = DioClient().client;
   final _logger = getLogger();
 
-  /// Fetches the user's available appliances from the backend
+  // Mock data for appliances
+  final List<Map<String, dynamic>> _mockAppliances = [
+    {'id': 1, 'name': 'Oven'},
+    {'id': 2, 'name': 'Microwave'},
+    {'id': 3, 'name': 'Blender'},
+    {'id': 4, 'name': 'Food Processor'},
+    {'id': 5, 'name': 'Air Fryer'},
+    {'id': 6, 'name': 'Slow Cooker'},
+    {'id': 7, 'name': 'Mixer'},
+    {'id': 8, 'name': 'Toaster'},
+    {'id': 9, 'name': 'Pressure Cooker'},
+    {'id': 10, 'name': 'Rice Cooker'},
+  ];
+
+  /// Fetches the user's available appliances (mocked data)
   Future<List<Appliance>> fetchAppliances({
     List<int>? selectedAppliances,
   }) async {
-    try {
-      final response = await _dio.get('/user/appliance');
-      if (response.statusCode == 200) {
-        List<dynamic> appliancesData = response.data as List<dynamic>;
+    _logger.d('Fetching appliances (mock data)');
 
-        return appliancesData.map((item) {
-          return Appliance(
-            id: item['id'],
-            name: item['name'],
-            isSelected: selectedAppliances?.contains(item['id']) ?? false,
-          );
-        }).toList();
-      }
-      return [];
-    } catch (e) {
-      _logger.e('Failed to fetch appliances: ${e.toString()}');
-      throw Exception('Failed to load appliances: ${e.toString()}');
-    }
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Return mock appliances
+    return _mockAppliances.map((item) {
+      return Appliance(
+        id: item['id'],
+        name: item['name'],
+        isSelected: selectedAppliances?.contains(item['id']) ?? false,
+      );
+    }).toList();
   }
 
-  /// Creates a new appliance entry for the user
+  /// Creates a new appliance entry for the user (mock implementation)
   Future<bool> createAppliance(String name) async {
-    try {
-      final response = await _dio.post('/user/appliance', data: {'name': name});
-      return response.statusCode == 201;
-    } catch (e) {
-      _logger.e('Failed to create appliance: ${e.toString()}');
-      return false;
-    }
+    _logger.d('Creating appliance: $name (mock implementation)');
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Add to mock data with a new ID
+    _mockAppliances.add({'id': _mockAppliances.length + 1, 'name': name});
+
+    return true;
   }
 
-  /// Deletes a user's appliance
+  /// Deletes a user's appliance (mock implementation)
   Future<bool> deleteAppliance(int id) async {
-    try {
-      final response = await _dio.delete('/user/appliance/$id');
-      return response.statusCode == 200;
-    } catch (e) {
-      _logger.e('Failed to delete appliance: ${e.toString()}');
-      return false;
-    }
+    _logger.d('Deleting appliance ID: $id (mock implementation)');
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Remove from mock data
+    _mockAppliances.removeWhere((appliance) => appliance['id'] == id);
+
+    return true;
   }
 }
