@@ -73,6 +73,8 @@ model UserFavouritedRestaurant {
   restaurantId Int
   user         User       @relation(fields: [userId], references: [id])
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@id([userId, restaurantId])
 }
 
 model UserCuisine {
@@ -82,13 +84,6 @@ model UserCuisine {
   cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
 
   @@id([userId, cuisineId])
-}
-
-model Restaurant {
-  id                 Int       @id @default(autoincrement())
-  place_id           String    @unique // Google Places ID
-
-  @@id([userId, restaurantId])
 }
 
 model Restaurant {
