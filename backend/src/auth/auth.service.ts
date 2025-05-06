@@ -51,6 +51,7 @@ export class AuthService {
   }
 
   async verifyEmail(email: string, code: number): Promise<AuthTokens| null> {
+    console.log(`Verifying email for ${email} with code ${code}`);
     const user = await this.userService.findOneByEmail(email);
     
     if (!user) return null;
@@ -71,7 +72,7 @@ export class AuthService {
     if (user.provider !== 'local') return null; // they should use their existing provider
     if (user.providerId) return null; // they should use their existing provider
     if (!user.verifyCode) return null;
-    const newCode = randomInt(10000000, 99999999);
+    const newCode = randomInt(100000, 999999);
     user.verifyCode = newCode;
     await this.userService.update(user.id, { verifyCode: newCode });
     try {
@@ -125,8 +126,8 @@ export class AuthService {
       lastName: user.lastName,
     };
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '45m' }),
-      refresh_token: this.jwtService.sign(payload, { expiresIn: '7d' }),
+      access_token: this.jwtService.sign(payload, { expiresIn: '1m' }),
+      refresh_token: this.jwtService.sign(payload, { expiresIn: '1d' }),
     };
   }
 

@@ -1,8 +1,6 @@
-// lib/pages/title_page.dart
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/login_page.dart';
-import 'package:nibbles/service/auth/auth_service.dart';
-import 'package:nibbles/navigation/app_navigation.dart';
+import 'package:nibbles/pages/auth/create_account_page.dart';
 
 class TitlePage extends StatelessWidget {
   const TitlePage({Key? key}) : super(key: key);
@@ -10,22 +8,6 @@ class TitlePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
-
-    // Check if the user is logged in and redirect to AppNavigation if true
-    Future<void> _checkLoginStatus() async {
-      final isLoggedIn = await authService.checkLoginStatus();
-      if (isLoggedIn) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AppNavigation()),
-        );
-      }
-    }
-
-    // Call the login status check when the page loads
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkLoginStatus());
-
     return Scaffold(
       backgroundColor: _primary,
       body: SafeArea(
@@ -78,7 +60,13 @@ class TitlePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/register'),
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateAccountPage(),
+                          ),
+                        ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
