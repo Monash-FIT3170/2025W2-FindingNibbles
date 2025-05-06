@@ -3,14 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   NotFoundException,
 } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
-import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { Prisma } from 'generated/prisma';
 
 @Controller('recipe')
@@ -24,13 +21,19 @@ export class RecipeController {
     const cuisine = await this.recipeService.validateAndGetCuisine(
       generatedRecipe.cuisine,
     );
+
     if (!cuisine) {
       throw new NotFoundException('Cuisine is not found.');
     }
+
     const recipe: Prisma.RecipeCreateInput = {
       ...generatedRecipe,
       ...createRecipeDto,
-      cuisineId: cuisine.id,
+      cuisine: {
+        connect: {
+          id: cuisine.id,
+        },
+      },
     };
 
     return this.recipeService.create(recipe);
@@ -44,15 +47,5 @@ export class RecipeController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.recipeService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRecipeDto: UpdateRecipeDto) {
-    return this.recipeService.update(+id, updateRecipeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.recipeService.remove(+id);
   }
 }

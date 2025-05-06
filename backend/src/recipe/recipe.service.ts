@@ -15,14 +15,15 @@ type RecipeGenerated = {
   difficultyLevel: number;
   cuisine: string;
 };
+
 @Injectable()
 export class RecipeService {
-  constructor(private databaseService: DatabaseService) {}
-  // Create a type for a recipe that mirrors the prisma schema
+  constructor(private db: DatabaseService) {}
 
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated> {
-    // TODO: call the llm here
-    // Return RecipeGenerated
+    // TODO: call the llm here instead of this mock
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const mockRecipe: RecipeGenerated = {
       title: 'Classic Margherita Pizza',
       description:
@@ -61,8 +62,7 @@ export class RecipeService {
   }
 
   async validateAndGetCuisine(cuisineName: string) {
-    // First try to find the cuisine
-    const existingCuisine = await this.databaseService.cuisine.findFirst({
+    const existingCuisine = await this.db.cuisine.findFirst({
       where: {
         name: cuisineName.toLowerCase(),
       },
@@ -71,25 +71,14 @@ export class RecipeService {
   }
 
   async create(recipe: Prisma.RecipeCreateInput) {
-    return this.databaseService.recipe.create({ data: recipe });
+    return this.db.recipe.create({ data: recipe });
   }
 
   findAll() {
-    return this.recipes;
+    return [];
   }
 
   findOne(id: number) {
     return `This action returns a #${id} recipe`;
-  }
-
-  // async update(id: number, updateRecipeDto: Prisma.RecipeUpdateInput) {
-  //   return this.databaseService.recipe.update({
-  //     where: { id },
-  //     data: updateRecipeDto,
-  //   });
-  // }
-
-  remove(id: number) {
-    return `This action removes a #${id} recipe`;
   }
 }
