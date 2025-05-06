@@ -17,25 +17,25 @@ datasource db {
 // Models
 
 model User {
-  id                   Int                        @id @default(autoincrement())
-  firstName            String
-  lastName             String
-  verifyCode           Int?
-  isVerified           Boolean                    @default(false)
-  email                String                     @unique
-  passwordHash         String?
-  provider             String
-  providerId           String?
-  locations            UserLocation[]
-  userDietaries        UserDietary[]
-  mealPlans            UserMealPlan[]
-  calorieLogs          UserCalorieLog[]
-  restaurantReviews    RestaurantReview[]
-  favouriteRestaurants UserFavouritedRestaurant[]
+  id                     Int                        @id @default(autoincrement())
+  firstName              String
+  lastName               String
+  verifyCode             Int?
+  isVerified             Boolean                    @default(false)
+  email                  String                     @unique
+  passwordHash           String?
+  provider               String
+  providerId             String?
+  locations              UserLocation[]
+  userDietaries          UserDietary[]
+  mealPlans              UserMealPlan[]
+  calorieLogs            UserCalorieLog[]
+  restaurantReviews      RestaurantReview[]
+  favouriteRestaurants   UserFavouritedRestaurant[]
   userCuisinePreferences UserCuisine[]
-  appliances           UserAppliance[]
-  createdAt            DateTime                   @default(now())
-  updatedAt            DateTime                   @updatedAt
+  appliances             UserAppliance[]
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
 
   @@unique([provider, providerId])
 }
@@ -80,7 +80,7 @@ model UserFavouritedRestaurant {
 model UserCuisine {
   userId    Int
   cuisineId Int
-  user      User               @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
 
   @@id([userId, cuisineId])
@@ -172,7 +172,7 @@ model Cuisine {
   description        String?
   dishes             Dish[]
   restaurantCuisines RestaurantCuisine[]
-  userCuisines UserCuisine[]
+  userCuisines       UserCuisine[]
   recipes            Recipe[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -240,12 +240,13 @@ model UserCalorieLog {
 }
 
 model Appliances {
-  id             Int             @id @default(autoincrement())
-  name           String
-  description    String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  userAppliances UserAppliance[]
+  id              Int               @id @default(autoincrement())
+  name            String
+  description     String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  userAppliances  UserAppliance[]
+  RecipeAppliance RecipeAppliance[]
 }
 
 model UserAppliance {
@@ -257,21 +258,31 @@ model UserAppliance {
 
   @@unique([userId, applianceId])
 }
-model Recipe {
-  id          Int      @id @default(autoincrement())
-  title        String
-  description String  
-  ingredients String[]
-  instructions Json
-  estimatedTimeMinutes Int
-  servings  Int
-  dietaryTags String[]
-  nutritionalInfo String[]
-  difficultyLevel Int
-  imageURL String?
-  cuisineId   Int
-  cuisine     Cuisine @relation(fields: [cuisineId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+model RecipeAppliance {
+  recipeId    Int
+  applianceId Int
+  recipe      Recipe     @relation(fields: [recipeId], references: [id])
+  appliance   Appliances @relation(fields: [applianceId], references: [id])
+
+  @@id([recipeId, applianceId])
 }
 
+model Recipe {
+  id                   Int               @id @default(autoincrement())
+  title                String
+  description          String
+  ingredients          String[]
+  instructions         String[]
+  appliances           RecipeAppliance[]
+  estimatedTimeMinutes Int
+  servings             Int
+  dietaryTags          String[]
+  nutritionalInfo      String[]
+  difficultyLevel      String
+  imageURL             String?
+  cuisineId            Int
+  cuisine              Cuisine           @relation(fields: [cuisineId], references: [id])
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+}
