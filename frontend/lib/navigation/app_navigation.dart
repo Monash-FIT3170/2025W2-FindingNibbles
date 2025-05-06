@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
 import '../pages/restaurants_page.dart';
-import '../pages/recipes_page.dart';
+import '../pages/recipes/recipes_page.dart';
 
 class AppNavigation extends StatefulWidget {
   const AppNavigation({super.key});
