@@ -265,15 +265,15 @@ model UserAppliance {
 model Recipe {
   id          Int      @id @default(autoincrement())
   title        String
+  description String  
   ingredients String[]
   instructions Json
-  missing_ingredients String[]
-  estimated_time_minutes Int
+  estimatedTimeMinutes Int
   servings  Int
-  dietary_tags String[]
-  Difficulty_level Int
-  image_url String?
-  Nutritional_info String[]
+  dietaryTags String[]
+  nutritionalInfo String[]
+  difficultyLevel Int
+  imageURL String?
   cuisineId   Int
   cuisine     Cuisine @relation(fields: [cuisineId], references: [id])
   createdAt   DateTime @default(now())
