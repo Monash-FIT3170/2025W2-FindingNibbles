@@ -115,7 +115,10 @@ class _VerificationCodePageState extends State<VerificationCodePage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('VERIFY'),
+                      child: const Text(
+                        'VERIFY',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Center(

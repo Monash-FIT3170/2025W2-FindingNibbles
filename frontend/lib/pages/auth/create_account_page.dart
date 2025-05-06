@@ -139,7 +139,13 @@ class CreateAccountPage extends StatelessWidget {
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: const Text('CREATE ACCOUNT'),
+                        child: const Text(
+                          'CREATE ACCOUNT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Center(
