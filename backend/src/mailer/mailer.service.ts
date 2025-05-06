@@ -4,7 +4,7 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailerService {
-  private transporter;
+  private transporter: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({

@@ -1,5 +1,5 @@
 import * as argon2 from 'argon2';
-import { Injectable, BadRequestException, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './strategies/jwt/jwt.strategy';
@@ -12,7 +12,6 @@ import { OAuth2Client } from 'google-auth-library';
 import { AuthTokens } from './dto/tokens.dto';
 import { User } from 'generated/prisma';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,10 +22,9 @@ export class AuthService {
     private googleClient: OAuth2Client,
   ) {}
 
-
   async register(registerDto: RegisterDto): Promise<User> {
     const passwordHash = await argon2.hash(registerDto.password);
-    const verifyCode = randomInt(100000, 999999);
+    const verifyCode = randomInt(10000000, 99999999);
 
     // If in development mode, log the verification code
     if (this.configService.get<string>('NODE_ENV') === 'development') {
@@ -34,7 +32,10 @@ export class AuthService {
     }
 
     try {
-      await this.mailerService.sendVerificationEmail(registerDto.email, verifyCode);
+      await this.mailerService.sendVerificationEmail(
+        registerDto.email,
+        verifyCode,
+      );
     } catch (err) {
       console.error('Failed to send verification email:', err);
     }
@@ -50,10 +51,9 @@ export class AuthService {
     });
   }
 
-  async verifyEmail(email: string, code: number): Promise<AuthTokens| null> {
+  async verifyEmail(email: string, code: number): Promise<AuthTokens | null> {
     console.log(`Verifying email for ${email} with code ${code}`);
     const user = await this.userService.findOneByEmail(email);
-    
     if (!user) return null;
     if (user.isVerified) return null;
     if (user.verifyCode !== Number(code)) return null;
@@ -72,7 +72,7 @@ export class AuthService {
     if (user.provider !== 'local') return null; // they should use their existing provider
     if (user.providerId) return null; // they should use their existing provider
     if (!user.verifyCode) return null;
-    const newCode = randomInt(100000, 999999);
+    const newCode = randomInt(10000000, 99999999);
     user.verifyCode = newCode;
     await this.userService.update(user.id, { verifyCode: newCode });
     try {
@@ -118,7 +118,7 @@ export class AuthService {
     });
   }
 
-  async login(user: User) {
+  login(user: User) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -131,25 +131,27 @@ export class AuthService {
     };
   }
 
-  async refreshAccessToken(token: string): Promise<{ access_token: string }> {
+  refreshAccessToken(token: string): Promise<{ access_token: string }> {
     try {
       const { sub, email, firstName, lastName } =
-      this.jwtService.verify<JwtPayload>(token, {
-        ignoreExpiration: false,
-        secret: this.configService.get<string>('REFRESH_SECRET'),
-      });
+        this.jwtService.verify<JwtPayload>(token, {
+          ignoreExpiration: false,
+          secret: this.configService.get<string>('REFRESH_SECRET'),
+        });
       const access_token = this.jwtService.sign(
         { sub, email, firstName, lastName },
         { expiresIn: '45m' },
       );
-      return { access_token };
+      return Promise.resolve({ access_token });
     } catch (error) {
       console.error('❌ [AuthService] refreshAccessToken error:', error);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
 
-  async validateGoogleToken(token: string): Promise<{ access_token: string; refresh_token: string } | null> {
+  async validateGoogleToken(
+    token: string,
+  ): Promise<{ access_token: string; refresh_token: string } | null> {
     const ticket = await this.googleClient.verifyIdToken({
       idToken: token,
       audience: [
@@ -168,9 +170,8 @@ export class AuthService {
         familyName: payload.family_name,
       },
     } as Profile;
-      
+
     const user = await this.validateOrCreateGoogleUser(profile);
     return this.login(user);
   }
-
 }
