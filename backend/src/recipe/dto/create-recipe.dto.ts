@@ -16,5 +16,5 @@ export class CreateRecipeDto {
   includeAllIngredients: boolean;
 
   @IsIn(['easy', 'medium', 'hard', 'any'])
-  difficulty_level: 'easy' | 'medium' | 'hard' | 'any';
+  difficultyLevel: 'easy' | 'medium' | 'hard' | 'any';
 }
