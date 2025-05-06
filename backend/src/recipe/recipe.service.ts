@@ -1,56 +1,77 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
+import { DatabaseService } from 'src/database/database.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
-import { UpdateRecipeDto } from './dto/update-recipe.dto';
 
+type RecipeGenerated = {
+  title: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  estimatedTimeMinutes: number;
+  servings: number;
+  dietaryTags: string[];
+  nutritionalInfo: string[];
+  difficultyLevel: number;
+  cuisine: string;
+};
 @Injectable()
 export class RecipeService {
-  private recipes = [
-    {
-      id: 1,
-      title: 'Spaghetti Bolognese',
-      description: 'A classic Italian pasta dish with a rich meat sauce.',
+  constructor(private databaseService: DatabaseService) {}
+  // Create a type for a recipe that mirrors the prisma schema
+
+  async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated> {
+    // TODO: call the llm here
+    // Return RecipeGenerated
+    const mockRecipe: RecipeGenerated = {
+      title: 'Classic Margherita Pizza',
+      description:
+        'A simple and delicious pizza topped with fresh mozzarella, basil, and tomato sauce.',
       ingredients: [
-        'spaghetti',
-        'ground beef',
+        'pizza dough',
         'tomato sauce',
-        'onion',
-        'garlic',
+        'fresh mozzarella',
+        'fresh basil leaves',
+        'olive oil',
+        'salt',
       ],
       instructions: [
-        'Cook spaghetti according to package instructions.',
-        'In a pan, sauté onion and garlic until translucent.',
-        'Add ground beef and cook until browned.',
-        'Stir in tomato sauce and simmer for 20 minutes.',
-        'Serve sauce over spaghetti.',
+        'Preheat the oven to 500°F (260°C).',
+        'Roll out the pizza dough on a floured surface.',
+        'Spread tomato sauce evenly over the dough.',
+        'Add slices of fresh mozzarella on top.',
+        'Drizzle olive oil and sprinkle salt.',
+        'Bake in the oven for 7-10 minutes until the crust is golden and cheese is bubbly.',
+        'Garnish with fresh basil leaves before serving.',
       ],
-      missing_ingredients: ['parmesan cheese'],
-      estimated_time_minutes: 30,
-      servings: 4,
-      dietary_tags: ['gluten-free'],
-      difficulty_level: 2,
-      image_url: 'https://example.com/spaghetti.jpg',
-      nutritional_info: [
-        'Calories: 500',
+      estimatedTimeMinutes: 20,
+      servings: 2,
+      dietaryTags: ['vegetarian'],
+      nutritionalInfo: [
+        'Calories: 800',
         'Protein: 25g',
-        'Carbohydrates: 60g',
-        'Fat: 15g',
+        'Carbohydrates: 90g',
+        'Fat: 30g',
       ],
-      cuisineId: 1,
-      cuisine: ['Italian'],
-    },
-  ];
-
-  create(createRecipeDto: CreateRecipeDto) {
-    // generate a new reicpe with an id
-    const newRecipe = {
-      id: this.recipes.length + 1,
-      ...createRecipeDto,
+      difficultyLevel: 1,
+      cuisine: 'italian',
     };
 
-    this.recipes.push(newRecipe);
-    // save the recipe to the database
+    return mockRecipe;
+  }
 
-    return 'This action adds a new recipe';
+  async validateAndGetCuisine(cuisineName: string) {
+    // First try to find the cuisine
+    const existingCuisine = await this.databaseService.cuisine.findFirst({
+      where: {
+        name: cuisineName.toLowerCase(),
+      },
+    });
+    return existingCuisine;
+  }
+
+  async create(recipe: Prisma.RecipeCreateInput) {
+    return this.databaseService.recipe.create({ data: recipe });
   }
 
   findAll() {
@@ -61,9 +82,12 @@ export class RecipeService {
     return `This action returns a #${id} recipe`;
   }
 
-  update(id: number, updateRecipeDto: UpdateRecipeDto) {
-    return `This action updates a #${id} recipe`;
-  }
+  // async update(id: number, updateRecipeDto: Prisma.RecipeUpdateInput) {
+  //   return this.databaseService.recipe.update({
+  //     where: { id },
+  //     data: updateRecipeDto,
+  //   });
+  // }
 
   remove(id: number) {
     return `This action removes a #${id} recipe`;
