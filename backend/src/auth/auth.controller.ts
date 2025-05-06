@@ -11,14 +11,13 @@ import {
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { LocalAuthGuard } from './strategies/local/local-auth.guard';
-import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { User } from 'generated/prisma';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyEmailDto } from './dto/verify.dto';
 import { UserService } from '../user/user.service';
 import { GoogleAuthGuard } from './strategies/google/google-auth.guard';
-import { RequestUser } from '../types';
+import { Public, RequestUser } from '../types';
 
 @Controller('auth')
 export class AuthController {
@@ -27,6 +26,7 @@ export class AuthController {
     private userService: UserService,
   ) {}
 
+  @Public()
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     // We might want to add some error handling to this endpoint for duplicate emails
@@ -37,6 +37,7 @@ export class AuthController {
     return userWithoutPassword;
   }
 
+  @Public()
   @Post('verify')
   async verify(@Body() verifyEmailDto: VerifyEmailDto) {
     console.log('📩 Incoming verification:', verifyEmailDto);
@@ -46,6 +47,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(@Request() req: ExpressRequest & { user: User }) {
@@ -54,23 +56,27 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @Public()
   @Get('login/google')
   @UseGuards(GoogleAuthGuard)
   async googleAuth() {
     // Guard redirects to Google
   }
 
+  @Public()
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   googleAuthRedirect(@Request() req: ExpressRequest & { user: User }) {
     return this.authService.login(req.user);
   }
 
+  @Public()
   @Post('google/token')
   loginWithGoogleToken(@Body('idToken') idToken: string) {
     return this.authService.validateGoogleToken(idToken);
   }
 
+  @Public()
   @Post('refresh')
   refreshToken(@Body('refresh_token') refreshToken: string) {
     if (!refreshToken) {
@@ -79,12 +85,12 @@ export class AuthController {
     return this.authService.refreshAccessToken(refreshToken);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('check')
   getProfile(@Req() req: RequestUser) {
     return req.user.id;
   }
 
+  @Public()
   @Post('new-verification')
   async sendNewVerificationEmail(@Body('email') email: string) {
     if (!email) {
