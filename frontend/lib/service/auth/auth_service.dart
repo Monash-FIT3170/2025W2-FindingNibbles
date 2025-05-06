@@ -9,7 +9,8 @@ class AuthService {
   final _storage = FlutterSecureStorage();
   final _logger = getLogger();
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: 'to_do',
+    clientId:
+        '1054514268037-m5797qhoes139be9tbph112nv1dseif6.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
 
