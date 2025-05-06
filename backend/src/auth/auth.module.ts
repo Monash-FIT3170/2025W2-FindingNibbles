@@ -10,6 +10,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { MailerModule } from '../mailer/mailer.module';
 import { OAuth2Client } from 'google-auth-library';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
 
 /**
  * This module separates access and refresh token services:
@@ -41,6 +43,10 @@ import { OAuth2Client } from 'google-auth-library';
         return new OAuth2Client(configService.get('GOOGLE_CLIENT_ID'));
       },
       inject: [ConfigService],
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
   exports: [AuthService],
