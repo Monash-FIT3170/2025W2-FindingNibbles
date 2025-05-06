@@ -32,6 +32,7 @@ model User {
   calorieLogs          UserCalorieLog[]
   restaurantReviews    RestaurantReview[]
   favouriteRestaurants UserFavouritedRestaurant[]
+  userCuisinePreferences UserCuisine[]
   appliances           UserAppliance[]
   createdAt            DateTime                   @default(now())
   updatedAt            DateTime                   @updatedAt
@@ -72,6 +73,20 @@ model UserFavouritedRestaurant {
   restaurantId Int
   user         User       @relation(fields: [userId], references: [id])
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+}
+
+model UserCuisine {
+  userId    Int
+  cuisineId Int
+  user      User               @relation(fields: [userId], references: [id])
+  cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
+
+  @@id([userId, cuisineId])
+}
+
+model Restaurant {
+  id                 Int       @id @default(autoincrement())
+  place_id           String    @unique // Google Places ID
 
   @@id([userId, restaurantId])
 }
@@ -162,6 +177,8 @@ model Cuisine {
   description        String?
   dishes             Dish[]
   restaurantCuisines RestaurantCuisine[]
+  userCuisines UserCuisine[]
+  recipes            Recipe[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 }
@@ -245,3 +262,21 @@ model UserAppliance {
 
   @@unique([userId, applianceId])
 }
+model Recipe {
+  id          Int      @id @default(autoincrement())
+  title        String
+  ingredients String[]
+  instructions Json
+  missing_ingredients String[]
+  estimated_time_minutes Int
+  servings  Int
+  dietary_tags String[]
+  Difficulty_level Int
+  image_url String?
+  Nutritional_info String[]
+  cuisineId   Int
+  cuisine     Cuisine @relation(fields: [cuisineId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
