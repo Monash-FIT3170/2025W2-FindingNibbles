@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { DietaryRestriction, Prisma } from 'generated/prisma';
+import { Prisma } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
 import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly db: DatabaseService,
-              private readonly dietaryRestrictionService: DietaryRestrictionService
-              ) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly dietaryRestrictionService: DietaryRestrictionService,
+  ) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
     return this.db.user.create({ data: createUserDto });
@@ -31,9 +32,9 @@ export class UserService {
   }
   /**
    * Create a new user favourite restaurant
-   * @param userId 
-   * @param restaurantId 
-   * @returns 
+   * @param userId d
+   * @param restaurantId d
+   * @returns d
    */
   async favouriteRestaurant(userId: number, restaurantId: number) {
     return this.db.userFavouritedRestaurant.create({
@@ -41,13 +42,13 @@ export class UserService {
         userId,
         restaurantId,
       },
-    })
+    });
   }
   /**
    * Unfavourite a restaurant
-   * @param userId 
-   * @param restaurantId 
-   * @returns 
+   * @param userId d
+   * @param restaurantId d
+   * @returns d
    */
 
   async unfavouriteRestaurant(userId: number, restaurantId: number) {
@@ -62,8 +63,8 @@ export class UserService {
   }
   /**
    * Return all the restaurants favourited by a user
-   * @param userId 
-   * @returns 
+   * @param userId d
+   * @returns d
    */
   async getFavouritedRestaurants(userId: number) {
     return this.db.userFavouritedRestaurant.findMany({
@@ -78,9 +79,9 @@ export class UserService {
 
   /**
    * Add a dietary restriction to a user
-   * @param userId 
-   * @param dietaryId 
-   * @returns 
+   * @param userId d
+   * @param dietaryId d
+   * @returns d
    */
   async addDietaryRestriction(userId: number, dietaryId: number) {
     return this.db.userDietary.create({
@@ -93,9 +94,9 @@ export class UserService {
 
   /**
    * Remove a dietary restriction from a user
-   * @param userId 
-   * @param dietaryId 
-   * @returns 
+   * @param userId d
+   * @param dietaryId d
+   * @returns d
    */
   async removeDietaryRestriction(userId: number, dietaryId: number) {
     return this.db.userDietary.delete({
@@ -121,12 +122,15 @@ export class UserService {
 
   /**
    * Get all dietary restrictions
-   * @returns 
+   * @returns d
    */
 
-  async createUserSpecificDietaryRestriction(userId: number, dietaryInformation: CreateDietaryRestrictionDto)
-  {
-    const dietaryRestriction = await this.dietaryRestrictionService.create(dietaryInformation);
+  async createUserSpecificDietaryRestriction(
+    userId: number,
+    dietaryInformation: CreateDietaryRestrictionDto,
+  ) {
+    const dietaryRestriction =
+      await this.dietaryRestrictionService.create(dietaryInformation);
     return this.db.userDietary.create({
       data: {
         userId,

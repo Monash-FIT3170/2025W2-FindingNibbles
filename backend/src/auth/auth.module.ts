@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategies/local/local.strategy';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt/jwt.strategy';
 import { GoogleStrategy } from './strategies/google/google.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -42,7 +42,6 @@ import { OAuth2Client } from 'google-auth-library';
       },
       inject: [ConfigService],
     },
-
   ],
   exports: [AuthService],
   controllers: [AuthController],

@@ -22,8 +22,9 @@ import { RequestUser } from '../types';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService,
-              private userService: UserService,
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
   ) {}
 
   @Post('register')
@@ -39,7 +40,10 @@ export class AuthController {
   @Post('verify')
   async verify(@Body() verifyEmailDto: VerifyEmailDto) {
     console.log('📩 Incoming verification:', verifyEmailDto);
-    return this.authService.verifyEmail(verifyEmailDto.email, verifyEmailDto.code);
+    return this.authService.verifyEmail(
+      verifyEmailDto.email,
+      verifyEmailDto.code,
+    );
   }
 
   @UseGuards(LocalAuthGuard)
@@ -64,7 +68,7 @@ export class AuthController {
 
   @Post('google/token')
   loginWithGoogleToken(@Body('idToken') idToken: string) {
-    return this.authService.validateGoogleToken(idToken)
+    return this.authService.validateGoogleToken(idToken);
   }
 
   @Post('refresh')
@@ -77,10 +81,9 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('check')
-  getProfile(@Req () req: RequestUser) {
+  getProfile(@Req() req: RequestUser) {
     return req.user.id;
   }
-
 
   @Post('new-verification')
   async sendNewVerificationEmail(@Body('email') email: string) {
@@ -88,5 +91,5 @@ export class AuthController {
       throw new BadRequestException('Email is required.');
     }
     return this.authService.newValidationCode(email);
-}
+  }
 }

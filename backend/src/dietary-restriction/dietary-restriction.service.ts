@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDietaryRestrictionDto } from './dto/create-dietary-restriction.dto';
-import { UpdateDietaryRestrictionDto } from './dto/update-dietary-restriction.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { Prisma } from 'generated/prisma';
 
