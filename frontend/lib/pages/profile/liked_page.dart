@@ -12,18 +12,18 @@ class LikedPage extends StatelessWidget {
     // Example data
     final favoriteRestaurants = [
       {
-        'image': 'https://.../dragon_hot_pot.jpg',
+        'image': '', // Empty image URL
         'name': 'Dragon Hot Pot',
         'subtitle': 'Hot Pot \$\$',
         'rating': 4.1,
       },
       {
-        'image': 'https://.../china_bar.jpg',
+        'image': '', // Empty image URL
         'name': 'China Bar',
         'subtitle': 'Chinese \$',
         'rating': 3.8,
       },
-      // add more...
+      // Add more restaurants as needed
     ];
 
     return Scaffold(
@@ -31,7 +31,7 @@ class LikedPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: _background,
         elevation: 0,
-        leading: BackButton(color: Colors.white),
+        leading: const BackButton(color: Colors.white),
         title: const Text('Favourites', style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
@@ -71,6 +71,12 @@ class LikedPage extends StatelessWidget {
                               isFavorite: true,
                               onTap: () {},
                               onFavoriteTap: () {},
+                              // Temporary placeholder for missing images
+                              placeholder: const Icon(
+                                Icons.restaurant,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -98,8 +104,8 @@ class LikedPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 12),
-                  // You can reuse the same RestaurantCard for recipes or create a RecipeCard widget
-                  Text('…'),
+                  // Placeholder for recipes
+                  Text('No favourite recipes yet.'),
                 ],
               ),
             ),
