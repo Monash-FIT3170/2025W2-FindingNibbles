@@ -12,7 +12,7 @@ class ProfileService {
 
   Future<List<DietaryRequirementDto>> getDietaryRestrictions() async {
     try {
-      final response = await _dio.get('user/dietary-restrictions');
+      final response = await _dio.get('user/dietary-restriction');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
@@ -26,11 +26,11 @@ class ProfileService {
     }
   }
 
-  Future<void> addDietaryRequirement(int dietaryId) async {
+  Future<void> addDietaryRestriction(int dietaryId) async {
     try {
       // Pass the dietaryId in the request body
       final response = await _dio.post(
-        '/user/add-dietary-restriction',
+        '/user/dietary-restriction',
         data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
       );
       if (response.statusCode != 201) {
@@ -41,10 +41,10 @@ class ProfileService {
     }
   }
 
-  Future<void> removeDietaryRequirement(int dietaryId) async {
+  Future<void> removeDietaryRestriction(int dietaryId) async {
     try {
-      final response = await _dio.post(
-        '/user/remove-dietary-restriction',
+      final response = await _dio.delete(
+        '/user/dietary-restriction',
         data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
       );
       if (response.statusCode != 200) {
@@ -55,9 +55,9 @@ class ProfileService {
     }
   }
 
-  Future<List<DietaryRequirementDto>> getDefaultDietaryRequirements() async {
+  Future<List<DietaryRequirementDto>> getDefaultDietaryRestrictions() async {
     try {
-      final response = await _dio.get('dietary-requirements');
+      final response = await _dio.get('dietary-requirement');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
@@ -71,13 +71,32 @@ class ProfileService {
     }
   }
 
+  Future<DietaryRequirementDto> createDietaryRestriction(
+    String name,
+    String description,
+  ) async {
+    try {
+      final response = await _dio.post(
+        'create-dietary-restriction',
+        data: {'name': name, 'description': description},
+      );
+      if (response.statusCode == 201) {
+        return DietaryRequirementDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create dietary restriction');
+      }
+    } catch (e) {
+      throw Exception('Failed to create dietary restriction: $e');
+    }
+  }
+
   /**
    * Resteraunts 
    */
 
   Future<List<RestaurantDto>> getRestaurants() async {
     try {
-      final response = await _dio.get('user/favourited-restaurants');
+      final response = await _dio.get('user/favourite-restaurant');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data.map((item) => RestaurantDto.fromJson(item)).toList();
