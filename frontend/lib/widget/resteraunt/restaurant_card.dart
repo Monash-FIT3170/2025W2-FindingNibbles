@@ -7,8 +7,9 @@ class RestaurantCard extends StatelessWidget {
   final String subtitle;
   final double rating;
   final bool isFavorite;
-  final VoidCallback? onFavoriteTap;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
+  final VoidCallback onFavoriteTap;
+  final Widget? placeholder; // Add a placeholder property
 
   const RestaurantCard({
     Key? key,
@@ -16,96 +17,74 @@ class RestaurantCard extends StatelessWidget {
     required this.name,
     required this.subtitle,
     required this.rating,
-    this.isFavorite = false,
-    this.onFavoriteTap,
-    this.onTap,
+    required this.isFavorite,
+    required this.onTap,
+    required this.onFavoriteTap,
+    this.placeholder, // Optional placeholder
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Row(
           children: [
-            // Background image
-            SizedBox(
-              width: double.infinity,
-              height: 120,
-              child: Image.network(imageUrl, fit: BoxFit.cover),
-            ),
-            // Dark gradient overlay at bottom
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 60,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Colors.black54, Colors.transparent],
+            // Display image or placeholder
+            imageUrl.isNotEmpty
+                ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return placeholder ??
+                          const Icon(Icons.error, size: 50, color: Colors.red);
+                    },
                   ),
-                ),
-              ),
-            ),
-            // Name & subtitle
-            Positioned(
-              bottom: 8,
-              left: 12,
+                )
+                : (placeholder ??
+                    const Icon(Icons.restaurant, size: 50, color: Colors.grey)),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     name,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, size: 16, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(
+                        rating.toString(),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            // Rating badge
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white70,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star, size: 14, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating.toStringAsFixed(1),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+            IconButton(
+              icon: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: isFavorite ? Colors.red : Colors.grey,
               ),
-            ),
-            // Favorite icon
-            Positioned(
-              top: 8,
-              left: 8,
-              child: GestureDetector(
-                onTap: onFavoriteTap,
-                child: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.pinkAccent,
-                ),
-              ),
+              onPressed: onFavoriteTap,
             ),
           ],
         ),
