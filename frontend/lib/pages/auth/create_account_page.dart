@@ -38,15 +38,19 @@ class CreateAccountPage extends StatelessWidget {
         password,
       );
 
-      if (success) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
-        ); // Navigate to verification page
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Registration failed')));
+      if (context.mounted) {
+        if (success) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VerificationCodePage(email: email),
+            ),
+          ); // Navigate to verification page
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Registration failed')));
+        }
       }
     }
 

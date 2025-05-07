@@ -214,7 +214,8 @@ class _RecipesPageState extends State<RecipesPage> {
 
       _logger.d(recipeResults);
     } catch (e) {
-      // Show error dialog
+      if (!mounted) return;
+
       showDialog(
         context: context,
         builder: (BuildContext context) {

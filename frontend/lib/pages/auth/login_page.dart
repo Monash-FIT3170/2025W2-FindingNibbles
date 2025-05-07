@@ -29,21 +29,25 @@ class LoginPage extends StatelessWidget {
       }
 
       final success = await authService.loginWithEmail(email, password);
-      if (success) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AppNavigation()),
-        ); // Navigate to home
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid email or password')),
-        );
+      if (context.mounted) {
+        if (success) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AppNavigation()),
+          ); // Navigate to home
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid email or password')),
+          );
+        }
       }
     }
 
     void handleGoogleLogin(BuildContext context) async {
       try {
         final success = await authService.loginWithGoogle();
+        if (!context.mounted) return;
+
         if (success) {
           Navigator.pushReplacement(
             context,
@@ -56,6 +60,8 @@ class LoginPage extends StatelessWidget {
         }
       } catch (e) {
         _logger.d('Error during Google login: $e');
+        if (!context.mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('An error occurred during Google login'),

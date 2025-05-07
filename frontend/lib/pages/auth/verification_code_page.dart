@@ -26,6 +26,8 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     }
 
     final success = await _authService.verifyEmail(widget.email, code);
+    if (!mounted) return; // Check if widget is still mounted
+
     if (success) {
       Navigator.pushReplacement(
         context,
@@ -40,6 +42,8 @@ class VerificationCodePageState extends State<VerificationCodePage> {
 
   void _resendCode() async {
     final success = await _authService.newVerification(widget.email);
+    if (!mounted) return; // Check if widget is still mounted
+
     if (success) {
       ScaffoldMessenger.of(
         context,
