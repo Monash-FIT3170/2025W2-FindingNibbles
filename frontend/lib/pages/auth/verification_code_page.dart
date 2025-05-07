@@ -5,13 +5,13 @@ import 'package:nibbles/service/auth/auth_service.dart';
 
 class VerificationCodePage extends StatefulWidget {
   final String email; // Pass the email to this page
-  const VerificationCodePage({Key? key, required this.email}) : super(key: key);
+  const VerificationCodePage({super.key, required this.email});
 
   @override
-  _VerificationCodePageState createState() => _VerificationCodePageState();
+  VerificationCodePageState createState() => VerificationCodePageState();
 }
 
-class _VerificationCodePageState extends State<VerificationCodePage> {
+class VerificationCodePageState extends State<VerificationCodePage> {
   final _codeController = TextEditingController();
   static const _primary = Color(0xFFAD2C50);
   final AuthService _authService = AuthService();
