@@ -20,4 +20,6 @@ class RecipeIngredientsPage extends StatelessWidget {
     );
   }
 }
-// This page is a placeholder for the recipe ingredients page. It will be replaced with the actual implementation later.
+
+// This widget is used to display the recipe ingredients page.  
+// It is a stateless widget that builds a card with a centered text.  
