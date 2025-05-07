@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/profile/personal_info_page.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
 import 'package:nibbles/widget/profile/cooking_appliances_widget.dart';
 import 'package:nibbles/widget/profile/dietary_requirements_widget.dart';
@@ -32,7 +33,14 @@ class ProfilePage extends StatelessWidget {
               ),
               // Personal menu widget
               PersonalMenuWidget(
-                onPersonalInfo: () {},
+                onPersonalInfo: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PersonalInfoPage(),
+                    ),
+                  );
+                },
                 onFavourites: () {
                   Navigator.push(
                     context,
