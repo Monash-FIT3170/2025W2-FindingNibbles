@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Get, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Req, Get, Delete, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/strategies/jwt/jwt-auth.guard';
@@ -8,6 +8,21 @@ import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-
 @Controller('user')
 export class UserController {
   constructor(readonly userService: UserService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  async getProfile(@Req() req: RequestUser) {
+    const user = await this.userService.findOneById(req.user.id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('favourite-restaurant')
