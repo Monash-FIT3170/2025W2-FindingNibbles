@@ -51,3 +51,9 @@ android/app/build
 ios/Flutter/
 ios/Pods/
 ios/.symlinks
+
+
+# Ignore all generated plugin registrants across platforms
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.*
