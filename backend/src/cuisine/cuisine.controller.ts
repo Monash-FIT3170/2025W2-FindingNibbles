@@ -6,13 +6,16 @@ export class CuisineController {
   constructor(private readonly cuisineService: CuisineService) {}
 
   @Get()
-  findAll() {
-    return this.cuisineService.findAll();
-  }
+  findAll(@Query('popular') popular?: string, @Query('limit') limit?: string) {
+    // Check if popular query parameter is set to true
+    if (popular === 'true') {
+      return this.cuisineService.findPopularCuisines(
+        limit ? Number(limit) : 10,
+      );
+    }
 
-  @Get('popular')
-  findPopular(@Query('limit') limit?: string) {
-    return this.cuisineService.findPopularCuisines(limit ? Number(limit) : 10);
+    // Otherwise, return all cuisines sorted alphabetically
+    return this.cuisineService.findAll();
   }
 
   @Get(':id')
