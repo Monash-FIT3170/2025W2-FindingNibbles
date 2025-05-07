@@ -12,7 +12,7 @@ class RestaurantCard extends StatelessWidget {
   final Widget? placeholder; // Add a placeholder property
 
   const RestaurantCard({
-    Key? key,
+    super.key,
     required this.imageUrl,
     required this.name,
     required this.subtitle,
@@ -21,7 +21,7 @@ class RestaurantCard extends StatelessWidget {
     required this.onTap,
     required this.onFavoriteTap,
     this.placeholder, // Optional placeholder
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
