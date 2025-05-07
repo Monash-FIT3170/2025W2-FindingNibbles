@@ -6,6 +6,8 @@ import 'package:nibbles/widget/profile/logout_widget.dart';
 import 'package:nibbles/widget/profile/personal_menu_widget.dart';
 
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -6,11 +6,11 @@ class DietaryRequirementsWidget extends StatelessWidget {
   final void Function(String) onTagRemoved;
 
   const DietaryRequirementsWidget({
-    Key? key,
+    super.key,
     required this.tags,
     required this.onOpenSelector,
     required this.onTagRemoved,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

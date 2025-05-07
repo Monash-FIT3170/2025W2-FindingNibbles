@@ -212,7 +212,6 @@ class _RecipesPageState extends State<RecipesPage> {
         difficultyLevel: selectedDifficulty,
       );
 
-      // TODO: Handle the recipes response
       _logger.d(recipeResults);
     } catch (e) {
       // Show error dialog

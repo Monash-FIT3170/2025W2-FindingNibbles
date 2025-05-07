@@ -6,9 +6,7 @@ import 'package:nibbles/service/profile/resteraunt_dto.dart';
 class ProfileService {
   final Dio _dio = DioClient().client;
 
-  /**
-   * Dietary Requirements
-   */
+  /// Dietary Requirements
 
   Future<List<DietaryRequirementDto>> getDietaryRestrictions() async {
     try {
@@ -90,9 +88,7 @@ class ProfileService {
     }
   }
 
-  /**
-   * Resteraunts 
-   */
+  /// Resteraunts
 
   Future<List<RestaurantDto>> getRestaurants() async {
     try {

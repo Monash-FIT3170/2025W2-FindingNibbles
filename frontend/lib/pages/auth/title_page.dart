@@ -3,7 +3,7 @@ import 'package:nibbles/pages/auth/login_page.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
 
 class TitlePage extends StatelessWidget {
-  const TitlePage({Key? key}) : super(key: key);
+  const TitlePage({super.key});
   static const _primary = Color(0xFFAD2C50);
 
   @override
@@ -42,9 +42,7 @@ class TitlePage extends StatelessWidget {
                     onPressed:
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
+                          MaterialPageRoute(builder: (context) => LoginPage()),
                         ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white),

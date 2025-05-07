@@ -6,11 +6,11 @@ class CookingAppliancesWidget extends StatelessWidget {
   final void Function(String) onApplianceRemoved;
 
   const CookingAppliancesWidget({
-    Key? key,
+    super.key,
     required this.appliances,
     required this.onOpenSelector,
     required this.onApplianceRemoved,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

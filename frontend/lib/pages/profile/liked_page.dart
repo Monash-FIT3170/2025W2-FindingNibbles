@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/widget/resteraunt/restaurant_card.dart';
 
 class LikedPage extends StatelessWidget {
-  const LikedPage({Key? key}) : super(key: key);
+  const LikedPage({super.key});
   static const Color _background = Color(0xFFAD2C50);
   static const Color _sheetColor = Color(0xFFF2F2F2);
 
