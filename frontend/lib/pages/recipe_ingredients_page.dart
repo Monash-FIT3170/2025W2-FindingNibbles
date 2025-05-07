@@ -296,3 +296,35 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     );
   }
 }
+
+// Tab bar for Ingredients and Cooking Instructions
+class RecipeTabBarPage extends StatelessWidget {
+  const RecipeTabBarPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Recipe Details'),
+          bottom: const TabBar(
+            indicatorColor: Colors.pink,
+            labelColor: Colors.pink,
+            unselectedLabelColor: Colors.grey,
+            tabs: [
+              Tab(text: 'Ingredients'),
+              Tab(text: 'Cooking Instructions'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            Center(child: Text('Ingredients content here')),
+            Center(child: Text('Cooking Instructions content here')),
+          ],
+        ),
+      ),
+    );
+  }
+}
