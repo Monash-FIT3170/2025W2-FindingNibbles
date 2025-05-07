@@ -88,7 +88,7 @@ class ProfileService {
     }
   }
 
-  /// Resteraunts
+  /// Restaurants
 
   Future<List<RestaurantDto>> getRestaurants() async {
     try {
