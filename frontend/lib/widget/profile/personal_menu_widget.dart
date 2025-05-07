@@ -6,11 +6,11 @@ class PersonalMenuWidget extends StatelessWidget {
   final VoidCallback onMyReviews;
 
   const PersonalMenuWidget({
-    Key? key,
+    super.key,
     required this.onPersonalInfo,
     required this.onFavourites,
     required this.onMyReviews,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
