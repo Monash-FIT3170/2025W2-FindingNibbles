@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/pages/recipe_ingredients_page.dart';
-import 'package:nibbles/pages/profile_page.dart';
+import 'package:nibbles/pages/ingredients_screen.dart';
 import '../pages/home_page.dart';
 import '../pages/restaurants/restaurants_page.dart';
 import '../pages/recipes/recipes_page.dart';
@@ -58,8 +57,7 @@ class _AppNavigationState extends State<AppNavigation> {
             const HomePage(),
             const RestaurantsPage(),
             const RecipesPage(),
-            const RecipeIngredientsPage(), //get rid of this once app has been tested
-            ProfilePage(),
+            const IngredientsPage() // TODO: get rid of this once app has been tested
           ][currentPageIndex],
     );
   }
