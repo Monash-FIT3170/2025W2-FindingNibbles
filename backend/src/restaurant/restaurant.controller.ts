@@ -5,9 +5,11 @@ import {
   ParseIntPipe,
   Query,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { Prisma } from '../../generated/prisma';
+import { Restaurant } from 'generated/prisma';
 
 @Controller('restaurant')
 export class RestaurantController {
@@ -56,5 +58,40 @@ export class RestaurantController {
 
     await this.restaurantService.incrementViewCount(id);
     return restaurant;
+  }
+
+  @Get()
+  findAllWithinBounds(
+    @Query('swLat') swLat: string,
+    @Query('swLng') swLng: string,
+    @Query('neLat') neLat: string,
+    @Query('neLng') neLng: string,
+  ): Promise<Restaurant[]> {
+    if (swLat && swLng && neLat && neLng) {
+      const swLatNum = parseFloat(swLat);
+      const swLngNum = parseFloat(swLng);
+      const neLatNum = parseFloat(neLat);
+      const neLngNum = parseFloat(neLng);
+
+      // Breaking the validation checks across multiple lines for better formatting
+      if (
+        isNaN(swLatNum) ||
+        isNaN(swLngNum) ||
+        isNaN(neLatNum) ||
+        isNaN(neLngNum)
+      ) {
+        throw new BadRequestException('Invalid latitude or longitude values.');
+      }
+
+      return this.restaurantService.findInBounds(
+        swLatNum,
+        swLngNum,
+        neLatNum,
+        neLngNum,
+      );
+    }
+
+    // If no bounds are provided, return all restaurants
+    return this.restaurantService.findAll();
   }
 }
