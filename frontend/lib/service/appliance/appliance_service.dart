@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:nibbles/core/logger.dart';
 
 class Appliance {
