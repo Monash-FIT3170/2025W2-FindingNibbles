@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { Prisma, User } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 
@@ -20,8 +20,33 @@ type RecipeGenerated = {
 export class RecipeService {
   constructor(private db: DatabaseService) {}
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async generate(_recipe: CreateRecipeDto): Promise<RecipeGenerated> {
+  async generate(
+    _recipe: CreateRecipeDto,
+    user: User,
+  ): Promise<RecipeGenerated> {
+    // if the recipe.useDietaries is true, then we need to get the dietary tags from the user that is requesting the recipe
+    // if the recipe.includeAllIngredients is true, then we need to pass through all of the ingredients that are entered in the page
+    // Otherwise, we need to pass through an empty array of ingredients or even say to the llm that we don't have any specific ingredients
+    // if recipe.useDietaries is true, get dietary preferences from user
+
+    // the userDietaryTags will be set to the users dietary tags if selected, empty otherwise
+    let userDietaryTags: string[] = [];
+    if (recipe.useDietaries) {
+      const userProfile = await this.db.user.findUnique({
+        where: { id: user.id },
+        include: { userDietaries: true },
+      });
+      userDietaryTags = userProfile.dietaryPreferences.map((pref) => pref.name);
+    }
+    // if recipe.includeAllIngredients is true, get all ingredients from the recipe
+    // otherwise, pass an empty array
+    let userIngredients: string[] = [];
+    if (recipe.includeAllIngredients) {
+      userIngredients = recipe.ingredients;
+    }
+
     // TODO: call the llm here instead of this mock
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const mockRecipe: RecipeGenerated = {

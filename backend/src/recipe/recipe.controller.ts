@@ -5,18 +5,28 @@ import {
   Body,
   Param,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
-// import { Prisma } from 'generated/prisma';
+import { Prisma, User } from 'generated/prisma';
+import { CurrentUser } from 'src/auth/strategies/jwt/decorators/user_decorator';
 
 @Controller('recipe')
 export class RecipeController {
   constructor(private readonly recipeService: RecipeService) {}
 
   @Post()
-  async create(@Body() createRecipeDto: CreateRecipeDto) {
-    const generatedRecipe = await this.recipeService.generate(createRecipeDto);
+  @UseGuards(AuthGuard('jwt'))
+  async create(
+    @Body() createRecipeDto: CreateRecipeDto,
+    @CurrentUser() user: User,
+  ) {
+    const generatedRecipe = await this.recipeService.generate(
+      createRecipeDto,
+      user,
+    );
 
     const cuisine = await this.recipeService.validateAndGetCuisine(
       generatedRecipe.cuisine,
