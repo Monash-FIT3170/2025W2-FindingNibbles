@@ -16,11 +16,40 @@ export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
   @Get()
-  findAll(
+  async findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
     @Query('orderBy') orderBy?: string,
-  ) {
+    @Query('swLat') swLat?: string,
+    @Query('swLng') swLng?: string,
+    @Query('neLat') neLat?: string,
+    @Query('neLng') neLng?: string,
+  ): Promise<Restaurant[]> {
+    // Check if bounds parameters are provided
+    if (swLat && swLng && neLat && neLng) {
+      const swLatNum = parseFloat(swLat);
+      const swLngNum = parseFloat(swLng);
+      const neLatNum = parseFloat(neLat);
+      const neLngNum = parseFloat(neLng);
+
+      // Validate the coordinates
+      if (
+        isNaN(swLatNum) ||
+        isNaN(swLngNum) ||
+        isNaN(neLatNum) ||
+        isNaN(neLngNum)
+      ) {
+        throw new BadRequestException('Invalid latitude or longitude values.');
+      }
+      return this.restaurantService.findInBounds(
+        swLatNum,
+        swLngNum,
+        neLatNum,
+        neLngNum,
+      );
+    }
+
+    // If no bounds are provided, return paginated and sorted restaurants
     let orderByObject: Prisma.RestaurantOrderByWithRelationInput | undefined =
       undefined;
     if (orderBy === 'rating') {
@@ -58,40 +87,5 @@ export class RestaurantController {
 
     await this.restaurantService.incrementViewCount(id);
     return restaurant;
-  }
-
-  @Get()
-  findAllWithinBounds(
-    @Query('swLat') swLat: string,
-    @Query('swLng') swLng: string,
-    @Query('neLat') neLat: string,
-    @Query('neLng') neLng: string,
-  ): Promise<Restaurant[]> {
-    if (swLat && swLng && neLat && neLng) {
-      const swLatNum = parseFloat(swLat);
-      const swLngNum = parseFloat(swLng);
-      const neLatNum = parseFloat(neLat);
-      const neLngNum = parseFloat(neLng);
-
-      // Breaking the validation checks across multiple lines for better formatting
-      if (
-        isNaN(swLatNum) ||
-        isNaN(swLngNum) ||
-        isNaN(neLatNum) ||
-        isNaN(neLngNum)
-      ) {
-        throw new BadRequestException('Invalid latitude or longitude values.');
-      }
-
-      return this.restaurantService.findInBounds(
-        swLatNum,
-        swLngNum,
-        neLatNum,
-        neLngNum,
-      );
-    }
-
-    // If no bounds are provided, return all restaurants
-    return this.restaurantService.findAll();
   }
 }
