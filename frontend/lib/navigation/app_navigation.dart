@@ -53,7 +53,7 @@ class _AppNavigationState extends State<AppNavigation> {
             const HomePage(),
             const RestaurantsPage(),
             const RecipesPage(),
-            const IngredientsPage() // TODO: get rid of this once app has been tested
+            const RecipeIngredientsPage() //get rid of this once app has been tested
             ProfilePage(),
           ][currentPageIndex],
     );
