@@ -20,7 +20,7 @@ export class AuthService {
     private jwtService: JwtService,
     private mailerService: MailerService,
     private googleClient: OAuth2Client,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto): Promise<User> {
     const passwordHash = await argon2.hash(registerDto.password);
