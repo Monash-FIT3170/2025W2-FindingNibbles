@@ -4,7 +4,7 @@ import 'package:nibbles/pages/auth/verification_code_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
 
 class CreateAccountPage extends StatelessWidget {
-  const CreateAccountPage({Key? key}) : super(key: key);
+  const CreateAccountPage({super.key});
   static const _primary = Color(0xFFAD2C50);
 
   @override
@@ -15,7 +15,7 @@ class CreateAccountPage extends StatelessWidget {
     final passwordController = TextEditingController();
     final authService = AuthService();
 
-    void _register() async {
+    void register() async {
       final firstName = firstNameController.text.trim();
       final lastName = lastNameController.text.trim();
       final email = emailController.text.trim();
@@ -131,7 +131,7 @@ class CreateAccountPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: _register,
+                        onPressed: register,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primary,
                           shape: RoundedRectangleBorder(

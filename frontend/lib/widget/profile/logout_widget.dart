@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class LogoutWidget extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutWidget({Key? key, required this.onLogout}) : super(key: key);
+  const LogoutWidget({super.key, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {

@@ -140,7 +140,7 @@ class AuthService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Login status check failed: $e');
+      _logger.d('Login status check failed: $e');
       return false;
     }
   }

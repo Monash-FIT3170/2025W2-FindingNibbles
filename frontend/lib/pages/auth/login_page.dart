@@ -1,12 +1,14 @@
 // lib/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  LoginPage({super.key});
+  final _logger = getLogger();
   static const _primary = Color(0xFFAD2C50);
 
   @override
@@ -15,7 +17,7 @@ class LoginPage extends StatelessWidget {
     final passwordController = TextEditingController();
     final authService = AuthService();
 
-    void _login() async {
+    void login() async {
       final email = emailController.text.trim();
       final password = passwordController.text.trim();
 
@@ -39,7 +41,7 @@ class LoginPage extends StatelessWidget {
       }
     }
 
-    void _handleGoogleLogin(BuildContext context) async {
+    void handleGoogleLogin(BuildContext context) async {
       try {
         final success = await authService.loginWithGoogle();
         if (success) {
@@ -53,7 +55,7 @@ class LoginPage extends StatelessWidget {
           ).showSnackBar(const SnackBar(content: Text('Google login failed')));
         }
       } catch (e) {
-        print('Error during Google login: $e');
+        _logger.d('Error during Google login: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('An error occurred during Google login'),
@@ -62,7 +64,7 @@ class LoginPage extends StatelessWidget {
       }
     }
 
-    Widget _buildLoginButton({
+    Widget buildLoginButton({
       required IconData icon,
       required String text,
       required VoidCallback onTap,
@@ -175,7 +177,7 @@ class LoginPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: _login,
+                        onPressed: login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primary,
                           shape: RoundedRectangleBorder(
@@ -214,10 +216,10 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      _buildLoginButton(
+                      buildLoginButton(
                         icon: FontAwesomeIcons.google,
                         text: 'Continue with Google',
-                        onTap: () => _handleGoogleLogin(context),
+                        onTap: () => handleGoogleLogin(context),
                       ),
                     ],
                   ),
