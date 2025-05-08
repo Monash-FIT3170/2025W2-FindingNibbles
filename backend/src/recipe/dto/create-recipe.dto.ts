@@ -10,16 +10,15 @@ export const RecipeDifficultyLevels = ['easy', 'medium', 'hard', 'any'];
 export type RecipeDifficultyLevel = (typeof RecipeDifficultyLevels)[number];
 
 export class CreateRecipeDto {
-  @IsNotEmpty()
+
+  @IsArray()
   ingredients: string[];
 
-  // We don't need values in the array,
-  // but we do want the parameter present.
   @IsArray()
-  dietaries: number[];
+  dietaryRequirements: string[];
 
-  @ArrayNotEmpty()
-  appliances: number[];
+  @IsArray()
+  kitchenAppliances: number[];
 
   @IsBoolean()
   @IsNotEmpty()
