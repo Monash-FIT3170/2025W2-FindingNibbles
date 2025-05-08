@@ -174,7 +174,7 @@ class AuthService {
         'Profile fetch failed: ${e.response?.data['message'] ?? e.message}',
       );
     } catch (e) {
-      print('Error: $e'); // Add this line
+      print('Error: $e');
       throw Exception('Failed to get profile: $e');
     }
   }
