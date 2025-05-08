@@ -303,27 +303,21 @@ class RecipeTabBarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Recipe Details'),
-          bottom: const TabBar(
-            indicatorColor: Colors.pink,
-            labelColor: Colors.pink,
-            unselectedLabelColor: Colors.grey,
-            tabs: [
-              Tab(text: 'Ingredients'),
-              Tab(text: 'Cooking Instructions'),
-            ],
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            Center(child: Text('Ingredients content here')),
-            Center(child: Text('Cooking Instructions content here')),
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(title: Text(recipe.title)),
+      body: ListView.builder(
+        itemCount: recipe.ingredients.length,
+        itemBuilder: (context, index) {
+          return CheckboxListTile(
+            title: Text(recipe.ingredients[index]),
+            value: checkedIngredients[index],
+            onChanged: (bool? value) {
+              setState(() {
+                checkedIngredients[index] = value ?? false;
+              });
+            },
+          );
+        },
       ),
     );
   }
