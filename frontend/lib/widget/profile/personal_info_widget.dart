@@ -24,12 +24,9 @@ class PersonalInfo extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              //_buildInfoTile('Username', 'mockupUsername'),
               _buildInfoTile('First Name', user['firstName'] ?? ''),
               _buildInfoTile('Last Name', user['lastName'] ?? ''),
               _buildInfoTile('Email', user['email'] ?? ''),
-              //_buildInfoTile('Phone Number', '0411 111 111'),
-              //_buildInfoTile('Birth Date', 'DD/MM/YYYY', hasDropdown: true),
               const SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: () {},
