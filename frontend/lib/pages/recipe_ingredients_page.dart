@@ -304,20 +304,153 @@ class RecipeTabBarPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(recipe.title)),
-      body: ListView.builder(
-        itemCount: recipe.ingredients.length,
-        itemBuilder: (context, index) {
-          return CheckboxListTile(
-            title: Text(recipe.ingredients[index]),
-            value: checkedIngredients[index],
-            onChanged: (bool? value) {
-              setState(() {
-                checkedIngredients[index] = value ?? false;
-              });
-            },
-          );
-        },
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: const BackButton(color: Colors.black),
+        centerTitle: false,
+        title: const Text(
+          'Recipe List',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.more_horiz, color: Colors.black),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Recipe image
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                // Image with gray placeholder
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.grey),
+                    ),
+                  ),
+                ),
+
+                // Gradient overlay
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 60,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Title text
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  child: Text(
+                    recipe.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+
+                // Time indicator
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${recipe.cookingTime} min',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Favorite button
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      iconSize: 18,
+                      icon: Icon(
+                        recipe.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.pink,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          recipe.isFavorite = !recipe.isFavorite;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Ingredients list
+          Expanded(
+            child: ListView.builder(
+              itemCount: recipe.ingredients.length,
+              itemBuilder: (context, index) {
+                return CheckboxListTile(
+                  title: Text(recipe.ingredients[index]),
+                  value: checkedIngredients[index],
+                  onChanged: (bool? value) {
+                    setState(() {
+                      checkedIngredients[index] = value!;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
