@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recipe_instructions_page.dart'; // Keep this import
 
 class Recipe {
   final String title;
@@ -54,6 +55,15 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     checkedIngredients = List.generate(recipe.ingredients.length, (_) => false);
     // Set first ingredient as checked for demonstration
     checkedIngredients[0] = true;
+  }
+
+  void navigateToInstructionsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecipeInstructionsPage(recipe: recipe),
+      ),
+    );
   }
 
   @override
@@ -112,8 +122,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.7),
-                          Colors.transparent.withValues(alpha: 0.0),
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
                         ],
                       ),
                     ),
@@ -162,7 +172,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: Colors.white.withOpacity(0.3),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1),
                     ),
@@ -197,34 +207,42 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        child: Text(
-                          'Ingredients',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                  child: InkWell(
+                    onTap: () {
+                      // Already on this tab
+                    },
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            'Ingredients',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
-                      ),
-                      Container(height: 2, color: Colors.red),
-                    ],
+                        Container(height: 2, color: Colors.red),
+                      ],
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: Column(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 14),
-                        child: Text(
-                          'Cooking Instructions',
-                          style: TextStyle(color: Colors.grey),
+                  child: InkWell(
+                    onTap: navigateToInstructionsPage,
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            'Cooking Instructions',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ),
-                      ),
-                      Container(height: 2, color: Colors.transparent),
-                    ],
+                        Container(height: 2, color: Colors.transparent),
+                      ],
+                    ),
                   ),
                 ),
               ],
