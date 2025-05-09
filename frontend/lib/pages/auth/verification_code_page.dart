@@ -93,14 +93,14 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'We sent a 6-digit code to your email. Please enter it below:',
+                      'We sent an 8-digit code to your email. Please enter it below:',
                       style: TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 24),
                     TextField(
                       controller: _codeController,
                       keyboardType: TextInputType.number,
-                      maxLength: 6,
+                      maxLength: 8,
                       decoration: InputDecoration(
                         labelText: 'Verification Code',
                         border: OutlineInputBorder(
