@@ -25,7 +25,7 @@ class _RecipeInstructionsPageState extends State<RecipeInstructionsPage> {
 
   void goToStep(int step) {
     setState(() {
-      currentStep = step;
+      currentStep = step;  // Update the current step and each step will be displayed seperately through the toggle at bottom of screen. 
     });
   }
 
@@ -52,18 +52,57 @@ class _RecipeInstructionsPageState extends State<RecipeInstructionsPage> {
             onPressed: () {},
           ),
         ],
-
-
-        
       ),
-      ),
-      body: Column(
+
+     body: Column( // main body of the page that contains the recipe image and title, and the steps to be followed.
         children: [
-          // Your image + gradient + title + time indicator + fav icon
-          // Tab selector
-          // Instructions list
-        ],
-      ),
-    );
-  }
-}
+          // Recipe image and title section
+          Padding(
+            padding: const EdgeInsets.all(16.0), // Add padding around the image
+            child: Stack(
+              children: [
+                // Placeholder for the recipe image
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4), // Rounded corners
+                  child: Container(
+                    height: 150, // Height of the image container
+                    width: double.infinity, // Full width
+                    color: Colors.grey[300], // Placeholder background color
+                    child: const Center(
+                      child: Icon(Icons.image, size: 50, color: Colors.grey), // Placeholder icon
+                    ),
+                  ),
+                ),
+                // Recipe title overlay
+                Positioned(
+                  bottom: 8, // Position from the bottom
+                  left: 8, // Position from the left
+                  child: Text(
+                    widget.recipe.title, // Display the recipe title
+                    style: const TextStyle(
+                      color: Colors.white, // Text color
+                      fontWeight: FontWeight.bold, // Font weight
+                      fontSize: 18, // Font size
+                    ),
+                  ),
+                ),
+                // Cooking time overlay
+                Positioned(
+                  bottom: 8, // Position from the bottom
+                  right: 8, // Position from the right
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time, // Clock icon
+                        color: Colors.white, // Icon color
+                        size: 16, // Icon size
+                      ),
+                      const SizedBox(width: 4), // Spacing between icon and text
+                      Text(
+                        '${widget.recipe.cookingTime} min', // Display cooking time
+                        style: const TextStyle(color: Colors.white), // Text style
+                      ),
+                    ],
+                  ),
+                ),
+
