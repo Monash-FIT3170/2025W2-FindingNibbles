@@ -153,8 +153,8 @@ class CreateAccountPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Center(
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
                           child: const Text.rich(
                             TextSpan(
                               text: 'Already have an account? ',
