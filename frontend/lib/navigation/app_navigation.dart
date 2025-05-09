@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/recipe_ingredients_page.dart';
+import 'package:nibbles/pages/recipe_instructions_page.dart'
 import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
 import '../pages/restaurants/restaurants_page.dart';
