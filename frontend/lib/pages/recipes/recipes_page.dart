@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/appliance/appliance_service.dart';
+import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
 
 class RecipesPage extends StatefulWidget {
@@ -16,30 +18,53 @@ class _RecipesPageState extends State<RecipesPage> {
   final List<int> appliances = [];
   final TextEditingController _ingredientInputController =
       TextEditingController();
-  bool useDietaries = false;
-  bool includeAllIngredients = false;
+  // Can be either all, saved, or selected
+  String dietaryMode = '';
   RecipeDifficulty selectedDifficulty = RecipeDifficulty.any;
   List<Appliance> availableAppliances = [];
-  bool isLoadingAppliances = false;
+  List<DietaryRequirementDto> dietaries = [];
+  bool isLoading = false;
 
   // Services
+  final ProfileService _profileService = ProfileService();
   final ApplianceService _applianceService = ApplianceService();
   final RecipeService _recipeService = RecipeService();
 
   @override
   void initState() {
     super.initState();
+    setState(() {
+      isLoading = true;
+    });
+    _fetchDietaries();
     _fetchAppliances();
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  // Fetch available appliances from the backend using ApplianceService
-  Future<void> _fetchAppliances() async {
-    setState(() {
-      isLoadingAppliances = true;
-    });
-
+  Future<void> _fetchDietaries() async {
     try {
-      // Use the appliance service to fetch appliances
+      final fetchedDietaries = await _profileService.getDietaryRestrictions();
+
+      setState(() {
+        dietaries = fetchedDietaries;
+      });
+    } catch (e) {
+      _logger.e('Failed to fetch dietaries: ${e.toString()}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load dietaries: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _fetchAppliances() async {
+    try {
       final fetchedAppliances = await _applianceService.fetchAppliances(
         selectedAppliances: appliances,
       );
@@ -49,7 +74,6 @@ class _RecipesPageState extends State<RecipesPage> {
       });
     } catch (e) {
       _logger.e('Failed to fetch appliances: ${e.toString()}');
-      // Show a snackbar with the error
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,12 +81,6 @@ class _RecipesPageState extends State<RecipesPage> {
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoadingAppliances = false;
-        });
       }
     }
   }
@@ -154,7 +172,7 @@ class _RecipesPageState extends State<RecipesPage> {
                         style: TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 16),
-                      if (isLoadingAppliances)
+                      if (isLoading)
                         const Center(child: CircularProgressIndicator())
                       else if (availableAppliances.isEmpty)
                         const Center(
@@ -206,9 +224,11 @@ class _RecipesPageState extends State<RecipesPage> {
     try {
       final recipeResults = await _recipeService.generateRecipes(
         ingredients: ingredients,
-        useDietaries: useDietaries,
-        kitchenAppliances: appliances,
-        includeAllIngredients: includeAllIngredients,
+        dietaryMode: dietaryMode,
+        // We can cast id to an int here since we are loading
+        // existing dietaries from the server
+        dietaries: dietaries.map((e) => e.id!).toList(),
+        appliances: appliances,
         difficultyLevel: selectedDifficulty,
       );
 
@@ -293,24 +313,6 @@ class _RecipesPageState extends State<RecipesPage> {
               ),
               child: Column(
                 children: [
-                  SwitchListTile(
-                    title: const Text('Match Dietary Requirements'),
-                    value: useDietaries,
-                    onChanged: (bool value) {
-                      setState(() {
-                        useDietaries = value;
-                      });
-                    },
-                  ),
-                  SwitchListTile(
-                    title: const Text('Include All Ingredients'),
-                    value: includeAllIngredients,
-                    onChanged: (bool value) {
-                      setState(() {
-                        includeAllIngredients = value;
-                      });
-                    },
-                  ),
                   ListTile(
                     title: const Text('Recipe Difficulty'),
                     contentPadding: EdgeInsets.only(left: 16.0, right: 16.0),
