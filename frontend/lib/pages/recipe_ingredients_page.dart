@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'recipe_instructions_page.dart'; // Keep this import
 
@@ -6,6 +8,7 @@ class Recipe {
   final String imageUrl;
   final int cookingTime;
   final List<String> ingredients;
+  final List<dynamic>instructions;
   bool isFavorite;
 
   Recipe({
@@ -13,6 +16,7 @@ class Recipe {
     required this.imageUrl,
     required this.cookingTime,
     required this.ingredients,
+    required this.instructions,
     this.isFavorite = false,
   });
 }
