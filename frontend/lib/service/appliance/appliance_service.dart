@@ -25,10 +25,7 @@ class ApplianceService {
     {'id': 10, 'name': 'Rice Cooker'},
   ];
 
-  /// Fetches the user's available appliances (mocked data)
-  Future<List<Appliance>> fetchAppliances({
-    List<int>? selectedAppliances,
-  }) async {
+  Future<List<Appliance>> fetchAppliances() async {
     _logger.d('Fetching appliances (mock data)');
 
     // Simulate network delay
@@ -36,11 +33,7 @@ class ApplianceService {
 
     // Return mock appliances
     return _mockAppliances.map((item) {
-      return Appliance(
-        id: item['id'],
-        name: item['name'],
-        isSelected: selectedAppliances?.contains(item['id']) ?? false,
-      );
+      return Appliance(id: item['id'], name: item['name']);
     }).toList();
   }
 

@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
-import { Prisma } from 'generated/prisma';
+// import { Prisma } from 'generated/prisma';
 
 @Controller('recipe')
 export class RecipeController {
@@ -26,17 +26,17 @@ export class RecipeController {
       throw new NotFoundException('Cuisine is not found.');
     }
 
-    const recipe: Prisma.RecipeCreateInput = {
-      ...generatedRecipe,
-      ...createRecipeDto,
-      cuisine: {
-        connect: {
-          id: cuisine.id,
-        },
-      },
-    };
+    // const recipe: Prisma.RecipeCreateInput = {
+    //   ...generatedRecipe,
+    //   ...createRecipeDto,
+    //   cuisine: {
+    //     connect: {
+    //       id: cuisine.id,
+    //     },
+    //   },
+    // };
 
-    return this.recipeService.create(recipe);
+    // return this.recipeService.create(recipe);
   }
 
   @Get()

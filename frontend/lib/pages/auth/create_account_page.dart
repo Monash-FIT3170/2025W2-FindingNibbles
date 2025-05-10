@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/verification_code_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
+import 'package:nibbles/pages/auth/login_page.dart';
 
 class CreateAccountPage extends StatelessWidget {
   const CreateAccountPage({super.key});
-  static const _primary = Color(0xFFAD2C50);
 
   @override
   Widget build(BuildContext context) {
@@ -55,29 +55,23 @@ class CreateAccountPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: _primary,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 'Create your account',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
                   ),
@@ -95,9 +89,7 @@ class CreateAccountPage extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'First Name',
                           hintText: 'John',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -106,9 +98,7 @@ class CreateAccountPage extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'Last Name',
                           hintText: 'Smith',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -117,9 +107,7 @@ class CreateAccountPage extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'Email',
                           hintText: 'example@mail.com',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -128,48 +116,39 @@ class CreateAccountPage extends StatelessWidget {
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
                         child: const Text(
-                          'CREATE ACCOUNT',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          'Create Account',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text.rich(
-                            TextSpan(
-                              text: 'Already have an account? ',
-                              children: [
-                                TextSpan(
-                                  text: 'Sign In',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: _primary,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Already have an account? "),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(0),
+                            ),
+                            onPressed:
+                                () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => LoginPage(),
                                   ),
                                 ),
-                              ],
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

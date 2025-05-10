@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class CookingAppliancesWidget extends StatelessWidget {
-  final List<String> appliances;
+class DietaryRequirementsWidget extends StatelessWidget {
+  final List<String> tags;
   final VoidCallback onOpenSelector;
-  final void Function(String) onApplianceRemoved;
+  final void Function(String) onTagRemoved;
 
-  const CookingAppliancesWidget({
+  const DietaryRequirementsWidget({
     super.key,
-    required this.appliances,
+    required this.tags,
     required this.onOpenSelector,
-    required this.onApplianceRemoved,
+    required this.onTagRemoved,
   });
 
   @override
@@ -23,7 +23,7 @@ class CookingAppliancesWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Cooking Appliances',
+              'Dietary Requirements',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -32,9 +32,7 @@ class CookingAppliancesWidget extends StatelessWidget {
               child: InputDecorator(
                 decoration: InputDecoration(
                   hintText: '--Select Tags--',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  border: OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -44,11 +42,11 @@ class CookingAppliancesWidget extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children:
-                      appliances
+                      tags
                           .map(
-                            (app) => Chip(
-                              label: Text(app),
-                              onDeleted: () => onApplianceRemoved(app),
+                            (tag) => Chip(
+                              label: Text(tag),
+                              onDeleted: () => onTagRemoved(tag),
                             ),
                           )
                           .toList(),

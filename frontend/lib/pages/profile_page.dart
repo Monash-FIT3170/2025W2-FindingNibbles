@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
-import 'package:nibbles/widget/profile/cooking_appliances_widget.dart';
-import 'package:nibbles/widget/profile/dietary_requirements_widget.dart';
-import 'package:nibbles/widget/profile/logout_widget.dart';
-import 'package:nibbles/widget/profile/personal_menu_widget.dart';
+import 'package:nibbles/pages/profile/widgets/cooking_appliances_widget.dart';
+import 'package:nibbles/pages/profile/widgets/dietary_requirements_widget.dart';
+import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
+import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Color(0xFFAD2C50), // Background color
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -23,14 +24,7 @@ class ProfilePage extends StatelessWidget {
                 padding: const EdgeInsets.all(
                   16.0,
                 ), // Adds spacing around the text
-                child: Text(
-                  'Profile',
-                  style: TextStyle(
-                    color: Colors.white, // White text color
-                    fontSize: 32, // Font size for the header
-                    fontWeight: FontWeight.bold, // Bold font weight
-                  ),
-                ),
+                child: Text('Profile', style: textTheme.titleLarge),
               ),
               // Personal menu widget
               PersonalMenuWidget(

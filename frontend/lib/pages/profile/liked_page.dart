@@ -1,15 +1,14 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
-import 'package:nibbles/widget/resteraunt/restaurant_card.dart';
+import 'package:nibbles/pages/restaurants/widgets/restaurant_card.dart';
 
 class LikedPage extends StatelessWidget {
   const LikedPage({super.key});
-  static const Color _background = Color(0xFFAD2C50);
-  static const Color _sheetColor = Color(0xFFF2F2F2);
 
   @override
   Widget build(BuildContext context) {
-    // Example data
+    final textTheme = Theme.of(context).textTheme;
+
     final favoriteRestaurants = [
       {
         'image': '', // Empty image URL
@@ -27,12 +26,10 @@ class LikedPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: _background,
         elevation: 0,
-        leading: const BackButton(color: Colors.white),
-        title: const Text('Favourites', style: TextStyle(color: Colors.white)),
+        leading: const BackButton(),
+        title: Text('Favourites', style: textTheme.titleLarge),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -43,20 +40,12 @@ class LikedPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _sheetColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Favourite Restaurants',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFAD2C50),
-                    ),
-                  ),
+                  Text('Favourite Restaurants', style: textTheme.titleMedium),
                   const SizedBox(height: 12),
                   Column(
                     children:
@@ -71,11 +60,9 @@ class LikedPage extends StatelessWidget {
                               isFavorite: true,
                               onTap: () {},
                               onFavoriteTap: () {},
-                              // Temporary placeholder for missing images
                               placeholder: const Icon(
                                 Icons.restaurant,
                                 size: 50,
-                                color: Colors.grey,
                               ),
                             ),
                           );
@@ -89,22 +76,13 @@ class LikedPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _sheetColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Favourite Recipes',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFAD2C50),
-                    ),
-                  ),
+                children: [
+                  Text('Favourite Recipes', style: textTheme.titleMedium),
                   SizedBox(height: 12),
-                  // Placeholder for recipes
                   Text('No favourite recipes yet.'),
                 ],
               ),
