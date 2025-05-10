@@ -13,9 +13,6 @@ export class CreateRecipeDto {
   @IsNotEmpty()
   ingredients: string[];
 
-  @IsNotEmpty()
-  dietaryMode: boolean;
-
   // We don't need values in the array,
   // but we do want the parameter present.
   @IsArray()
