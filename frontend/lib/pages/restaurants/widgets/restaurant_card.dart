@@ -25,6 +25,8 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -53,27 +55,15 @@ class RestaurantCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(name),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
+                  Text(subtitle),
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       const Icon(Icons.star, size: 16, color: Colors.amber),
                       const SizedBox(width: 4),
-                      Text(
-                        rating.toString(),
-                        style: const TextStyle(fontSize: 14),
-                      ),
+                      Text(rating.toString()),
                     ],
                   ),
                 ],
@@ -82,7 +72,7 @@ class RestaurantCard extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.red : Colors.grey,
+                color: isFavorite ? colorScheme.primary : colorScheme.onSurface,
               ),
               onPressed: onFavoriteTap,
             ),

@@ -3,36 +3,28 @@ import 'package:nibbles/pages/auth/login_page.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
 
 class TitlePage extends StatelessWidget {
-  const TitlePage({super.key});
-  static const _primary = Color(0xFFAD2C50);
+  final String title;
+  final String subtitle;
+
+  const TitlePage({super.key, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: _primary,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const SizedBox(),
               Column(
                 children: [
-                  const Text(
-                    'FINDINGNIBBLES',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Find food fast',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
+                  Text(title, style: textTheme.displayLarge),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: textTheme.headlineSmall),
                 ],
               ),
               Column(
@@ -44,17 +36,7 @@ class TitlePage extends StatelessWidget {
                           context,
                           MaterialPageRoute(builder: (context) => LoginPage()),
                         ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.white),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: const Text(
-                      'SIGN IN',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text('SIGN IN'),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
@@ -65,20 +47,7 @@ class TitlePage extends StatelessWidget {
                             builder: (_) => const CreateAccountPage(),
                           ),
                         ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(
-                      'REGISTER',
-                      style: TextStyle(
-                        color: _primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: Text('REGISTER'),
                   ),
                 ],
               ),

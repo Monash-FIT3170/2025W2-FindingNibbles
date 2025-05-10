@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
-import '../pages/restaurants_page.dart';
+import '../pages/restaurants/restaurants_page.dart';
 import '../pages/recipes/recipes_page.dart';
 
 class AppNavigation extends StatefulWidget {
@@ -23,7 +23,6 @@ class _AppNavigationState extends State<AppNavigation> {
             currentPageIndex = index;
           });
         },
-        indicatorColor: Colors.red[200],
         selectedIndex: currentPageIndex,
         destinations: const <Widget>[
           NavigationDestination(

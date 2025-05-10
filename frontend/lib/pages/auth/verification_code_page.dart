@@ -13,7 +13,6 @@ class VerificationCodePage extends StatefulWidget {
 
 class VerificationCodePageState extends State<VerificationCodePage> {
   final _codeController = TextEditingController();
-  static const _primary = Color(0xFFAD2C50);
   final AuthService _authService = AuthService();
 
   void _verifyCode() async {
@@ -57,30 +56,26 @@ class VerificationCodePageState extends State<VerificationCodePage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: _primary,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 'Enter Verification Code',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: textTheme.headlineLarge,
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
                   ),
@@ -92,7 +87,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'We sent an 8-digit code to your email. Please enter it below:',
                       style: TextStyle(fontSize: 16),
                     ),
@@ -103,25 +98,15 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                       maxLength: 8,
                       decoration: InputDecoration(
                         labelText: 'Verification Code',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        counterText: '',
+                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: _verifyCode,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
                       child: const Text(
                         'VERIFY',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 16),
