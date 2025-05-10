@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'recipe_ingredients_page.dart'; // Import to access Recipe model
 
+
 class RecipeInstructionsPage extends StatefulWidget {
   final Recipe recipe;
 
@@ -9,7 +10,6 @@ class RecipeInstructionsPage extends StatefulWidget {
   @override
   State<RecipeInstructionsPage> createState() => _RecipeInstructionsPageState();
 }
-
 
 class _RecipeInstructionsPageState extends State<RecipeInstructionsPage> {
   int currentStep = 0;
@@ -104,5 +104,5 @@ class _RecipeInstructionsPageState extends State<RecipeInstructionsPage> {
                       ),
                     ],
                   ),
-                ),
+                ),;
 
