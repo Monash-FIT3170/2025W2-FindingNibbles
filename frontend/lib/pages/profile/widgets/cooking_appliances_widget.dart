@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class DietaryRequirementsWidget extends StatelessWidget {
-  final List<String> tags;
+class CookingAppliancesWidget extends StatelessWidget {
+  final List<String> appliances;
   final VoidCallback onOpenSelector;
-  final void Function(String) onTagRemoved;
+  final void Function(String) onApplianceRemoved;
 
-  const DietaryRequirementsWidget({
+  const CookingAppliancesWidget({
     super.key,
-    required this.tags,
+    required this.appliances,
     required this.onOpenSelector,
-    required this.onTagRemoved,
+    required this.onApplianceRemoved,
   });
 
   @override
@@ -23,7 +23,7 @@ class DietaryRequirementsWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Dietary Requirements',
+              'Cooking Appliances',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -32,9 +32,7 @@ class DietaryRequirementsWidget extends StatelessWidget {
               child: InputDecorator(
                 decoration: InputDecoration(
                   hintText: '--Select Tags--',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  border: OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -44,11 +42,11 @@ class DietaryRequirementsWidget extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children:
-                      tags
+                      appliances
                           .map(
-                            (tag) => Chip(
-                              label: Text(tag),
-                              onDeleted: () => onTagRemoved(tag),
+                            (app) => Chip(
+                              label: Text(app),
+                              onDeleted: () => onApplianceRemoved(app),
                             ),
                           )
                           .toList(),

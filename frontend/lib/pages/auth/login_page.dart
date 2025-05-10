@@ -9,10 +9,10 @@ import 'package:nibbles/service/auth/auth_service.dart';
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
   final _logger = getLogger();
-  static const _primary = Color(0xFFAD2C50);
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final authService = AuthService();
@@ -70,76 +70,24 @@ class LoginPage extends StatelessWidget {
       }
     }
 
-    Widget buildLoginButton({
-      required IconData icon,
-      required String text,
-      required VoidCallback onTap,
-    }) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Material(
-          color:
-              Colors
-                  .grey
-                  .shade200, // Updated background color for better contrast
-          borderRadius: BorderRadius.circular(8),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            highlightColor: Colors.grey.shade300,
-            splashColor: Colors.grey.shade400,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              child: Row(
-                children: [
-                  Icon(
-                    icon,
-                    size: 24,
-                    color: Colors.black,
-                  ), // Icon color set to black
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      text,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black, // Text color set to black
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      backgroundColor: _primary,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 'Sign into your account',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: textTheme.titleLarge,
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
                   ),
@@ -157,9 +105,7 @@ class LoginPage extends StatelessWidget {
                         decoration: InputDecoration(
                           labelText: 'Email',
                           hintText: 'example@mail.com',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -168,9 +114,7 @@ class LoginPage extends StatelessWidget {
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -182,50 +126,35 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          foregroundColor:
-                              Colors.white, // Text color set to white
-                        ),
-                        child: const Text('SIGN IN'),
-                      ),
+                      ElevatedButton(onPressed: login, child: Text('SIGN IN')),
                       const SizedBox(height: 16),
-                      Center(
-                        child: TextButton(
-                          onPressed:
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const CreateAccountPage(),
-                                ),
-                              ),
-                          child: const Text.rich(
-                            TextSpan(
-                              text: "Don't have an account? ",
-                              children: [
-                                TextSpan(
-                                  text: 'Sign Up',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: _primary,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Don't have an account? "),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.all(0),
+                            ),
+                            onPressed:
+                                () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const CreateAccountPage(),
                                   ),
                                 ),
-                              ],
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                       const SizedBox(height: 24),
-                      buildLoginButton(
-                        icon: FontAwesomeIcons.google,
-                        text: 'Continue with Google',
-                        onTap: () => handleGoogleLogin(context),
+                      ElevatedButton.icon(
+                        onPressed: () => handleGoogleLogin(context),
+                        icon: const Icon(FontAwesomeIcons.google),
+                        label: const Text('Continue with Google'),
                       ),
                     ],
                   ),
