@@ -66,6 +66,7 @@ model UserDietary {
   user      User                @relation(fields: [userId], references: [id])
   dietary   DietaryRestriction  @relation(fields: [dietaryId], references: [id])
   recipes   RecipeUserDietary[]
+  @@unique([userId, dietaryId])
 }
 
 model UserFavouritedRestaurant {
@@ -74,6 +75,7 @@ model UserFavouritedRestaurant {
   restaurantId Int
   user         User       @relation(fields: [userId], references: [id])
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  @@unique([userId, restaurantId])
 }
 
 model UserCuisine {
@@ -82,6 +84,7 @@ model UserCuisine {
   cuisineId Int
   user      User    @relation(fields: [userId], references: [id])
   cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
+  @@unique([userId, cuisineId])
 }
 
 model Restaurant {
@@ -206,6 +209,7 @@ model DishDietary {
   dietary   DietaryRestriction @relation(fields: [dietaryId], references: [id])
 
   @@id([dishId, dietaryId])
+  @@unique([dishId, dietaryId])
 }
 
 model UserMealPlan {
@@ -264,6 +268,7 @@ model RecipeUserAppliance {
   appliance       UserAppliance @relation(fields: [userApplianceId], references: [id])
   Appliance       Appliance?    @relation(fields: [applianceId], references: [id])
   applianceId     Int?
+  @@unique([recipeId, userApplianceId])
 }
 
 model RecipeUserDietary {
@@ -272,6 +277,7 @@ model RecipeUserDietary {
   userDietaryId Int
   recipe        Recipe      @relation(fields: [recipeId], references: [id])
   dietary       UserDietary @relation(fields: [userDietaryId], references: [id])
+  @@unique([recipeId, userDietaryId])
 }
 
 model Recipe {
