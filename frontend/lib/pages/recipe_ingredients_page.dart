@@ -1,6 +1,4 @@
-
 import 'package:flutter/material.dart';
-import 'recipe_instructions_page.dart'; // Keep this import
 
 class Recipe {
   final String title;
@@ -65,8 +63,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     checkedIngredients = List.generate(recipe.ingredients.length, (_) => false);
     checkedIngredients[0] = true;
   }
-
-
 
   Widget _buildIngredientsList() {
     return Column(
