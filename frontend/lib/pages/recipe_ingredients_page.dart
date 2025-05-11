@@ -66,6 +66,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     checkedIngredients[0] = true;
   }
 
+
+
   Widget _buildIngredientsList() {
     return Column(
       children: [
@@ -587,7 +589,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                       setState(() {
                         currentTab = 1; // Set to Cooking Instructions tab
                       });
-                      navigateToInstructionsPage(); // Optional: if you want to navigate to instructions page
                     },
                     child: Column(
                       children: [
