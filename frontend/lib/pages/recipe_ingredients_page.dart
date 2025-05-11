@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'recipe_instructions_page.dart'; // Keep this import
@@ -29,11 +28,12 @@ class RecipeIngredientsPage extends StatefulWidget {
 }
 
 class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
-  int currentStep = 0; // current step index for the app navigation 
-  // Sample recipe data (this would come from your data source)
+  int currentStep = 0;
+  int currentTab =  0;
+
   final Recipe recipe = Recipe(
     title: 'Traditional spare ribs baked',
-    imageUrl: 'placeholder', // You'd replace this with actual image URL
+    imageUrl: 'placeholder',
     cookingTime: 55,
     ingredients: [
       '1kg pork spare ribs',
@@ -48,30 +48,21 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       '1/2 cup water',
     ],
     instructions: [
-      'Step 1 - Prepare the Pork\n\nCut pork spare ribs into bite-sized pieces. Clean the pork (optional but highly recommended). Fill a small pot with water (enough to cover the spare ribs when added). Add salt (1 teaspoon). Bring the water to a boil. Add pork ribs and blanch the pork for 8 minutes or until scum floats to the top. This will remove the impurities and off-smell of pork. Drain the ribs in a colander in the sink. Rinse thoroughly under cold running water. Pork ribs are now ready to be cooked.',
-      'Step 2 - Marinate the Pork\n\nIn a large bowl, combine fish sauce, diced shallot, ground black pepper, and 1 tablespoon of sugar. Add the pork ribs and mix well. Let the pork marinate for at least 30 minutes.',
-      'Step 3 - Prepare the Caramel Sauce\n\nIn a pan, add 2 tablespoons of sugar and heat over medium heat until the sugar melts and turns golden brown. Add 1/2 cup of water and stir until the caramel dissolves completely.',
-      'Step 4 - Cook the Pork\n\nHeat a large pan over medium heat. Add the marinated pork ribs and cook until lightly browned. Pour the caramel sauce over the pork and stir well. Add the bouillon powder and coconut soda. Cover and simmer for 20 minutes.',
-      'Step 5 - Garnish and Serve\n\nOnce the pork is tender and the sauce has thickened, remove from heat. Garnish with thinly sliced green onions and serve hot with steamed rice.',
+      'Step 1 - Prepare the Pork...',
+      'Step 2 - Marinate the Pork...',
+      'Step 3 - Prepare the Caramel Sauce...',
+      'Step 4 - Cook the Pork...',
+      'Step 5 - Garnish and Serve...',
     ],
     isFavorite: false,
   );
 
-    // Function to navigate to a specific step
-  void goToStep(int step) {
-    setState(() {
-      currentStep = step; // Update the current step
-    });
-
-  // Track checked ingredients
   late List<bool> checkedIngredients;
 
   @override
   void initState() {
     super.initState();
-    // Initialize all ingredients as unchecked
     checkedIngredients = List.generate(recipe.ingredients.length, (_) => false);
-    // Set first ingredient as checked for demonstration
     checkedIngredients[0] = true;
   }
 
@@ -87,7 +78,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   Widget _buildIngredientsList() {
     return Column(
       children: [
-        // Ingredients title
         Container(
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
@@ -96,8 +86,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-
-        // Ingredients list
         Expanded(
           child: ListView.builder(
             itemCount: recipe.ingredients.length,
@@ -108,9 +96,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   vertical: 8,
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Custom checkbox
                     InkWell(
                       onTap: () {
                         setState(() {
@@ -129,16 +115,11 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                           ),
                         ),
                         child: checkedIngredients[index]
-                            ? const Icon(
-                                Icons.check,
-                                size: 16,
-                                color: Colors.white,
-                              )
+                            ? const Icon(Icons.check, size: 16, color: Colors.white)
                             : null,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Ingredient text
                     Expanded(
                       child: Text(
                         recipe.ingredients[index],
@@ -159,65 +140,64 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     );
   }
 
-
-Widget _buildInstructionList() {
-  return Column(
-    children: [
-      // Display the current step's instructions
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            recipe.instructions[currentStep], // Display the current step
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.5, // Line height for better readability
+  Widget _buildInstructionList() {
+    return Column(
+      children: [
+        // Display the current step's instructions
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              recipe.instructions[currentStep], // Display the current step
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.5, // Line height for better readability
+              ),
             ),
           ),
         ),
-      ),
 
-      // Step navigation at the bottom
-      Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Center the step indicators
-          children: List.generate(recipe.instructions.length, (index) {
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  currentStep = index; // Update the current step
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8), // Spacing between indicators
-                width: 30, // Width of the indicator
-                height: 30, // Height of the indicator
-                decoration: BoxDecoration(
-                  color: currentStep == index
-                      ? Colors.red // Active step color
-                      : Colors.grey[300], // Inactive step color
-                  shape: BoxShape.circle, // Circular shape
-                ),
-                child: Center(
-                  child: Text(
-                    '${index + 1}', // Step number
-                    style: TextStyle(
-                      color: currentStep == index
-                          ? Colors.white // Active step text color
-                          : Colors.black, // Inactive step text color
-                      fontWeight: FontWeight.bold, // Font weight
+        // Step navigation at the bottom
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center the step indicators
+            children: List.generate(recipe.instructions.length, (index) {
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    currentStep = index; // Update the current step
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8), // Spacing between indicators
+                  width: 30, // Width of the indicator
+                  height: 30, // Height of the indicator
+                  decoration: BoxDecoration(
+                    color: currentStep == index
+                        ? Colors.red // Active step color
+                        : Colors.grey[300], // Inactive step color
+                    shape: BoxShape.circle, // Circular shape
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}', // Step number
+                      style: TextStyle(
+                        color: currentStep == index
+                            ? Colors.white // Active step text color
+                            : Colors.black, // Inactive step text color
+                        fontWeight: FontWeight.bold, // Font weight
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -244,12 +224,10 @@ Widget _buildInstructionList() {
       ),
       body: Column(
         children: [
-          // Recipe image
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Stack(
               children: [
-                // Image with gray placeholder
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: Container(
@@ -261,93 +239,9 @@ Widget _buildInstructionList() {
                     ),
                   ),
                 ),
-
-                // Gradient overlay
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.7),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Title text
-                Positioned(
-                  bottom: 8,
-                  left: 8,
-                  child: Text(
-                    recipe.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-
-                // Time indicator
-                Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${recipe.cookingTime} min',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Favorite button
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1),
-                    ),
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      iconSize: 18,
-                      icon: Icon(
-                        recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: Colors.pink,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          recipe.isFavorite = !recipe.isFavorite;
-                        });
-                      },
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
-
-          // Tab selector
           Container(
             decoration: const BoxDecoration(
               border: Border(
@@ -359,7 +253,9 @@ Widget _buildInstructionList() {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      // Already on this tab
+                      setState(() {
+                        currentTab = 0; // Set to Ingredients tab
+                      });
                     },
                     child: Column(
                       children: [
@@ -373,14 +269,19 @@ Widget _buildInstructionList() {
                             ),
                           ),
                         ),
-                        Container(height: 2, color: Colors.red),
+                        Container(height: 2, color: currentTab == 0 ? Colors.red : Colors.transparent),
                       ],
                     ),
                   ),
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: navigateToInstructionsPage,
+                    onTap: () {
+                      setState(() {
+                        currentTab = 1; // Set to Cooking Instructions tab
+                      });
+                      navigateToInstructionsPage(); // Optional: if you want to navigate to instructions page
+                    },
                     child: Column(
                       children: [
                         const Padding(
@@ -390,7 +291,7 @@ Widget _buildInstructionList() {
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
-                        Container(height: 2, color: Colors.transparent),
+                        Container(height: 2, color: currentTab == 1 ? Colors.red : Colors.transparent),
                       ],
                     ),
                   ),
@@ -398,9 +299,10 @@ Widget _buildInstructionList() {
               ],
             ),
           ),
+          // Display the appropriate content based on the active tab
+          currentTab == 0 ? _buildIngredientsList() : _buildInstructionList(),
         ],
       ),
     );
   }
-}
 }
