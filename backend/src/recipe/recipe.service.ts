@@ -19,7 +19,8 @@ type RecipeGenerated = {
 @Injectable()
 export class RecipeService {
   constructor(private db: DatabaseService) {}
-  async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async generate(_recipe: CreateRecipeDto): Promise<RecipeGenerated> {
     // TODO: call the llm here instead of this mock
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
