@@ -66,14 +66,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     checkedIngredients[0] = true;
   }
 
-  void navigateToInstructionsPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecipeInstructionsPage(recipe: recipe),
-      ),
-    );
-  }
+
 
   Widget _buildIngredientsList() {
     return Column(
@@ -280,7 +273,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                       setState(() {
                         currentTab = 1; // Set to Cooking Instructions tab
                       });
-                      navigateToInstructionsPage(); // Optional: if you want to navigate to instructions page
                     },
                     child: Column(
                       children: [
