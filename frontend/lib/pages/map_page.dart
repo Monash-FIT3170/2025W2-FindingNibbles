@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 
 import 'package:nibbles/service/map/map_service.dart'; // Add this import
+import 'package:nibbles/service/profile/restaurant_dto.dart'; // Add this import
 
 
 class MapPage extends StatefulWidget {
@@ -18,7 +19,7 @@ class _MapPageState extends State<MapPage> {
   late final MapController _mapController = MapController();
   LatLng? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription; // Add this line
-  List<Restaurant> _restaurants = [];
+  List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   
   @override

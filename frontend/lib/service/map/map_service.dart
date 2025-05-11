@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 
 class MapService {
   final Dio _dio = DioClient().client;
 
-  Future<List<Restaurant>> getRestaurants(swLatNum: double, swLngNum: double, neLatNum: double, neLngNum: double) async {
+  Future<List<RestaurantDto>> getRestaurants({required double swLatNum, required double swLngNum, required double neLatNum, required double neLngNum}) async {
     try {
       final response = await _dio.get(
         'restaurant/getRestaurants',
@@ -18,7 +19,7 @@ class MapService {
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
-        return data.map((json) => Restaurant.fromJson(json)).toList();
+        return data.map((json) => RestaurantDto.fromJson(json)).toList();
       } else {
         throw Exception('Failed to load restaurants');
       }
