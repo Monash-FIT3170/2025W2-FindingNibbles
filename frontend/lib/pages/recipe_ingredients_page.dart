@@ -288,7 +288,9 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
             ),
           ),
           // Display the appropriate content based on the active tab
-          currentTab == 0 ? _buildIngredientsList() : _buildInstructionList(),
+          Expanded(
+            child: currentTab == 0 ? _buildIngredientsList() : _buildInstructionList(),
+          ),  
         ],
       ),
     );
