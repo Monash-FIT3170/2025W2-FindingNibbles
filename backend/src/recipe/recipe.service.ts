@@ -25,9 +25,8 @@ type RecipeGenerated = {
 export class RecipeService {
   constructor(private db: DatabaseService) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async generate(
-    _recipe: CreateRecipeDto,
+    recipe: CreateRecipeDto,
     user: User,
   ): Promise<RecipeGenerated[]> {
     let userDietaryTags: string[] = [];
