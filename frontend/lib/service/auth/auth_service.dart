@@ -4,15 +4,28 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nibbles/core/constants.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
+import 'dart:io';
 
 class AuthService {
   final Dio _dio = DioClient().client;
   final _storage = FlutterSecureStorage();
   final _logger = getLogger();
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: AppConstants.googleClientId,
-    scopes: ['email', 'profile'],
-  );
+
+  // default google sign in
+  late GoogleSignIn _googleSignIn;
+
+  AuthService() {
+    if (Platform.isAndroid) {
+      _googleSignIn = GoogleSignIn(scopes: ['email']);
+    } else if (Platform.isIOS) {
+      _googleSignIn = GoogleSignIn(
+        clientId: AppConstants.googleClientId,
+        scopes: ['email'],
+      );
+    } else {
+      _googleSignIn = GoogleSignIn(scopes: ['email']);
+    }
+  }
 
   // Saves the access and refresh tokens to secure storage
   Future<void> _saveTokens(Map<String, dynamic> data) async {
@@ -135,12 +148,12 @@ class AuthService {
   /// Returns true if the JWT is valid (HTTP 200), false otherwise.
   Future<bool> checkLoginStatus() async {
     try {
-      // Call the backend check endpoint with Authorization header
-      final response = await _dio.get('auth/check');
+      // Optionally, verify the token with the backend
+      final response = await _dio.get('/auth/check');
 
       return response.statusCode == 200;
     } catch (e) {
-      _logger.d('Login status check failed: $e');
+      print('Error checking login status: $e');
       return false;
     }
   }
