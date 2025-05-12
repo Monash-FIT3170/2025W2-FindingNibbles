@@ -3,6 +3,9 @@ allprojects {
         google()
         mavenCentral()
     }
+    dependencies {
+        classpath("com.google.gms:google-services:4.3.15") 
+    }
 }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()

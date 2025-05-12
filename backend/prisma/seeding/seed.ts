@@ -13,6 +13,7 @@
 
 import { PrismaClient } from '../../generated/prisma';
 import { restaurants } from './seedConstants';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -20,6 +21,26 @@ async function main(): Promise<void> {
   console.log('Start seeding...');
 
   try {
+    // Create default user
+    console.log('Creating default user...');
+    const defaultUserEmail = 'team@findingnibbles.com';
+    const defaultUserPassword = '#FindingNibbles123'; // Replace with a secure password
+    const hashedPassword = await argon2.hash(defaultUserPassword); // Hash the password
+
+    const defaultUser = await prisma.user.upsert({
+      where: { email: defaultUserEmail },
+      update: {}, // No updates needed if the user already exists
+      create: {
+        email: defaultUserEmail,
+        passwordHash: hashedPassword,
+        firstName: 'Team',
+        lastName: 'FindingNibbles',
+        isVerified: true, // Mark the user as verified
+        provider: 'local', // Add the required provider field
+      },
+    });
+
+    console.log(`Default user created: ${defaultUser.email}`);
     // First, collect and create all unique cuisines
     console.log('Creating cuisines...');
     const uniqueCuisines = new Set<string>();
