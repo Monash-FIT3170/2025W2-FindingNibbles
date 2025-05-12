@@ -4,13 +4,12 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
-
-import 'package:nibbles/service/map/map_service.dart'; // Add this import
-import 'package:nibbles/service/profile/restaurant_dto.dart'; // Add this import
+import 'package:nibbles/service/map/map_service.dart'; 
+import 'package:nibbles/service/profile/restaurant_dto.dart'; 
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
-
+ 
   RestaurantMarker({required this.restaurant})
     : super(
         point: LatLng(restaurant.latitude, restaurant.longitude),
@@ -46,7 +45,7 @@ class _MapPageState extends State<MapPage> {
       Timer.periodic(const Duration(milliseconds: 100), (timer) {
         final bounds = _mapController.bounds;
         if (bounds != null) {
-          _fetchRestaurantsInBounds(); // Now it's safe to fetch
+          _fetchRestaurantsInBounds(); // Fetch restaurants when bounds are available
           timer.cancel(); // Stop the timer once bounds are available
         }
       });
@@ -79,7 +78,6 @@ class _MapPageState extends State<MapPage> {
     // Get current position
     final position = await Geolocator.getCurrentPosition();
     if (mounted) {
-      // Add this check
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
       });
