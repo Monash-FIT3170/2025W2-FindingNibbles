@@ -8,6 +8,8 @@ const String appName = 'FINDINGNIBBLES';
 const String appMotto = 'Find Food Fast';
 
 void main() async {
+  // Ensure that all services are initialised before running this section.
+  // Used when there are services that are running asynchronously.
   WidgetsFlutterBinding.ensureInitialized();
 
   // check if the user is authenticated
