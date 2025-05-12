@@ -25,6 +25,9 @@ export class RestaurantController {
     @Query('neLat') neLat?: string,
     @Query('neLng') neLng?: string,
   ): Promise<Restaurant[]> {
+    console.log(
+      `Received query parameters: swLat=${swLat}, swLng=${swLng}, neLat=${neLat}, neLng=${neLng}`,
+    );
     // Check if bounds parameters are provided
     if (swLat && swLng && neLat && neLng) {
       const swLatNum = parseFloat(swLat);

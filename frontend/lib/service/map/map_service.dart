@@ -5,15 +5,15 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 class MapService {
   final Dio _dio = DioClient().client;
 
-  Future<List<RestaurantDto>> getRestaurants({required double swLatNum, required double swLngNum, required double neLatNum, required double neLngNum}) async {
+  Future<List<RestaurantDto>> getRestaurants({required double swLat, required double swLng, required double neLat, required double neLng}) async {
     try {
       final response = await _dio.get(
-        'restaurant/getRestaurants',
+        'restaurant',
         queryParameters: {
-          'swLatNum': swLatNum,
-          'swLngNum': swLngNum,
-          'neLatNum': neLatNum,
-          'neLngNum': neLngNum,
+          'swLat': swLat,
+          'swLng': swLng,
+          'neLat': neLat,
+          'neLng': neLng,
         },
       );
 
