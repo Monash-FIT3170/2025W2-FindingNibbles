@@ -3,9 +3,24 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 
 import 'package:nibbles/service/map/map_service.dart'; // Add this import
 import 'package:nibbles/service/profile/restaurant_dto.dart'; // Add this import
+
+class RestaurantMarker extends Marker {
+  final RestaurantDto restaurant;
+
+  RestaurantMarker({required this.restaurant})
+    : super(
+        point: LatLng(restaurant.latitude, restaurant.longitude),
+        width: 40,
+        height: 40,
+        builder:
+            (ctx) =>
+                const Icon(Icons.location_pin, color: Colors.red, size: 40),
+      );
+}
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -20,6 +35,7 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<Position>? _positionStreamSubscription; // Add this line
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
+  final PopupController _popupController = PopupController();
 
   @override
   void initState() {
@@ -34,7 +50,7 @@ class _MapPageState extends State<MapPage> {
           timer.cancel(); // Stop the timer once bounds are available
         }
       });
-    }); 
+    });
   }
 
   Future<void> _getCurrentLocation() async {
@@ -86,7 +102,6 @@ class _MapPageState extends State<MapPage> {
 
   // Fetch restaurants within current map bounds
   Future<void> _fetchRestaurantsInBounds() async {
-
     if (!mounted) return;
 
     setState(() {
@@ -125,9 +140,9 @@ class _MapPageState extends State<MapPage> {
           zoom: 13,
           onPositionChanged: (MapPosition position, bool hasGesture) {
             if (hasGesture) {
-            _fetchRestaurantsInBounds();
+              _fetchRestaurantsInBounds();
             }
-        },
+          },
         ),
         children: [
           TileLayer(
@@ -136,14 +151,58 @@ class _MapPageState extends State<MapPage> {
             userAgentPackageName: 'com.example.app',
           ),
           MarkerLayer(
-            markers: _restaurants.map((restaurant) {
-              return Marker(
-                point: LatLng(restaurant.latitude, restaurant.longitude),
-                width: 40,
-                height: 40,
-                builder: (ctx) => const Icon(Icons.location_pin, color: Colors.red, size: 40),
-              );
-            }).toList(),
+            markers:
+                _restaurants.map((restaurant) {
+                  return Marker(
+                    point: LatLng(restaurant.latitude, restaurant.longitude),
+                    width: 40,
+                    height: 40,
+                    builder:
+                        (ctx) => GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text(restaurant.name),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Rating: ${restaurant.rating}'),
+                                        Text(
+                                          'Total reviews: : ${restaurant.userRatingsTotal}',
+                                        ),
+                                        Text(
+                                          'PH: ${restaurant.formattedPhoneNum}',
+                                        ),
+                                        Text(
+                                          'Address: ${restaurant.formattedAddress}',
+                                        ),
+                                        Text('Website: ${restaurant.website}'),
+                                        Text(
+                                          'Price Level: ${restaurant.priceLevel}',
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.location_pin,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                  );
+                }).toList(),
           ),
         ],
       ),
