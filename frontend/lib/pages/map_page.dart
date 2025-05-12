@@ -25,10 +25,16 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _getCurrentLocation();
+    // Wait until the widget is built and try to fetch restaurants once the map has bounds
     WidgetsBinding.instance.addPostFrameCallback((_) {
-    _fetchRestaurantsInBounds();
-    });
-    
+      Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        final bounds = _mapController.bounds;
+        if (bounds != null) {
+          _fetchRestaurantsInBounds(); // Now it's safe to fetch
+          timer.cancel(); // Stop the timer once bounds are available
+        }
+      });
+    }); 
   }
 
   Future<void> _getCurrentLocation() async {
@@ -80,7 +86,7 @@ class _MapPageState extends State<MapPage> {
 
   // Fetch restaurants within current map bounds
   Future<void> _fetchRestaurantsInBounds() async {
-    print('Fetching restaurants...');
+
     if (!mounted) return;
 
     setState(() {
@@ -92,7 +98,6 @@ class _MapPageState extends State<MapPage> {
     final swLng = bounds?.west ?? 0.0;
     final neLat = bounds?.north ?? 0.0;
     final neLng = bounds?.east ?? 0.0;
-    print('Map bounds: $swLat, $swLng, $neLat, $neLng');
 
     // Fetch restaurants from the backend using MapService
     final restaurants = await MapService().getRestaurants(
@@ -101,7 +106,6 @@ class _MapPageState extends State<MapPage> {
       neLat: neLat,
       neLng: neLng,
     );
-    print('Fetched ${restaurants.length} restaurants');
 
     setState(() {
       _restaurants =
