@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/title_page.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
+import 'package:nibbles/service/auth/auth_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 const String appName = 'FINDINGNIBBLES';
 const String appMotto = 'Find Food Fast';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // check if the user is authenticated
+  final authService = AuthService();
+  final bool isAuthenticated = await authService.checkLoginStatus();
+  runApp(MainApp(isAuthenticated: isAuthenticated));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  final bool isAuthenticated;
+  const MainApp({super.key, required this.isAuthenticated});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +28,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.pink),
       ),
-      initialRoute: '/title',
+      initialRoute: isAuthenticated ? '/home' : '/title',
       routes: {
         '/title':
             (context) => const TitlePage(title: appName, subtitle: appMotto),
