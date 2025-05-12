@@ -19,6 +19,7 @@ dependencies:
   latlong2: ^0.8.0
   geolocator: ^10.1.0
   permission_handler: ^11.3.1
+  flutter_map_marker_popup: ^5.1.0
 
 dev_dependencies:
   flutter_test:
