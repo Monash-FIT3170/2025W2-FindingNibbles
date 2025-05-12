@@ -7,7 +7,6 @@ import 'dart:async';
 import 'package:nibbles/service/map/map_service.dart'; // Add this import
 import 'package:nibbles/service/profile/restaurant_dto.dart'; // Add this import
 
-
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -21,11 +20,15 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<Position>? _positionStreamSubscription; // Add this line
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _fetchRestaurantsInBounds();
+    });
+    
   }
 
   Future<void> _getCurrentLocation() async {
@@ -53,16 +56,20 @@ class _MapPageState extends State<MapPage> {
 
     // Get current position
     final position = await Geolocator.getCurrentPosition();
-    if (mounted) {  // Add this check
+    if (mounted) {
+      // Add this check
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
       });
     }
 
     // Listen for updates with proper subscription management
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position pos) {
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((
+      Position pos,
+    ) {
       final newPos = LatLng(pos.latitude, pos.longitude);
-      if (mounted) {  // Add this check
+      if (mounted) {
+        // Add this check
         setState(() {
           _currentPosition = newPos;
         });
@@ -73,48 +80,66 @@ class _MapPageState extends State<MapPage> {
 
   // Fetch restaurants within current map bounds
   Future<void> _fetchRestaurantsInBounds() async {
-  if (!mounted) return;
+    print('Fetching restaurants...');
+    if (!mounted) return;
 
-  setState(() {
-    _isLoading = true;
-  });
+    setState(() {
+      _isLoading = true;
+    });
     // Get current map bounds
     final bounds = _mapController.bounds;
     final swLat = bounds?.south ?? 0.0;
     final swLng = bounds?.west ?? 0.0;
     final neLat = bounds?.north ?? 0.0;
     final neLng = bounds?.east ?? 0.0;
+    print('Map bounds: $swLat, $swLng, $neLat, $neLng');
 
     // Fetch restaurants from the backend using MapService
     final restaurants = await MapService().getRestaurants(
-      swLatNum: swLat,
-      swLngNum: swLng,
-      neLatNum: neLat,
-      neLngNum: neLng,
+      swLat: swLat,
+      swLng: swLng,
+      neLat: neLat,
+      neLng: neLng,
     );
+    print('Fetched ${restaurants.length} restaurants');
 
     setState(() {
-      _restaurants = restaurants; // Make sure _restaurants is defined in your state
+      _restaurants =
+          restaurants; // Make sure _restaurants is defined in your state
       _isLoading = false;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Map'),
-      ),
+      appBar: AppBar(title: const Text('Map')),
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          center: LatLng(49.2827, -123.1207), // Vancouver coordinates
+          center: LatLng(37.9111, 145.1367), // Monash coordinates
           zoom: 13,
+          onPositionChanged: (MapPosition position, bool hasGesture) {
+            if (hasGesture) {
+            _fetchRestaurantsInBounds();
+            }
+        },
         ),
         children: [
           TileLayer(
             urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             subdomains: const ['a', 'b', 'c'],
             userAgentPackageName: 'com.example.app',
+          ),
+          MarkerLayer(
+            markers: _restaurants.map((restaurant) {
+              return Marker(
+                point: LatLng(restaurant.latitude, restaurant.longitude),
+                width: 40,
+                height: 40,
+                builder: (ctx) => const Icon(Icons.location_pin, color: Colors.red, size: 40),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -123,7 +148,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   void dispose() {
-    _positionStreamSubscription?.cancel();  // Add this line
+    _positionStreamSubscription?.cancel(); // Add this line
     _mapController.dispose();
     super.dispose();
   }
