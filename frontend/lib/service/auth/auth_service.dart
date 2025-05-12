@@ -17,13 +17,11 @@ class AuthService {
   AuthService() {
     if (Platform.isAndroid) {
       _googleSignIn = GoogleSignIn(scopes: ['email']);
-    } else if (Platform.isIOS) {
+    } else {
       _googleSignIn = GoogleSignIn(
         clientId: AppConstants.googleClientId,
         scopes: ['email'],
       );
-    } else {
-      _googleSignIn = GoogleSignIn(scopes: ['email']);
     }
   }
 
@@ -153,7 +151,7 @@ class AuthService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error checking login status: $e');
+      _logger.d('Error checking login status: $e');
       return false;
     }
   }
