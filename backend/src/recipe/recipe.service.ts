@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { Prisma, User } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
-import { CreateRecipeDto } from './dto/create-recipe.dto';
+import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
+import { GoogleGenAI, Type } from '@google/genai';
+
+const ai = new GoogleGenAI({
+  apiKey: 'AIzaSyBhMQzjfUu3ICYSmCTmrD4EyE3EGhe7LyA',
+});
 
 type RecipeGenerated = {
   title: string;
@@ -12,53 +17,137 @@ type RecipeGenerated = {
   servings: number;
   dietaryTags: string[];
   nutritionalInfo: string[];
-  difficultyLevel: number;
+  difficultyLevel: RecipeDifficulty;
   cuisine: string;
 };
 
 @Injectable()
 export class RecipeService {
   constructor(private db: DatabaseService) {}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async generate(_recipe: CreateRecipeDto): Promise<RecipeGenerated> {
-    // TODO: call the llm here instead of this mock
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const mockRecipe: RecipeGenerated = {
-      title: 'Classic Margherita Pizza',
-      description:
-        'A simple and delicious pizza topped with fresh mozzarella, basil, and tomato sauce.',
-      ingredients: [
-        'pizza dough',
-        'tomato sauce',
-        'fresh mozzarella',
-        'fresh basil leaves',
-        'olive oil',
-        'salt',
-      ],
-      instructions: [
-        'Preheat the oven to 500°F (260°C).',
-        'Roll out the pizza dough on a floured surface.',
-        'Spread tomato sauce evenly over the dough.',
-        'Add slices of fresh mozzarella on top.',
-        'Drizzle olive oil and sprinkle salt.',
-        'Bake in the oven for 7-10 minutes until the crust is golden and cheese is bubbly.',
-        'Garnish with fresh basil leaves before serving.',
-      ],
-      estimatedTimeMinutes: 20,
-      servings: 2,
-      dietaryTags: ['vegetarian'],
-      nutritionalInfo: [
-        'Calories: 800',
-        'Protein: 25g',
-        'Carbohydrates: 90g',
-        'Fat: 30g',
-      ],
-      difficultyLevel: 1,
-      cuisine: 'italian',
-    };
+  async generate(
+    recipe: CreateRecipeDto,
+    user: User,
+  ): Promise<RecipeGenerated[]> {
+    let userDietaryTags: string[] = [];
 
-    return mockRecipe;
+    try {
+      // If 'saved' is included in dietaryRequirements, get user-stored preferences
+      if (recipe.dietaryRequirements.includes('saved')) {
+        const userProfile = await this.db.user.findUnique({
+          where: { id: user.id },
+          include: { userDietaries: true },
+        });
+        userDietaryTags = userProfile.userDietaries.map((pref) => pref.name);
+      }
+
+      // Merge any non-'saved' dietary tags
+      const customTags = recipe.dietaryRequirements.filter(tag => tag !== 'saved');
+      userDietaryTags = [...userDietaryTags, ...customTags];
+
+      const appliances = await this.db.appliances.findMany({
+        where: {
+          id: {
+            in: recipe.kitchenAppliances,
+          },
+        },
+      });
+      const kitchenAppliances = appliances.map(app => app.name);
+
+      const requestedDifficulty = recipe.difficulty_level;
+      const difficultyLine = requestedDifficulty === RecipeDifficulty.ANY
+        ? ``
+        : `- Recipes must be '${requestedDifficulty}' difficulty.`;
+
+      const responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          recipes: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                cook_time: { type: Type.INTEGER },
+                servings: { type: Type.INTEGER },
+                ingredients: { type: Type.ARRAY, items: { type: Type.STRING } },
+                steps: { type: Type.ARRAY, items: { type: Type.STRING } },
+                nutritional_info: { type: Type.ARRAY, items: { type: Type.STRING } },
+                difficulty: { type: Type.STRING },
+                cuisine: { type: Type.STRING },
+              },
+              required: [
+                'title',
+                'description',
+                'cook_time',
+                'servings',
+                'ingredients',
+                'steps',
+                'nutritional_info',
+                'difficulty',
+                'cuisine',
+              ],
+            },
+          },
+        },
+        required: ['recipes'],
+      };
+
+      const prompt = `
+        Generate 3 recipes that meet the following criteria:
+        - Use British English and the metric system.
+        - Dietary restrictions: ${userDietaryTags.join(', ') || 'none'}.
+        - ${recipe.includeAllIngredients ? 'Use all of the following ingredients:' : 'Use the following ingredients:'} ${recipe.ingredients.join(', ') || 'none'}.
+        - Must be cookable using: ${kitchenAppliances.join(', ') || 'any tools'}.
+        ${difficultyLine}
+        Return the recipes in a JSON object with a 'recipes' key containing a list of three recipes.
+        Each recipe should include:
+        - Difficulty as 'easy', 'medium', or 'hard'
+        - Nutritional info including: Calories (kcal), Protein (g), Carbohydrates (g and sugars), Fat (g and saturated), Fibre (g), Salt (g)
+        - Cook time as an integer number of minutes.
+        - Cuisine type as a string.
+      `;
+
+      let recipesText;
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-1.5-pro',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema,
+          },
+        });
+        recipesText = (response as any).text;
+      } catch (error) {
+        throw new Error('Failed to get response from LLM: ' + error.message);
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(recipesText);
+      } catch (error) {
+        throw new Error('Failed to parse LLM recipe response: ' + error.message);
+      }
+
+      const recipes = parsed.recipes.map((recipeData: any) => ({
+        title: recipeData.title,
+        description: recipeData.description,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.steps,
+        estimatedTimeMinutes: recipeData.cook_time,
+        servings: recipeData.servings,
+        dietaryTags: userDietaryTags,
+        nutritionalInfo: recipeData.nutritional_info,
+        difficultyLevel: recipeData.difficulty as RecipeDifficulty,
+        cuisine: recipeData.cuisine || 'unknown',
+      }));
+
+      return recipes;
+    } catch (err) {
+      throw new Error('An error occurred while generating recipes: ' + err.message);
+    }
   }
 
   async validateAndGetCuisine(cuisineName: string) {
@@ -75,7 +164,6 @@ export class RecipeService {
   }
 
   async findAll() {
-    // return all the recipes in the database
     return this.db.recipe.findMany({
       include: {
         cuisine: true,
