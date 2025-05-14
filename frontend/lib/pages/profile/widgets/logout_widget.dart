@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LogoutWidget extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutWidget({super.key, required this.onLogout});
+  const LogoutWidget({Key? key, required this.onLogout}) : super(key: key);
+
+  Future<void> _handleLogout(BuildContext context) async {
+    const storage = FlutterSecureStorage();
+
+    try {
+      // Clear Authentication Tokens
+      await storage.delete(key: 'access_token');
+      await storage.delete(key: 'refresh_token');
+    } catch (e) {
+      print('Error clearing tokens: $e');
+    } finally {
+      // Redirect to Login/Title Screen
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/title',
+        (route) => false,
+      );
+      onLogout();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +43,7 @@ class LogoutWidget extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onLogout,
+        onTap: () => _handleLogout(context), // Call _handleLogout
       ),
     );
   }
