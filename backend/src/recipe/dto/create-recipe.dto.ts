@@ -1,30 +1,31 @@
 import {
   IsNotEmpty,
-  ArrayNotEmpty,
   IsBoolean,
-  IsIn,
   IsArray,
+  IsEnum,
 } from 'class-validator';
 
-export const RecipeDifficultyLevels = ['easy', 'medium', 'hard', 'any'];
-export type RecipeDifficultyLevel = (typeof RecipeDifficultyLevels)[number];
+export enum RecipeDifficulty {
+  EASY = 'easy',
+  MEDIUM = 'medium',
+  HARD = 'hard',
+  ANY = 'any',
+}
 
 export class CreateRecipeDto {
-  @IsNotEmpty()
+  @IsArray()
   ingredients: string[];
 
-  // We don't need values in the array,
-  // but we do want the parameter present.
   @IsArray()
-  dietaries: number[];
+  dietaryRequirements: string[]; // Can include 'saved', custom tags, or both
 
-  @ArrayNotEmpty()
-  appliances: number[];
+  @IsArray()
+  kitchenAppliances: number[]; // Appliance IDs
 
   @IsBoolean()
   @IsNotEmpty()
   includeAllIngredients: boolean;
 
-  @IsIn(RecipeDifficultyLevels)
-  difficultyLevel: RecipeDifficultyLevel;
+  @IsEnum(RecipeDifficulty)
+  difficulty_level: RecipeDifficulty;
 }
