@@ -4,7 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nibbles/core/constants.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   final Dio _dio = DioClient().client;
@@ -15,7 +15,7 @@ class AuthService {
   late GoogleSignIn _googleSignIn;
 
   AuthService() {
-    if (Platform.isIOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _googleSignIn = GoogleSignIn(
         clientId: AppConstants.googleClientId,
         scopes: ['email'],
