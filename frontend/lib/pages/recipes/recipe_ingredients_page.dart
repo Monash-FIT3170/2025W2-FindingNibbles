@@ -172,7 +172,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     height: 30,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.3),
-                      color: Colors.white.withOpacity(0.3),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1),
                     ),
@@ -196,3 +195,144 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
               ],
             ),
           ),
+
+          // Tab selector
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey, width: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      // Already on this tab
+                    },
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            'Ingredients',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        Container(height: 2, color: Colors.red),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: navigateToInstructionsPage,
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Text(
+                            'Cooking Instructions',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+
+                        Container(height: 2, color: Colors.transparent),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Ingredients title
+          Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+            child: const Text(
+              'Ingredients:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          // Ingredients list
+          Expanded(
+            child: ListView.builder(
+              itemCount: recipe.ingredients.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Custom checkbox
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            checkedIngredients[index] =
+                                !checkedIngredients[index];
+                          });
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color:
+                                checkedIngredients[index]
+                                    ? Colors.red
+                                    : Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color:
+                                  checkedIngredients[index]
+                                      ? Colors.red
+                                      : Colors.grey,
+                              width: 1.5,
+                            ),
+                          ),
+                          child:
+                              checkedIngredients[index]
+                                  ? const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Colors.white,
+                                  )
+                                  : null,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Ingredient text
+                      Expanded(
+                        child: Text(
+                          recipe.ingredients[index],
+                          style: TextStyle(
+                            decoration:
+                                checkedIngredients[index]
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                            color:
+                                checkedIngredients[index]
+                                    ? Colors.grey
+                                    : Colors.black,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
