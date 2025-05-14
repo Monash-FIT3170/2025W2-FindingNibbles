@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
+import 'package:nibbles/pages/profile/personal_info_page.dart';
 import 'package:nibbles/pages/profile/widgets/cooking_appliances_widget.dart';
 import 'package:nibbles/pages/profile/widgets/dietary_requirements_widget.dart';
 import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
@@ -78,7 +79,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Text('Profile', style: textTheme.titleLarge),
               ),
               PersonalMenuWidget(
-                onPersonalInfo: () {},
+                onPersonalInfo: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PersonalInfoPage())
+                  );
+                },
                 onFavourites: () {
                   Navigator.push(
                     context,
