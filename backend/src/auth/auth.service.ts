@@ -1,5 +1,5 @@
 import * as argon2 from 'argon2';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './strategies/jwt/jwt.strategy';
@@ -11,6 +11,7 @@ import { MailerService } from '../mailer/mailer.service';
 import { OAuth2Client } from 'google-auth-library';
 import { AuthTokens } from './dto/tokens.dto';
 import { User } from 'generated/prisma';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -173,5 +174,42 @@ export class AuthService {
 
     const user = await this.validateOrCreateGoogleUser(profile);
     return this.login(user);
+  }
+
+  async changePassword(
+    user: { id: number },
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<void> {
+    const { oldPassword, newPassword, confirmNewPassword } = changePasswordDto;
+
+    // Check if confirmation password matches
+    if (newPassword !== confirmNewPassword) {
+      throw new BadRequestException('New passwords do not match');
+    }
+
+    // Find the user
+    const existingUser = await this.userService.findOneById(user.id);
+
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Compare old password with that stored in database
+    if (!existingUser.passwordHash) {
+      throw new BadRequestException('User has no password set');
+    }
+
+    const isPasswordValid = await argon2.verify(
+      existingUser.passwordHash,
+      oldPassword,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid old password');
+    }
+
+    // Change user's password
+    const newPasswordHash = await argon2.hash(newPassword);
+    await this.userService.update(user.id, { passwordHash: newPasswordHash });
   }
 }
