@@ -1,6 +1,6 @@
 class RestaurantDto {
   final int id;
-  final String placeId; // Google Places ID
+  final String place_id; // Google Places ID
   final String name;
   final double latitude;
   final double longitude;
@@ -9,6 +9,7 @@ class RestaurantDto {
   final double? rating;
   final int? userRatingsTotal;
   final int? priceLevel;
+  final bool hasDetails;
   final String? formattedAddress;
   final String? formattedPhoneNum;
   final String? website;
@@ -19,12 +20,10 @@ class RestaurantDto {
   final bool? servesLunch;
   final bool? servesDinner;
   final bool? wheelchairAccessibleEntrance;
-  final DateTime createdAt;
-  final DateTime updatedAt;
 
   RestaurantDto({
     required this.id,
-    required this.placeId,
+    required this.place_id,
     required this.name,
     required this.latitude,
     required this.longitude,
@@ -33,6 +32,7 @@ class RestaurantDto {
     this.rating,
     this.userRatingsTotal,
     this.priceLevel,
+    required this.hasDetails,
     this.formattedAddress,
     this.formattedPhoneNum,
     this.website,
@@ -43,24 +43,25 @@ class RestaurantDto {
     this.servesLunch,
     this.servesDinner,
     this.wheelchairAccessibleEntrance,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   // Factory method to create a DTO from JSON
   factory RestaurantDto.fromJson(Map<String, dynamic> json) {
     return RestaurantDto(
       id: json['id'] as int,
-      placeId: json['place_id'] as String,
-      name: json['name'] as String,
+      place_id:
+          json['placeId'] as String? ?? '', // Provide a default value if null
+      name:
+          json['name'] as String? ??
+          'Unknown', // Provide a default value if null
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       businessStatus: json['businessStatus'] as String?,
       icon: json['icon'] as String?,
-      rating:
-          json['rating'] != null ? (json['rating'] as num).toDouble() : null,
+      rating: (json['rating'] as num?)?.toDouble(),
       userRatingsTotal: json['userRatingsTotal'] as int?,
       priceLevel: json['priceLevel'] as int?,
+      hasDetails: json['hasDetails'] as bool,
       formattedAddress: json['formattedAddress'] as String?,
       formattedPhoneNum: json['formattedPhoneNum'] as String?,
       website: json['website'] as String?,
@@ -72,8 +73,6 @@ class RestaurantDto {
       servesDinner: json['servesDinner'] as bool?,
       wheelchairAccessibleEntrance:
           json['wheelchairAccessibleEntrance'] as bool?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 
@@ -81,7 +80,7 @@ class RestaurantDto {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'place_id': placeId,
+      'place_id': place_id,
       'name': name,
       'latitude': latitude,
       'longitude': longitude,
@@ -90,6 +89,7 @@ class RestaurantDto {
       'rating': rating,
       'userRatingsTotal': userRatingsTotal,
       'priceLevel': priceLevel,
+      'hasDetails': hasDetails,
       'formattedAddress': formattedAddress,
       'formattedPhoneNum': formattedPhoneNum,
       'website': website,
@@ -100,8 +100,6 @@ class RestaurantDto {
       'servesLunch': servesLunch,
       'servesDinner': servesDinner,
       'wheelchairAccessibleEntrance': wheelchairAccessibleEntrance,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 }
