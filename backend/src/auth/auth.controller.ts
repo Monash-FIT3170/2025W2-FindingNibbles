@@ -8,6 +8,7 @@ import {
   BadRequestException,
   UnauthorizedException,
   Req,
+  Put,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { LocalAuthGuard } from './strategies/local/local-auth.guard';
@@ -18,6 +19,8 @@ import { VerifyEmailDto } from './dto/verify.dto';
 import { UserService } from '../user/user.service';
 import { GoogleAuthGuard } from './strategies/google/google-auth.guard';
 import { Public, RequestUser } from '../types';
+import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -97,5 +100,18 @@ export class AuthController {
       throw new BadRequestException('Email is required.');
     }
     return this.authService.newValidationCode(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('change-password')
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req: RequestUser,
+  ) {
+    await this.authService.changePassword(
+      { id: req.user.id },
+      changePasswordDto,
+    );
+    return { message: 'Password changed successfully' };
   }
 }
