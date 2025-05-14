@@ -1,29 +1,45 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/restaurants/widgets/restaurant_card.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/profile/resteraunt_dto.dart';
 
-class LikedPage extends StatelessWidget {
+class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
+
+  @override
+  State<LikedPage> createState() => _LikedPageState();
+}
+
+class _LikedPageState extends State<LikedPage> {
+  final ProfileService _profileService = ProfileService();
+  List<RestaurantDto> _favoriteRestaurants = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoriteRestaurants();
+  }
+
+  Future<void> _loadFavoriteRestaurants() async {
+    try {
+      final restaurants = await _profileService.getFavouriteRestaurants();
+      setState(() {
+        _favoriteRestaurants = restaurants;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading favorite restaurants: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
-    final favoriteRestaurants = [
-      {
-        'image': '', // Empty image URL
-        'name': 'Dragon Hot Pot',
-        'subtitle': 'Hot Pot \$\$',
-        'rating': 4.1,
-      },
-      {
-        'image': '', // Empty image URL
-        'name': 'China Bar',
-        'subtitle': 'Chinese \$',
-        'rating': 3.8,
-      },
-      // Add more restaurants as needed
-    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -31,65 +47,90 @@ class LikedPage extends StatelessWidget {
         leading: const BackButton(),
         title: Text('Favourites', style: textTheme.titleLarge),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Restaurants Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Restaurants Section
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Favourite Restaurants',
+                            style: textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Column(
+                            children:
+                                _favoriteRestaurants.map((restaurant) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: RestaurantCard(
+                                      restaurant: restaurant,
+                                      isLiked:
+                                          true, // Always true for liked restaurants
+                                      onTap: () {
+                                        print('Tapped on ${restaurant.name}');
+                                      },
+                                      onFavoriteTap: () async {
+                                        // Remove the restaurant from the list
+                                        try {
+                                          await _profileService
+                                              .removeFavouriteRestaurant(
+                                                restaurant.id,
+                                              );
+                                          setState(() {
+                                            _favoriteRestaurants.remove(
+                                              restaurant,
+                                            );
+                                          });
+                                          print(
+                                            'Removed ${restaurant.name} from favourites',
+                                          );
+                                        } catch (e) {
+                                          print(
+                                            'Failed to remove ${restaurant.name} from favourites: $e',
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Recipes Section Placeholder
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Favourite Recipes',
+                            style: textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text('No favourite recipes yet.'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Favourite Restaurants', style: textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  Column(
-                    children:
-                        favoriteRestaurants.map((data) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: RestaurantCard(
-                              imageUrl: data['image']! as String,
-                              name: data['name']! as String,
-                              subtitle: data['subtitle']! as String,
-                              rating: data['rating']! as double,
-                              isFavorite: true,
-                              onTap: () {},
-                              onFavoriteTap: () {},
-                              placeholder: const Icon(
-                                Icons.restaurant,
-                                size: 50,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Recipes Section Placeholder
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Favourite Recipes', style: textTheme.titleMedium),
-                  SizedBox(height: 12),
-                  Text('No favourite recipes yet.'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

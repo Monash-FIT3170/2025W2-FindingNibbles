@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
+import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
+  final _logger = getLogger();
 
   /// Dietary Requirements
 
@@ -90,10 +92,11 @@ class ProfileService {
 
   /// Restaurants
 
-  Future<List<RestaurantDto>> getRestaurants() async {
+  Future<List<RestaurantDto>> getFavouriteRestaurants() async {
     try {
       final response = await _dio.get('user/favourite-restaurant');
       if (response.statusCode == 200) {
+        _logger.d(response.data); // Log the response to inspect the data
         List<dynamic> data = response.data;
         return data.map((item) => RestaurantDto.fromJson(item)).toList();
       } else {
@@ -104,7 +107,7 @@ class ProfileService {
     }
   }
 
-  Future<void> addRestaurant(int restaurantId) async {
+  Future<void> addFavouriteRestaurant(int restaurantId) async {
     try {
       final response = await _dio.post(
         '/user/favourite-restaurant',
@@ -118,7 +121,7 @@ class ProfileService {
     }
   }
 
-  Future<void> removeRestaurant(int restaurantId) async {
+  Future<void> removeFavouriteRestaurant(int restaurantId) async {
     try {
       final response = await _dio.post(
         '/user/unfavourite-restaurant',
