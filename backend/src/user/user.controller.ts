@@ -7,6 +7,11 @@ import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-
 export class UserController {
   constructor(readonly userService: UserService) {}
 
+  @Get('profile')
+  async getProfile(@Req() req: RequestUser) {
+    return this.userService.getProfile(req.user.id);
+  }
+
   @Post('favourite-restaurant')
   favouriteRestaurant(
     @Req() req: RequestUser,

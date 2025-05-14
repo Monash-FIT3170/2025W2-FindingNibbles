@@ -180,6 +180,17 @@ export class UserService {
     });
   }
 
+  async getProfile(userId: number) {
+    return this.db.user.findUnique({
+      where: { id: userId },
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+    });
+  }
+
   async remove(id: number) {
     return this.db.user.delete({ where: { id } });
   }
