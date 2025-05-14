@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   try {
     // Create default user
     console.log('Creating default user...');
-    const defaultUserEmail = 'team@findingnibbles.com';
+    const defaultUserEmail = 'findingnibbles@gmail.com';
     const defaultUserPassword = '#FindingNibbles123'; // Replace with a secure password
     const hashedPassword = await argon2.hash(defaultUserPassword); // Hash the password
 
