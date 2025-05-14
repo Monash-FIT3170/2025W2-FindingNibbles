@@ -15,13 +15,13 @@ class AuthService {
   late GoogleSignIn _googleSignIn;
 
   AuthService() {
-    if (Platform.isAndroid) {
-      _googleSignIn = GoogleSignIn(scopes: ['email']);
-    } else {
+    if (Platform.isIOS) {
       _googleSignIn = GoogleSignIn(
         clientId: AppConstants.googleClientId,
         scopes: ['email'],
       );
+    } else {
+      _googleSignIn = GoogleSignIn(scopes: ['email']);
     }
   }
 
