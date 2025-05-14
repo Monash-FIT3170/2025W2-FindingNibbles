@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:nibbles/core/logger.dart';
 import '../main.dart'; // Import navigatorKey
+import 'dart:io';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -9,7 +10,10 @@ class DioClient {
 
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'http://localhost:3000/api/',
+      baseUrl:
+          Platform.isAndroid
+              ? 'http://10.0.2.2:3000/api/'
+              : 'http://localhost:3000/api/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       validateStatus: (status) => status != null && status < 400,
