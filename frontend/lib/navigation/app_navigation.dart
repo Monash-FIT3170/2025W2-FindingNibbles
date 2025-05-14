@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/recipe_ingredients_page.dart';
+import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
 import '../pages/restaurants/restaurants_page.dart';
 import '../pages/recipes/recipes_page.dart';
@@ -45,6 +46,11 @@ class _AppNavigationState extends State<AppNavigation> {
             icon: Icon(Icons.list_outlined),
             label: 'Ingredients',
           ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.person_2),
+            icon: Icon(Icons.person_2_outlined),
+            label: 'Profile',
+          ),
         ],
       ),
       body:
@@ -53,6 +59,7 @@ class _AppNavigationState extends State<AppNavigation> {
             const RestaurantsPage(),
             const RecipesPage(),
             const RecipeIngredientsPage(), //get rid of this once app has been tested
+            ProfilePage(),
           ][currentPageIndex],
     );
   }
