@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
+import { Prisma, Restaurant } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
 import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
@@ -15,9 +15,9 @@ export class UserService {
     return this.db.user.create({ data: createUserDto });
   }
 
-  async findAll() {
-    return this.db.user.findMany();
-  }
+  // async findAll() {
+  //   return this.db.user.findMany();
+  // }
 
   async findOneById(id: number) {
     return this.db.user.findUnique({ where: { id } });
@@ -66,15 +66,18 @@ export class UserService {
    * @param userId d
    * @returns d
    */
-  async getFavouritedRestaurants(userId: number) {
-    return this.db.userFavouritedRestaurant.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        restaurant: true,
-      },
-    });
+  async getFavouritedRestaurants(userId: number): Promise<Restaurant[]> {
+    const favouritedRestaurants =
+      await this.db.userFavouritedRestaurant.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          restaurant: true,
+        },
+      });
+
+    return favouritedRestaurants.map((fav) => fav.restaurant);
   }
 
   /**
@@ -133,7 +136,7 @@ export class UserService {
       await this.dietaryRestrictionService.create(dietaryInformation);
     return this.db.userDietary.create({
       data: {
-        userId,
+        userId: userId,
         dietaryId: dietaryRestriction.id,
       },
     });
