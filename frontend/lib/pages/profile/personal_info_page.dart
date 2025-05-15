@@ -60,4 +60,37 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
       ),
     );
   }
+
+  /// Function to handle updating user details
+  Future<void> _handleFieldUpdate(String fieldName, String newValue) async {
+    updateUserDto? data;
+    print(fieldName);
+    switch (fieldName) {
+      case 'firstName':
+        data = updateUserDto(firstName: newValue);
+        print(data.firstName);
+        break;
+      case 'lastName':
+        data = updateUserDto(lastName: newValue);
+        break;
+      case 'email':
+        data = updateUserDto(email: newValue);
+        break;
+      default:
+        return;
+    }
+
+    try {
+      _profileService.updateUserProfile(data); // update details
+      _loadUserInfo(); // Reload user info to reflect the changes
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${fieldName} updated successfully!')),
+      );
+    } catch (error) {
+      print('Error updating $fieldName: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred while updating.')),
+      );
+    }
+  }
 }
