@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
 
 class ProfileService {
@@ -123,8 +124,8 @@ class ProfileService {
 
   Future<void> removeFavouriteRestaurant(int restaurantId) async {
     try {
-      final response = await _dio.post(
-        '/user/unfavourite-restaurant',
+      final response = await _dio.delete(
+        '/user/favourite-restaurant',
         data: {'restaurantId': restaurantId}, // Send restaurantId as JSON
       );
       if (response.statusCode != 200) {
@@ -132,6 +133,48 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to remove restaurant: $e');
+    }
+  }
+
+  Future<List<RecipeDto>> getFavouriteRecipes() async {
+    try {
+      final response = await _dio.get('user/favourite-recipe');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data.map((item) => RecipeDto.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load recipes');
+      }
+    } catch (e) {
+      throw Exception('Failed to load recipes: $e');
+    }
+  }
+
+  Future<void> addFavouriteRecipe(int recipeId) async {
+    try {
+      final response = await _dio.post(
+        '/user/favourite-recipe',
+        data: {'recipeId': recipeId}, // Send recipeId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add recipe');
+      }
+    } catch (e) {
+      throw Exception('Failed to add recipe: $e');
+    }
+  }
+
+  Future<void> removeFavouriteRecipe(int recipeId) async {
+    try {
+      final response = await _dio.delete(
+        '/user/favourite-recipe',
+        data: {'recipeId': recipeId}, // Send recipeId as JSON
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove recipe');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove recipe: $e');
     }
   }
 }

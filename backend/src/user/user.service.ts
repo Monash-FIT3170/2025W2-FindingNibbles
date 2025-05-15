@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Restaurant } from 'generated/prisma';
+import { Prisma, Restaurant, Recipe } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
 import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
@@ -52,13 +52,8 @@ export class UserService {
    */
 
   async unfavouriteRestaurant(userId: number, restaurantId: number) {
-    return this.db.userFavouritedRestaurant.delete({
-      where: {
-        userId_restaurantId: {
-          userId,
-          restaurantId,
-        },
-      },
+    await this.db.userFavouritedRestaurant.deleteMany({
+      where: { userId, restaurantId },
     });
   }
   /**
@@ -139,6 +134,38 @@ export class UserService {
         userId: userId,
         dietaryId: dietaryRestriction.id,
       },
+    });
+  }
+
+  /**
+   * Recipe specific user
+   */
+
+  async getFavouritedRecipe(userId: number): Promise<Recipe[]> {
+    const favouritedRecipes = await this.db.userFavouritedRecipe.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        recipe: true,
+      },
+    });
+
+    return favouritedRecipes.map((fav) => fav.recipe);
+  }
+
+  async favouriteRecipe(userId: number, recipeId: number) {
+    return this.db.userFavouritedRecipe.create({
+      data: {
+        userId,
+        recipeId,
+      },
+    });
+  }
+
+  async unfavouriteRecipe(userId: number, recipeId: number) {
+    await this.db.userFavouritedRecipe.deleteMany({
+      where: { userId, recipeId },
     });
   }
 

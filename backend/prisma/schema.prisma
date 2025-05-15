@@ -34,6 +34,7 @@ model User {
   favouriteRestaurants   UserFavouritedRestaurant[]
   userCuisinePreferences UserCuisine[]
   appliances             UserAppliance[]
+  favouritedRecipes      UserFavouritedRecipe[]
   createdAt              DateTime                   @default(now())
   updatedAt              DateTime                   @updatedAt
 
@@ -66,6 +67,7 @@ model UserDietary {
   user      User                @relation(fields: [userId], references: [id])
   dietary   DietaryRestriction  @relation(fields: [dietaryId], references: [id])
   recipes   RecipeUserDietary[]
+
   @@unique([userId, dietaryId])
 }
 
@@ -75,7 +77,18 @@ model UserFavouritedRestaurant {
   restaurantId Int
   user         User       @relation(fields: [userId], references: [id])
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
   @@unique([userId, restaurantId])
+}
+
+model UserFavouritedRecipe {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  recipeId Int
+  user     User   @relation(fields: [userId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+
+  @@unique([userId, recipeId])
 }
 
 model UserCuisine {
@@ -84,6 +97,7 @@ model UserCuisine {
   cuisineId Int
   user      User    @relation(fields: [userId], references: [id])
   cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
+
   @@unique([userId, cuisineId])
 }
 
@@ -268,6 +282,7 @@ model RecipeUserAppliance {
   appliance       UserAppliance @relation(fields: [userApplianceId], references: [id])
   Appliance       Appliance?    @relation(fields: [applianceId], references: [id])
   applianceId     Int?
+
   @@unique([recipeId, userApplianceId])
 }
 
@@ -277,17 +292,19 @@ model RecipeUserDietary {
   userDietaryId Int
   recipe        Recipe      @relation(fields: [recipeId], references: [id])
   dietary       UserDietary @relation(fields: [userDietaryId], references: [id])
+
   @@unique([recipeId, userDietaryId])
 }
 
 model Recipe {
-  id                   Int                   @id @default(autoincrement())
+  id                   Int                    @id @default(autoincrement())
   title                String
   description          String
   ingredients          String[]
   dietaries            RecipeUserDietary[]
   instructions         String[]
   appliances           RecipeUserAppliance[]
+  favouriteBy          UserFavouritedRecipe[]
   estimatedTimeMinutes Int
   servings             Int
   dietaryTags          String[]
@@ -295,7 +312,7 @@ model Recipe {
   difficultyLevel      String
   imageURL             String?
   cuisineId            Int
-  cuisine              Cuisine               @relation(fields: [cuisineId], references: [id])
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  cuisine              Cuisine                @relation(fields: [cuisineId], references: [id])
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
 }
