@@ -1,7 +1,17 @@
-import { Body, Controller, Post, Req, Get, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  Get,
+  Delete,
+  Patch,
+} from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
 import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
+import { UpdateUserDto } from './dto/update-user_dto';
 
 @Controller('user')
 export class UserController {
@@ -83,5 +93,32 @@ export class UserController {
     @Body('recipeId') recipeId: number,
   ) {
     return this.userService.unfavouriteRecipe(req.user.sub, recipeId);
+  }
+
+  @Patch('update')
+  async updateUser(
+    @Req() req: RequestUser,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const userId = req.user.id;
+
+    console.log('Incoming Update Request:', updateUserDto);
+
+    // Attempt the update
+    const updatedUser = await this.userService.update(userId, updateUserDto);
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    console.log('Updated User:', updatedUser);
+
+    // Return the updated user details
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+    };
   }
 }
