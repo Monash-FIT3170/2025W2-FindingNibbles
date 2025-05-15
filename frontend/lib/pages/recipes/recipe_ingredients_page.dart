@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'recipe_instructions_page.dart'; // Keep this import
 
@@ -6,6 +8,7 @@ class Recipe {
   final String imageUrl;
   final int cookingTime;
   final List<String> ingredients;
+  final List<dynamic>instructions;
   bool isFavorite;
 
   Recipe({
@@ -13,6 +16,7 @@ class Recipe {
     required this.imageUrl,
     required this.cookingTime,
     required this.ingredients,
+    required this.instructions,
     this.isFavorite = false,
   });
 }
@@ -41,6 +45,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       '3/4 cup coconut soda',
       '1 green onion (optional, thinly sliced)',
       '1/2 cup water',
+    ],
+    instructions: [
+    'Step 1 - Prepare the Pork\n\nCut pork spare ribs into bite-sized pieces. Clean the pork (optional but highly recommended). Fill a small pot with water (enough to cover the spare ribs when added). Add salt (1 teaspoon). Bring the water to a boil. Add pork ribs and blanch the pork for 8 minutes or until scum floats to the top. This will remove the impurities and off-smell of pork. Drain the ribs in a colander in the sink. Rinse thoroughly under cold running water. Pork ribs are now ready to be cooked.',
+    'Step 2 - Marinate the Pork\n\nIn a large bowl, combine fish sauce, diced shallot, ground black pepper, and 1 tablespoon of sugar. Add the pork ribs and mix well. Let the pork marinate for at least 30 minutes.',
+    'Step 3 - Prepare the Caramel Sauce\n\nIn a pan, add 2 tablespoons of sugar and heat over medium heat until the sugar melts and turns golden brown. Add 1/2 cup of water and stir until the caramel dissolves completely.',
+    'Step 4 - Cook the Pork\n\nHeat a large pan over medium heat. Add the marinated pork ribs and cook until lightly browned. Pour the caramel sauce over the pork and stir well. Add the bouillon powder and coconut soda. Cover and simmer for 20 minutes.',
+    'Step 5 - Garnish and Serve\n\nOnce the pork is tender and the sauce has thickened, remove from heat. Garnish with thinly sliced green onions and serve hot with steamed rice.',
     ],
     isFavorite: false,
   );
@@ -122,8 +133,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.7),
-                          Colors.transparent.withValues(alpha: 0.0),
+                          Colors.black.withOpacity(0.7),
+                          Colors.transparent,
                         ],
                       ),
                     ),
@@ -163,6 +174,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     ],
                   ),
                 ),
+
                 // Favorite button
                 Positioned(
                   top: 8,
@@ -171,7 +183,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: Colors.white.withOpacity(0.3),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1),
                     ),
@@ -239,7 +251,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                             style: TextStyle(color: Colors.grey),
                           ),
                         ),
-
                         Container(height: 2, color: Colors.transparent),
                       ],
                     ),
