@@ -104,7 +104,7 @@ class _RecipesPageState extends State<RecipesPage> {
         ingredients: ingredients,
         dietaries:
             useDietaryRestrictions
-                ? selectedDietaries.map((d) => d.id!).toList()
+                ? selectedDietaries.map((d) => d.id).toList()
                 : [],
         appliances: selectedAppliances.map((a) => a.id).toList(),
         difficultyLevel: selectedDifficulty,

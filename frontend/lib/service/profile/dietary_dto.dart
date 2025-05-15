@@ -1,14 +1,18 @@
 class DietaryRequirementDto {
-  final int? id; // Optional for new entries
+  final int id; // Optional for new entries
   final String name;
   final String? description;
 
-  DietaryRequirementDto({this.id, required this.name, this.description});
+  DietaryRequirementDto({
+    required this.id,
+    required this.name,
+    this.description,
+  });
 
   // Factory method to create a DTO from JSON
   factory DietaryRequirementDto.fromJson(Map<String, dynamic> json) {
     return DietaryRequirementDto(
-      id: json['id'] as int?,
+      id: json['id'] as int,
       name: json['name'] as String,
       description: json['description'] as String?,
     );

@@ -58,17 +58,17 @@ class ProfileService {
 
   Future<List<DietaryRequirementDto>> getDefaultDietaryRestrictions() async {
     try {
-      final response = await _dio.get('dietary-requirement');
+      final response = await _dio.get('dietary-restriction');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
             .map((item) => DietaryRequirementDto.fromJson(item))
             .toList();
       } else {
-        throw Exception('Failed to load default dietary requirements');
+        throw Exception('Failed to load dietary requirements');
       }
     } catch (e) {
-      throw Exception('Failed to load default dietary requirements: $e');
+      throw Exception('Failed to load dietary requirements: $e');
     }
   }
 
@@ -78,7 +78,7 @@ class ProfileService {
   ) async {
     try {
       final response = await _dio.post(
-        'create-dietary-restriction',
+        'user/create-dietary-restriction',
         data: {'name': name, 'description': description},
       );
       if (response.statusCode == 201) {

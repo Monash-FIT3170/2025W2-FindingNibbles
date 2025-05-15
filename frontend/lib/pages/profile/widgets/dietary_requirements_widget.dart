@@ -1,16 +1,175 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 
-class DietaryRequirementsWidget extends StatelessWidget {
-  final List<String> tags;
-  final VoidCallback onOpenSelector;
-  final void Function(String) onTagRemoved;
+class DietaryRequirementsWidget extends StatefulWidget {
+  final List<DietaryRequirementDto> dietaryRestrictions;
+  final void Function(DietaryRequirementDto) onAdd;
+  final void Function(DietaryRequirementDto) onRemove;
 
   const DietaryRequirementsWidget({
-    super.key,
-    required this.tags,
-    required this.onOpenSelector,
-    required this.onTagRemoved,
-  });
+    Key? key,
+    required this.dietaryRestrictions,
+    required this.onAdd,
+    required this.onRemove,
+  }) : super(key: key);
+
+  @override
+  _DietaryRequirementsWidgetState createState() =>
+      _DietaryRequirementsWidgetState();
+}
+
+class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
+  final ProfileService _profileService = ProfileService();
+  List<DietaryRequirementDto> _allDefaults = [];
+  List<DietaryRequirementDto> _filtered = [];
+  String _searchTerm = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaults();
+  }
+
+  Future<void> _loadDefaults() async {
+    try {
+      final defaults = await _profileService.getDefaultDietaryRestrictions();
+      setState(() {
+        _allDefaults = defaults;
+        _filtered = defaults;
+      });
+    } catch (e) {
+      print('Error loading defaults: $e');
+      setState(() {
+        _allDefaults = [];
+        _filtered = [];
+      });
+      // Optionally, show a snackbar or dialog to inform the user
+    }
+  }
+
+  void _openCustomCreationDialog() {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Create Custom Dietary Restriction'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(labelText: 'Description'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final description = descriptionController.text.trim();
+
+                if (name.isNotEmpty && description.isNotEmpty) {
+                  final newDietary = await _profileService
+                      .createDietaryRestriction(name, description);
+                  widget.onAdd(newDietary);
+                  Navigator.of(context).pop();
+                } else {
+                  // Optionally, show an error message if fields are empty
+                }
+              },
+              child: const Text('Create'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _openAddDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          scrollable: true,
+          title: const Text('Add Dietary Restriction'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: Column(
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Search',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchTerm = value.toLowerCase();
+                      _filtered =
+                          _allDefaults
+                              .where(
+                                (d) =>
+                                    d.name.toLowerCase().contains(_searchTerm),
+                              )
+                              .toList();
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child:
+                      _filtered.isEmpty
+                          ? const Center(child: Text('No matches'))
+                          : ListView.builder(
+                            itemCount: _filtered.length,
+                            itemBuilder: (context, index) {
+                              final item = _filtered[index];
+                              return ListTile(
+                                title: Text(item.name),
+                                onTap: () async {
+                                  await _profileService.addDietaryRestriction(
+                                    item.id,
+                                  );
+                                  widget.onAdd(item);
+                                  Navigator.of(context).pop();
+                                },
+                              );
+                            },
+                          ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _openCustomCreationDialog();
+              },
+              child: const Text('Create custom'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,35 +181,51 @@ class DietaryRequirementsWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Dietary Requirements',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                const Text(
+                  'Dietary Requirements',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: _openAddDialog,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: onOpenSelector,
+              onTap: _openAddDialog,
               child: InputDecorator(
-                decoration: InputDecoration(
-                  hintText: '--Select Tags--',
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(
+                  contentPadding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
                 ),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children:
-                      tags
-                          .map(
-                            (tag) => Chip(
-                              label: Text(tag),
-                              onDeleted: () => onTagRemoved(tag),
-                            ),
-                          )
-                          .toList(),
-                ),
+                child:
+                    widget.dietaryRestrictions.isEmpty
+                        ? const Text(
+                          'No current dietary requirements',
+                          style: TextStyle(color: Colors.grey),
+                        )
+                        : Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children:
+                              widget.dietaryRestrictions.map((d) {
+                                return InputChip(
+                                  label: Text(d.name),
+                                  onDeleted: () async {
+                                    await _profileService
+                                        .removeDietaryRestriction(d.id);
+                                    widget.onRemove(d);
+                                  },
+                                );
+                              }).toList(),
+                        ),
               ),
             ),
           ],
