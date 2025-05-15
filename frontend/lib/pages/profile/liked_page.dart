@@ -82,38 +82,55 @@ class _LikedPageState extends State<LikedPage> {
                             style: textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _favoriteRestaurants.length,
-                            itemBuilder: (context, index) {
-                              final restaurant = _favoriteRestaurants[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: RestaurantCard(
-                                  restaurant: restaurant,
-                                  isLiked: true,
-                                  onTap: () {
-                                    print('Tapped on ${restaurant.name}');
-                                  },
-                                  onFavoriteTap: () async {
-                                    try {
-                                      await _profileService
-                                          .removeFavouriteRestaurant(
-                                            restaurant.id,
-                                          );
-                                      setState(() {
-                                        _favoriteRestaurants.remove(restaurant);
-                                      });
-                                    } catch (e) {
-                                      print(
-                                        'Failed to remove ${restaurant.name} from favourites: $e',
-                                      );
-                                    }
-                                  },
-                                ),
-                              );
-                            },
+                          SizedBox(
+                            height: 320, // Consistent height
+                            child:
+                                _favoriteRestaurants.isEmpty
+                                    ? Center(
+                                      child: Text(
+                                        'No favourite restaurants yet.',
+                                        style: textTheme.bodyMedium,
+                                      ),
+                                    )
+                                    : ListView.builder(
+                                      itemCount: _favoriteRestaurants.length,
+                                      itemBuilder: (context, index) {
+                                        final restaurant =
+                                            _favoriteRestaurants[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: RestaurantCard(
+                                            restaurant: restaurant,
+                                            isLiked: true,
+                                            height: 80.0, // Smaller card height
+                                            onTap: () {
+                                              print(
+                                                'Tapped on ${restaurant.name}',
+                                              );
+                                            },
+                                            onFavoriteTap: () async {
+                                              try {
+                                                await _profileService
+                                                    .removeFavouriteRestaurant(
+                                                      restaurant.id,
+                                                    );
+                                                setState(() {
+                                                  _favoriteRestaurants.remove(
+                                                    restaurant,
+                                                  );
+                                                });
+                                              } catch (e) {
+                                                print(
+                                                  'Failed to remove ${restaurant.name} from favourites: $e',
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                           ),
                         ],
                       ),
@@ -141,36 +158,54 @@ class _LikedPageState extends State<LikedPage> {
                             style: textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _favoriteRecipes.length,
-                            itemBuilder: (context, index) {
-                              final recipe = _favoriteRecipes[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: RecipeCard(
-                                  recipe: recipe,
-                                  isLiked: true,
-                                  onTap: () {
-                                    print('Tapped on ${recipe.title}');
-                                  },
-                                  onFavoriteTap: () async {
-                                    try {
-                                      await _profileService
-                                          .removeFavouriteRecipe(recipe.id);
-                                      setState(() {
-                                        _favoriteRecipes.remove(recipe);
-                                      });
-                                    } catch (e) {
-                                      print(
-                                        'Failed to remove ${recipe.title} from favourites: $e',
-                                      );
-                                    }
-                                  },
-                                ),
-                              );
-                            },
+                          SizedBox(
+                            height: 320, // Consistent height
+                            child:
+                                _favoriteRecipes.isEmpty
+                                    ? Center(
+                                      child: Text(
+                                        'No favourite recipes yet.',
+                                        style: textTheme.bodyMedium,
+                                      ),
+                                    )
+                                    : ListView.builder(
+                                      itemCount: _favoriteRecipes.length,
+                                      itemBuilder: (context, index) {
+                                        final recipe = _favoriteRecipes[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12,
+                                          ),
+                                          child: RecipeCard(
+                                            recipe: recipe,
+                                            isLiked: true,
+                                            height: 80.0, // Smaller card height
+                                            onTap: () {
+                                              print(
+                                                'Tapped on ${recipe.title}',
+                                              );
+                                            },
+                                            onFavoriteTap: () async {
+                                              try {
+                                                await _profileService
+                                                    .removeFavouriteRecipe(
+                                                      recipe.id,
+                                                    );
+                                                setState(() {
+                                                  _favoriteRecipes.remove(
+                                                    recipe,
+                                                  );
+                                                });
+                                              } catch (e) {
+                                                print(
+                                                  'Failed to remove ${recipe.title} from favourites: $e',
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                           ),
                         ],
                       ),

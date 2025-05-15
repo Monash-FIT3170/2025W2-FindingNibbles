@@ -158,6 +158,26 @@ async function main(): Promise<void> {
       }
     }
 
+    console.log('Adding random favorite restaurants for the default user...');
+    const allRestaurants = await prisma.restaurant.findMany();
+    if (allRestaurants.length >= 5) {
+      const randomRestaurants = allRestaurants
+        .sort(() => 0.5 - Math.random()) // Shuffle the array
+        .slice(0, 5); // Take the first 5
+
+      for (const restaurant of randomRestaurants) {
+        await prisma.userFavouritedRestaurant.create({
+          data: {
+            userId: defaultUser.id,
+            restaurantId: restaurant.id,
+          },
+        });
+        console.log(`Added favorite restaurant: ${restaurant.name}`);
+      }
+    } else {
+      console.warn('Not enough restaurants to add 5 favorites.');
+    }
+
     console.log('Seeding completed');
   } catch (error) {
     // Handle any errors in the main process
