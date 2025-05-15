@@ -4,9 +4,64 @@ import 'package:nibbles/pages/profile/widgets/cooking_appliances_widget.dart';
 import 'package:nibbles/pages/profile/widgets/dietary_requirements_widget.dart';
 import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
 import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
+import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final ProfileService _profileService = ProfileService();
+  List<DietaryRequirementDto> _dietaryRequirements = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDietaryRequirements();
+  }
+
+  void _addDietaryRequirement(DietaryRequirementDto requirement) {
+    setState(() {
+      _dietaryRequirements.add(requirement);
+    });
+  }
+
+  void _removeDietaryRequirement(DietaryRequirementDto requirement) {
+    setState(() {
+      _dietaryRequirements.removeWhere((r) => r.id == requirement.id);
+    });
+  }
+
+  /*
+   * Loading user specific dietary requirments
+   */
+  Future<void> _loadDietaryRequirements() async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final requirements = await _profileService.getDietaryRestrictions();
+      if (mounted) {
+        setState(() {
+          _dietaryRequirements = requirements;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching dietary requirements: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,17 +71,12 @@ class ProfilePage extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start, // Aligns content to the left
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Add a header with "Profile" text
               Padding(
-                padding: const EdgeInsets.all(
-                  16.0,
-                ), // Adds spacing around the text
+                padding: const EdgeInsets.all(16.0),
                 child: Text('Profile', style: textTheme.titleLarge),
               ),
-              // Personal menu widget
               PersonalMenuWidget(
                 onPersonalInfo: () {},
                 onFavourites: () {
@@ -37,13 +87,12 @@ class ProfilePage extends StatelessWidget {
                 },
                 onMyReviews: () {},
               ),
-              // Dietary requirements widget
               DietaryRequirementsWidget(
-                tags: ['Vegan', 'Gluten Free', 'Peanut-allergic'],
-                onOpenSelector: () {},
-                onTagRemoved: (tag) {},
+                dietaryRestrictions: _dietaryRequirements,
+                onAdd: _addDietaryRequirement,
+                onRemove: _removeDietaryRequirement,
               ),
-              // Cooking appliances widget
+
               CookingAppliancesWidget(
                 appliances: [
                   'Toaster',
@@ -55,7 +104,6 @@ class ProfilePage extends StatelessWidget {
                 onOpenSelector: () {},
                 onApplianceRemoved: (app) {},
               ),
-              // Logout widget
               LogoutWidget(onLogout: () {}),
             ],
           ),
