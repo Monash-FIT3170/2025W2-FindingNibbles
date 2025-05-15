@@ -4,6 +4,7 @@ import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/service/profile/user_dto.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
@@ -183,6 +184,24 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to remove recipe: $e');
+    }
+  }
+
+  Future<UserDto> updateUserProfile(updateUserDto updateUserDto) async {
+    try {
+      final response = await _dio.patch(
+        '/user/update',
+        data: updateUserDto.toJson(), // Convert UpdateUserDto to JSON
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response into a UserDto
+        return UserDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to update user profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
     }
   }
 }
