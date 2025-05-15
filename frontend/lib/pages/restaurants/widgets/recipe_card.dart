@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/service/profile/recipe_dto.dart';
 
-class RestaurantCard extends StatelessWidget {
-  final RestaurantDto restaurant;
+class RecipeCard extends StatelessWidget {
+  final RecipeDto recipe;
   final VoidCallback onTap;
   final VoidCallback onFavoriteTap;
   final bool isLiked;
-  final double height; // Add height parameter
-  final Widget? placeholder;
+  final double height;
 
-  const RestaurantCard({
+  const RecipeCard({
     super.key,
-    required this.restaurant,
+    required this.recipe,
     required this.onTap,
     required this.onFavoriteTap,
     required this.isLiked,
     this.height = 90.0, // Default height
-    this.placeholder,
   });
 
   @override
@@ -26,39 +24,37 @@ class RestaurantCard extends StatelessWidget {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: SizedBox(
-          height: height, // Use the configurable height
+          height: height,
           child: Row(
             children: [
               // Image container
               Container(
-                width: height, // Match the height for a square image
+                width: height,
                 height: height,
                 margin: const EdgeInsets.all(10),
                 child:
-                    (restaurant.icon != null && restaurant.icon!.isNotEmpty)
+                    (recipe.imageURL != null && recipe.imageURL!.isNotEmpty)
                         ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: Image.network(
-                            restaurant.icon!,
+                            recipe.imageURL!,
                             width: height,
                             height: height,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              return placeholder ??
-                                  const Icon(
-                                    Icons.error,
-                                    size: 50,
-                                    color: Colors.red,
-                                  );
+                              return const Icon(
+                                Icons.error,
+                                size: 50,
+                                color: Colors.red,
+                              );
                             },
                           ),
                         )
-                        : (placeholder ??
-                            const Icon(
-                              Icons.restaurant,
-                              size: 50,
-                              color: Colors.grey,
-                            )),
+                        : const Icon(
+                          Icons.fastfood,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
               ),
               const SizedBox(width: 12),
               // Text and details
@@ -68,7 +64,7 @@ class RestaurantCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      restaurant.name,
+                      recipe.title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -77,7 +73,7 @@ class RestaurantCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      restaurant.formattedAddress ?? 'No address available',
+                      recipe.cuisine,
                       style: const TextStyle(fontSize: 14, color: Colors.grey),
                       overflow: TextOverflow.ellipsis,
                     ),
