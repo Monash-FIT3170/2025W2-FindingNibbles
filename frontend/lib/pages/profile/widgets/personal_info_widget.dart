@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/profile/change_password_page.dart';
 
 class PersonalInfo extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -52,7 +53,14 @@ class _PersonalInfoState extends State<PersonalInfo> {
               _buildInfoTile('Email', 'email'),
               const SizedBox(height: 30),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ChangePasswordPage(),
+                    ),
+                  );
+                },
                 icon: const Icon(Icons.lock_outline),
                 label: const Text('Change Password'),
                 style: ElevatedButton.styleFrom(
