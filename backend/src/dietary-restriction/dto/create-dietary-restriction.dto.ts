@@ -1,9 +1,13 @@
-import { IsNotEmpty } from 'class-validator';
+export class DietaryRestrictionDto {
+  id: number;
 
-export class CreateDietaryRestrictionDto {
-  @IsNotEmpty()
   name: string;
 
-  @IsNotEmpty()
-  description: string;
+  description?: string;
+}
+
+export class CreateDietaryRestrictionDto {
+  name: string;
+
+  description?: string;
 }

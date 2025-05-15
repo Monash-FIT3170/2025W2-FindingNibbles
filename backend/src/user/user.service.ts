@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, Restaurant, Recipe } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
-import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
+import {
+  CreateDietaryRestrictionDto,
+  DietaryRestrictionDto,
+} from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
 
 @Injectable()
 export class UserService {
@@ -97,18 +100,18 @@ export class UserService {
    * @returns d
    */
   async removeDietaryRestriction(userId: number, dietaryId: number) {
-    return this.db.userDietary.delete({
+    return this.db.userDietary.deleteMany({
       where: {
-        userId_dietaryId: {
-          userId,
-          dietaryId,
-        },
+        userId,
+        dietaryId,
       },
     });
   }
 
-  async getDietaryRestrictions(userId: number) {
-    return this.db.userDietary.findMany({
+  async getDietaryRestrictions(
+    userId: number,
+  ): Promise<DietaryRestrictionDto[]> {
+    const userDietaries = await this.db.userDietary.findMany({
       where: {
         userId,
       },
@@ -116,6 +119,12 @@ export class UserService {
         dietary: true,
       },
     });
+
+    return userDietaries.map((userDietary) => ({
+      id: userDietary.dietary.id,
+      name: userDietary.dietary.name,
+      description: userDietary.dietary.description ?? undefined,
+    }));
   }
 
   /**
@@ -127,8 +136,10 @@ export class UserService {
     userId: number,
     dietaryInformation: CreateDietaryRestrictionDto,
   ) {
-    const dietaryRestriction =
-      await this.dietaryRestrictionService.create(dietaryInformation);
+    const dietaryRestriction = await this.dietaryRestrictionService.create({
+      name: dietaryInformation.name,
+      description: dietaryInformation.description,
+    });
     return this.db.userDietary.create({
       data: {
         userId: userId,
