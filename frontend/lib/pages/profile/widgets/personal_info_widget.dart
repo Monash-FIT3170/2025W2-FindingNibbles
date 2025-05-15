@@ -27,149 +27,86 @@ class _PersonalInfoState extends State<PersonalInfo> {
     _isEditing['email'] = false;
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      clipBehavior: Clip.none,
+    final primary = Theme.of(context).primaryColor;
+    return Column(
       children: [
-        Container(
-          margin: const EdgeInsets.only(top: 50),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 60),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2F2F2),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              _buildInfoTile('First Name', 'firstName'),
-              _buildInfoTile('Last Name', 'lastName'),
-              _buildInfoTile('Email', 'email'),
-              const SizedBox(height: 30),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ChangePasswordPage(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.lock_outline),
-                label: const Text('Change Password'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[700],
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+        const CircleAvatar(
+          radius: 48,
+          child: Icon(Icons.person, size: 48),
         ),
-        Positioned(
-          top: 0,
-          child: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              CircleAvatar(radius: 60, backgroundColor: Colors.orange[100]),
-              Positioned(
-                right: 0,
-                bottom: 4,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.indigo,
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(6),
-                  child: const Icon(Icons.edit, size: 16, color: Colors.white),
+        const SizedBox(height: 24),
+        _buildInfoTile('First Name', 'firstName', primary),
+        _buildInfoTile('Last Name', 'lastName', primary),
+        _buildInfoTile('Email', 'email', primary),
+        const SizedBox(height: 10),
+        Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ListTile(
+            leading: Icon(Icons.lock_outline, color: primary),
+            title: const Text('Change Password'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ChangePasswordPage(),
                 ),
-              ),
-            ],
-          ),
-        ),
+              );
+            },
+          )
+        ),       
       ],
     );
   }
 
   Widget _buildInfoTile(
     String label,
-    String fieldName
+    String fieldName,
+    Color primary,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Color(0xFFAD2C50),
-                      fontWeight: FontWeight.bold,
-                    ),
+    return Column(
+      children: [
+        ListTile(
+          title: Text(label, style: TextStyle(color: primary)),
+          subtitle: _isEditing[fieldName]!
+              ? TextFormField(
+                  controller: _controllers[fieldName],
+                  focusNode: _textFieldFocusNode,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isCollapsed: true, // to reduce extra padding
                   ),
-                  const SizedBox(height: 4),
-                  _isEditing[fieldName]! // if the user is editing this field
-                        ? TextFormField(
-                          controller: _controllers[fieldName], // links back to _controllers which stores all text entered by users in each field
-                          decoration: const InputDecoration(border: InputBorder.none),
-                          focusNode: _textFieldFocusNode,
-                          onFieldSubmitted: (value) {
-                            setState(() {
-                              _isEditing[fieldName] = false;
-                            });
-                            widget.onUpdateField?.call(fieldName, value);
-                          },
-                        )
-                      : Text(_controllers[fieldName]!.text,
-                          style: const TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isEditing[fieldName] = !_isEditing[fieldName]!;
-                  if (_isEditing[fieldName]!) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      FocusScope.of(context).requestFocus(_textFieldFocusNode);
+                  onFieldSubmitted: (value) {
+                    setState(() {
+                      _isEditing[fieldName] = false;
                     });
-                  } else {
-                    widget.onUpdateField?.call(fieldName, _controllers[fieldName]!.text);
-                  }
-                });
-              },
-              child: Icon(_isEditing[fieldName]! ? Icons.check : Icons.edit,
-                  color: Color(0xFFAD2C50)),
+                    widget.onUpdateField?.call(fieldName, value);
+                  },
+                )
+              : Text(_controllers[fieldName]!.text),
+          trailing: IconButton(
+            icon: Icon(
+              _isEditing[fieldName]! ? Icons.check : Icons.edit,
+              color: primary,
             ),
-          ],
+            onPressed: () {
+              setState(() {
+                _isEditing[fieldName] = !_isEditing[fieldName]!;
+                if (_isEditing[fieldName]!) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    FocusScope.of(context).requestFocus(_textFieldFocusNode);
+                  });
+                } else {
+                  widget.onUpdateField?.call(fieldName, _controllers[fieldName]!.text);
+                }
+              });
+            },
+          ),
         ),
-      ),
+        const Divider(height: 0),
+      ],
     );
   }
 }
