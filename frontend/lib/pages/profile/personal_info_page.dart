@@ -47,14 +47,14 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
           final user = snapshot.data!;
 
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: PersonalInfo(
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              PersonalInfo(
                 user: user,
                 onUpdateField: _handleFieldUpdate,
               ),
-            ),
+            ],
           );
         },
       ),

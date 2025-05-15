@@ -81,9 +81,14 @@ class ChangePasswordPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: handleChangePassword,
-                child: const Text('Update Password'),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: const Text('Update Password'),
+                  onTap: () {
+                    handleChangePassword();
+                  },
+                )
               ),
             ],
           ),
