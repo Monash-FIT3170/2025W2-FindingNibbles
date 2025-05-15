@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { Prisma } from 'generated/prisma';
+import { DietaryRestrictionDto } from './dto/create-dietary-restriction.dto';
 
 @Injectable()
 export class DietaryRestrictionService {
@@ -9,7 +10,11 @@ export class DietaryRestrictionService {
     return this.db.dietaryRestriction.create({ data: newDietary });
   }
 
-  async findAll() {
-    return this.db.dietaryRestriction.findMany();
+  async findAll(): Promise<DietaryRestrictionDto[]> {
+    const dietaryRestrictions = await this.db.dietaryRestriction.findMany();
+    return dietaryRestrictions.map((dietary) => ({
+      ...dietary,
+      description: dietary.description ?? undefined,
+    }));
   }
 }
