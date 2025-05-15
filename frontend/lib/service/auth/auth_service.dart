@@ -174,4 +174,38 @@ class AuthService {
       return false;
     }
   }
+
+  Future<String?> _getAccessToken() async {
+    try {
+      return await _storage.read(key: 'access_token');
+    } catch (e) {
+      print('Error reading access token from secure storage: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserProfile() async {
+    try {
+      final token = await _getAccessToken();
+      if (token == null) throw Exception('Not authenticated');
+
+      final response = await _dio.get(
+        'user/profile',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(response.data);
+      } else {
+        throw Exception('Failed to fetch profile: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        'Profile fetch failed: ${e.response?.data['message'] ?? e.message}',
+      );
+    } catch (e) {
+      print('Error: $e');
+      throw Exception('Failed to get profile: $e');
+    }
+  }
 }
