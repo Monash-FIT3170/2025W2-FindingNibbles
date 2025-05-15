@@ -1,7 +1,9 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/restaurants/widgets/restaurant_card.dart';
+import 'package:nibbles/pages/restaurants/widgets/recipe_card.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
 
 class LikedPage extends StatefulWidget {
@@ -14,23 +16,26 @@ class LikedPage extends StatefulWidget {
 class _LikedPageState extends State<LikedPage> {
   final ProfileService _profileService = ProfileService();
   List<RestaurantDto> _favoriteRestaurants = [];
+  List<RecipeDto> _favoriteRecipes = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadFavoriteRestaurants();
+    _loadFavorites();
   }
 
-  Future<void> _loadFavoriteRestaurants() async {
+  Future<void> _loadFavorites() async {
     try {
       final restaurants = await _profileService.getFavouriteRestaurants();
+      final recipes = await _profileService.getFavouriteRecipes();
       setState(() {
         _favoriteRestaurants = restaurants;
+        _favoriteRecipes = recipes;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading favorite restaurants: $e');
+      print('Error loading favorites: $e');
       setState(() {
         _isLoading = false;
       });
@@ -55,11 +60,19 @@ class _LikedPageState extends State<LikedPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Restaurants Section
+                    // Favourite Restaurants Section
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,52 +82,56 @@ class _LikedPageState extends State<LikedPage> {
                             style: textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          Column(
-                            children:
-                                _favoriteRestaurants.map((restaurant) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: RestaurantCard(
-                                      restaurant: restaurant,
-                                      isLiked:
-                                          true, // Always true for liked restaurants
-                                      onTap: () {
-                                        print('Tapped on ${restaurant.name}');
-                                      },
-                                      onFavoriteTap: () async {
-                                        // Remove the restaurant from the list
-                                        try {
-                                          await _profileService
-                                              .removeFavouriteRestaurant(
-                                                restaurant.id,
-                                              );
-                                          setState(() {
-                                            _favoriteRestaurants.remove(
-                                              restaurant,
-                                            );
-                                          });
-                                          print(
-                                            'Removed ${restaurant.name} from favourites',
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _favoriteRestaurants.length,
+                            itemBuilder: (context, index) {
+                              final restaurant = _favoriteRestaurants[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: RestaurantCard(
+                                  restaurant: restaurant,
+                                  isLiked: true,
+                                  onTap: () {
+                                    print('Tapped on ${restaurant.name}');
+                                  },
+                                  onFavoriteTap: () async {
+                                    try {
+                                      await _profileService
+                                          .removeFavouriteRestaurant(
+                                            restaurant.id,
                                           );
-                                        } catch (e) {
-                                          print(
-                                            'Failed to remove ${restaurant.name} from favourites: $e',
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  );
-                                }).toList(),
+                                      setState(() {
+                                        _favoriteRestaurants.remove(restaurant);
+                                      });
+                                    } catch (e) {
+                                      print(
+                                        'Failed to remove ${restaurant.name} from favourites: $e',
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // Recipes Section Placeholder
+                    // Favourite Recipes Section
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,7 +141,37 @@ class _LikedPageState extends State<LikedPage> {
                             style: textTheme.titleMedium,
                           ),
                           const SizedBox(height: 12),
-                          const Text('No favourite recipes yet.'),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _favoriteRecipes.length,
+                            itemBuilder: (context, index) {
+                              final recipe = _favoriteRecipes[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: RecipeCard(
+                                  recipe: recipe,
+                                  isLiked: true,
+                                  onTap: () {
+                                    print('Tapped on ${recipe.title}');
+                                  },
+                                  onFavoriteTap: () async {
+                                    try {
+                                      await _profileService
+                                          .removeFavouriteRecipe(recipe.id);
+                                      setState(() {
+                                        _favoriteRecipes.remove(recipe);
+                                      });
+                                    } catch (e) {
+                                      print(
+                                        'Failed to remove ${recipe.title} from favourites: $e',
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
