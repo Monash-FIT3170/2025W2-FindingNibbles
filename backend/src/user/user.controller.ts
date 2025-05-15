@@ -7,12 +7,19 @@ export class UserController {
   constructor(readonly userService: UserService) {}
 
   @Post('favourite-restaurant')
-  favouriteRestaurant(@Req() req: RequestUser, @Body() restaurantId: number) {
+  favouriteRestaurant(
+    @Req() req: RequestUser,
+    @Body('restaurantId') restaurantId: number,
+  ) {
     return this.userService.favouriteRestaurant(req.user.id, restaurantId);
   }
 
   @Delete('favourite-restaurant')
-  unfavouriteRestaurant(@Req() req: RequestUser, @Body() restaurantId: number) {
+  unfavouriteRestaurant(
+    @Req() req: RequestUser,
+    @Body('restaurantId') restaurantId: number,
+  ) {
+    console.log(`Unfavouriting restaurant ${restaurantId}`);
     return this.userService.unfavouriteRestaurant(req.user.id, restaurantId);
   }
 
@@ -34,5 +41,23 @@ export class UserController {
   @Get('dietary-restriction')
   getUserDietaryRestrictions(@Req() req: RequestUser) {
     return this.userService.getDietaryRestrictions(req.user.id);
+  }
+
+  @Get('favourite-recipe')
+  getFavouritedRecipes(@Req() req: RequestUser) {
+    return this.userService.getFavouritedRecipe(req.user.id);
+  }
+
+  @Post('favourite-recipe')
+  favouriteRecipe(@Req() req: RequestUser, @Body('recipeId') recipeId: number) {
+    return this.userService.favouriteRecipe(req.user.id, recipeId);
+  }
+
+  @Delete('favourite-recipe')
+  unfavouriteRecipe(
+    @Req() req: RequestUser,
+    @Body('recipeId') recipeId: number,
+  ) {
+    return this.userService.unfavouriteRecipe(req.user.id, recipeId);
   }
 }
