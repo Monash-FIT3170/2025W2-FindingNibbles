@@ -29,12 +29,11 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          _logger.d('📡 Interceptor triggered for: ${options.uri}');
           final token = await _storage.read(key: 'access_token');
-
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          _logger.d('Request Headers: ${options.headers}');
           return handler.next(options);
         },
         onError: (e, handler) async {
