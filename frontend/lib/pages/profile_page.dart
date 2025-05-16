@@ -7,6 +7,7 @@ import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
 import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/profile/appliance_dto.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,6 +17,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
   bool isLoading = true;
@@ -24,6 +26,46 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadDietaryRequirements();
+    _fetchAppliances();
+  }
+
+  Future<void> _fetchAppliances() async {
+    setState(() => isLoading = true);
+    try {
+      appliances = await _profileService.getApplicance();
+    } catch (e) {
+      print('Error fetching appliances: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _addAppliance(ApplianceRequirementDto appliance) async {
+    setState(() => isLoading = true);
+    try {
+      await _profileService.addAppliance(appliance.id!);
+      setState(() {
+        appliances.add(appliance);
+      });
+    } catch (e) {
+      print('Error adding appliance: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _removeAppliance(ApplianceRequirementDto appliance) async {
+    setState(() => isLoading = true);
+    try {
+      await _profileService.removeAppliance(appliance.id!);
+      setState(() {
+        appliances.removeWhere((a) => a.id == appliance.id);
+      });
+    } catch (e) {
+      print('Error removing appliance: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   void _addDietaryRequirement(DietaryRequirementDto requirement) {
@@ -31,6 +73,9 @@ class _ProfilePageState extends State<ProfilePage> {
       _dietaryRequirements.add(requirement);
     });
   }
+
+
+  
 
   void _removeDietaryRequirement(DietaryRequirementDto requirement) {
     setState(() {
@@ -67,43 +112,58 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFAD2C50),
+      backgroundColor: const Color(0xFFAD2C50),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Profile', style: textTheme.titleLarge),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Profile',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    PersonalMenuWidget(
+                      onPersonalInfo: () {},
+                      onFavourites: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LikedPage()),
+                        );
+                      },
+                      onMyReviews: () {},
+                    ),
+                    DietaryRequirementsWidget(
+                      dietaryRequirements: _dietaryRequirements,
+                      onAdd: _addDietaryRequirement,
+                      onRemove: _removeDietaryRequirement,
+                    ),
+                    CookingAppliancesWidget(
+                      appliances: appliances.map((e) => e.name).toList(),
+                      onOpenSelector: () {},
+                      onApplianceRemoved: (name) {
+                        final appliance = appliances.firstWhere((e) => e.name == name);
+                        _removeAppliance(appliance);
+                      },
+                      onApplianceAdded: (name) {
+                        final appliance = ApplianceRequirementDto(name: name);
+                        _addAppliance(appliance);
+                      },
+                    ),
+                    LogoutWidget(onLogout: () {}),
+                  ],
+                ),
               ),
-              PersonalMenuWidget(
-                onPersonalInfo: () {},
-                onFavourites: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LikedPage()),
-                  );
-                },
-                onMyReviews: () {},
-              ),
-              DietaryRequirementsWidget(
-                dietaryRequirements: _dietaryRequirements,
-                onAdd: _addDietaryRequirement,
-                onRemove: _removeDietaryRequirement,
-              ),
-
-              CookingAppliancesWidget(
-                appliances: appliances,
-                onOpenSelector: () {},
-                onApplianceRemoved: _removeAppliance,
-                onApplianceAdded: _addAppliance,
-              ),
-              LogoutWidget(onLogout: () {}),
-            ],
-          ),
-        ),
       ),
     );
   }
 }
+
