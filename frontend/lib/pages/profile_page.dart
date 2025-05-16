@@ -66,9 +66,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
+      backgroundColor: Color(0xFFAD2C50),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -79,12 +78,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Text('Profile', style: textTheme.titleLarge),
               ),
               PersonalMenuWidget(
-                onPersonalInfo: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PersonalInfoPage())
-                  );
-                },
+                onPersonalInfo: () {},
                 onFavourites: () {
                   Navigator.push(
                     context,
@@ -100,15 +94,10 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               CookingAppliancesWidget(
-                appliances: [
-                  'Toaster',
-                  'Oven',
-                  'Stove',
-                  'Air-fryer',
-                  'Waffle-maker',
-                ],
+                appliances: appliances,
                 onOpenSelector: () {},
-                onApplianceRemoved: (app) {},
+                onApplianceRemoved: _removeAppliance,
+                onApplianceAdded: _addAppliance,
               ),
               LogoutWidget(onLogout: () {}),
             ],
