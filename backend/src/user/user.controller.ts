@@ -44,6 +44,21 @@ export class UserController {
     return this.userService.getFavouritedRestaurants(req.user.sub);
   }
 
+  @Post('appliance')
+  addAppliance(@Req() req: RequestUser, @Body() applianceId: number) {
+    return this.userService.addAppliance(req.user.id, applianceId);
+  }
+
+  @Delete('appliance')
+  removeAppliance(@Req() req: RequestUser, @Body() applianceId: number) {
+    return this.userService.removeAppliance(req.user.id, applianceId);
+  }
+
+  @Get('appliance')
+  getUserAppliances(@Req() req: RequestUser) {
+    return this.userService.getAppliances(req.user.id);
+  }
+
   @Post('dietary-requirement')
   addDietaryRequirement(
     @Req() req: RequestUser,

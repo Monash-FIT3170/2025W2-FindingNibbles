@@ -74,6 +74,37 @@ export class UserService {
     return favouritedRestaurants.map((fav) => fav.restaurant);
   }
 
+  async addAppliance(userId: number, applianceId: number) {
+    return this.db.userAppliance.create({
+      data: {
+        userId,
+        applianceId,
+      },
+    });
+  }
+
+  async removeAppliance(userId: number, applianceId: number) {
+    return this.db.userAppliance.delete({
+      where: {
+        userId_applianceId: {
+          userId,
+          applianceId,
+        },
+      },
+    });
+  }
+
+  async getAppliances(userId: number) {
+    return this.db.userAppliance.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        appliance: true,
+      },
+    });
+  }
+
   /**
    * Add a dietary Requirement to a user
    * @param userId d
