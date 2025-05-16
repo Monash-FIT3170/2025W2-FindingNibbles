@@ -45,12 +45,17 @@ export class UserController {
   }
 
   @Post('appliance')
-  addAppliance(@Req() req: RequestUser, @Body() applianceId: number) {
+  addAppliance(@Req() req: RequestUser, @Body() body: { applianceId: number }) {
+    const { applianceId } = body;
     return this.userService.addAppliance(req.user.id, applianceId);
   }
 
   @Delete('appliance')
-  removeAppliance(@Req() req: RequestUser, @Body() applianceId: number) {
+  removeAppliance(
+    @Req() req: RequestUser,
+    @Body() body: { applianceId: number },
+  ) {
+    const { applianceId } = body;
     return this.userService.removeAppliance(req.user.id, applianceId);
   }
 

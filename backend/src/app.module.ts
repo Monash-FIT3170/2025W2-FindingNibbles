@@ -12,6 +12,7 @@ import { RecipeModule } from './recipe/recipe.module';
 import { DietaryRequirementModule } from './dietary-requirement/dietary-requirement.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
+import { ApplianceModule } from './appliance/appliance.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { CuisineModule } from './cuisine/cuisine.module';
     DietaryRequirementModule,
     RestaurantModule,
     CuisineModule,
+    ApplianceModule,
   ],
 })
 export class AppModule {}

@@ -13,6 +13,7 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+
   _ProfilePageState createState() => _ProfilePageState();
 }
 
@@ -32,9 +33,11 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _fetchAppliances() async {
     setState(() => isLoading = true);
     try {
-      appliances = await _profileService.getApplicance();
+      appliances = await _profileService.getUserAppliances();
     } catch (e) {
-      print('Error fetching appliances: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching appliances: $e')),
+      );
     } finally {
       setState(() => isLoading = false);
     }
@@ -45,10 +48,14 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await _profileService.addAppliance(appliance.id!);
       setState(() {
-        appliances.add(appliance);
+        if (appliances.any((a) => a.id == appliance.id)) {
+          appliances.add(appliance);
+        }
       });
     } catch (e) {
-      print('Error adding appliance: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding appliance: $e')),
+      );
     } finally {
       setState(() => isLoading = false);
     }
@@ -62,7 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
         appliances.removeWhere((a) => a.id == appliance.id);
       });
     } catch (e) {
-      print('Error removing appliance: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error removing appliance: $e')),
+      );
     } finally {
       setState(() => isLoading = false);
     }
@@ -116,50 +125,48 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Profile',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+            : RefreshIndicator(
+                onRefresh: _fetchAppliances,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Profile',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    PersonalMenuWidget(
-                      onPersonalInfo: () {},
-                      onFavourites: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LikedPage()),
-                        );
-                      },
-                      onMyReviews: () {},
-                    ),
-                    DietaryRequirementsWidget(
-                      dietaryRequirements: _dietaryRequirements,
-                      onAdd: _addDietaryRequirement,
-                      onRemove: _removeDietaryRequirement,
-                    ),
-                    CookingAppliancesWidget(
-                      appliances: appliances.map((e) => e.name).toList(),
-                      onOpenSelector: () {},
-                      onApplianceRemoved: (name) {
-                        final appliance = appliances.firstWhere((e) => e.name == name);
-                        _removeAppliance(appliance);
-                      },
-                      onApplianceAdded: (name) {
-                        final appliance = ApplianceRequirementDto(name: name);
-                        _addAppliance(appliance);
-                      },
-                    ),
-                    LogoutWidget(onLogout: () {}),
-                  ],
+                      PersonalMenuWidget(
+                        onPersonalInfo: () {},
+                        onFavourites: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LikedPage()),
+                          );
+                        },
+                        onMyReviews: () {},
+                      ),
+                      DietaryRequirementsWidget(
+                        dietaryRequirements: _dietaryRequirements,
+                        onAdd: _addDietaryRequirement,
+                        onRemove: _removeDietaryRequirement,
+                      ),
+                      CookingAppliancesWidget(
+                        appliances: appliances,
+                        onApplianceRemoved: _removeAppliance,
+                        onApplianceAdded: _addAppliance,
+                        onRefresh: _fetchAppliances,
+                      ),
+                      LogoutWidget(onLogout: () {}),
+                    ],
+                  ),
                 ),
               ),
       ),
