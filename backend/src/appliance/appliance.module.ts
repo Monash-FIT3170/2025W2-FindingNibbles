@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ApplianceService } from './appliace.service';
+import { ApplianceService } from './appliance.service';
 import { ApplianceController } from './appliance.controller';
 import { DatabaseModule } from '../database/database.module';
 
