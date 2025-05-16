@@ -33,7 +33,7 @@ export class UserController {
     @Req() req: RequestUser,
     @Body('dietaryId') dietaryId: number,
   ) {
-    console.log(`Adding dietary restriction for user ${req.user.id}`);
+    console.log(`Adding dietary restriction ${dietaryId}`);
     return this.userService.addDietaryRestriction(req.user.id, dietaryId);
   }
 
@@ -55,10 +55,10 @@ export class UserController {
     @Req() req: RequestUser,
     @Body() data: { name: string; description: string },
   ) {
-    return this.userService.createUserSpecificDietaryRestriction(req.user.id, {
-      name: data.name,
-      description: data.description,
-    });
+    return this.userService.createUserSpecificDietaryRestriction(
+      req.user.id,
+      data,
+    );
   }
 
   @Get('favourite-recipe')
