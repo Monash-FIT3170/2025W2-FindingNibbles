@@ -18,5 +18,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["src", "generated/prisma"]
+  "include": [
+    "src",
+    "generated/prisma"
+  ]
 }

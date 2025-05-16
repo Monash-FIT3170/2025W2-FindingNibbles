@@ -140,12 +140,20 @@ export class UserService {
       name: dietaryInformation.name,
       description: dietaryInformation.description,
     });
-    return this.db.userDietary.create({
+    const userDietary = await this.db.userDietary.create({
       data: {
         userId: userId,
         dietaryId: dietaryRestriction.id,
       },
     });
+    //The dietary IDs are different unsure of which is the correct one to use.
+    return {
+      id: userDietary.id,
+      userId: userDietary.userId,
+      dietaryId: userDietary.dietaryId,
+      name: dietaryRestriction.name,
+      description: dietaryRestriction.description,
+    };
   }
 
   /**
