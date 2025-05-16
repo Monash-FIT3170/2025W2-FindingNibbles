@@ -1,5 +1,30 @@
 import { RestaurantData } from './seedTypes';
 
+
+// Defined the list of dietary restrictions
+export const dietaryRestrictions = [] = [
+  {
+    id: 1,
+    name: 'Vegetarian',
+    description: 'No meat, fish, or poultry',
+  },
+  {
+    id: 2,
+    name: 'Vegan',
+    description: 'No animal products',
+  },
+  {
+    id: 3,
+    name: 'Gluten Free',
+    description: 'No gluten-containing foods',
+  },
+  {
+    id: 4,
+    name: 'Halal',
+    description: 'Meat from animals slaughter',
+  }
+];
+
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
   {
