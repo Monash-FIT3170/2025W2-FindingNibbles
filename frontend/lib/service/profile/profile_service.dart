@@ -30,8 +30,12 @@ class ProfileService {
   Future<void> addDietaryRestriction(int dietaryId) async {
     try {
       // Pass the dietaryId in the request body
+      _logger.d(
+        'Adding dietary restriction with ID: $dietaryId',
+      ); // Log the dietaryId
+
       final response = await _dio.post(
-        '/user/dietary-restriction',
+        'user/dietary-restriction',
         data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
       );
       if (response.statusCode != 201) {
@@ -77,6 +81,10 @@ class ProfileService {
     String description,
   ) async {
     try {
+      _logger.d(
+        'Creating dietary restriction with Name: $name, Description: $description',
+      ); // Log the name and description
+
       final response = await _dio.post(
         'user/create-dietary-restriction',
         data: {'name': name, 'description': description},
