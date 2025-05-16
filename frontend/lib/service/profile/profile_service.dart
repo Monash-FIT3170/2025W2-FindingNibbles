@@ -210,17 +210,17 @@ class ProfileService {
     }
   }
 
-    /**
+  /**
    * Updating Appliance for User
    */
 
-    Future<List<ApplianceRequirementDto>> getApplicance() async {
+  Future<List<ApplianceRequirementDto>> getUserAppliances() async {
     try {
-      final response = await _dio.get('user/appliance');
+      final response = await _dio.get('/user/appliance');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
-            .map((item) => ApplianceRequirementDto.fromJson(item))
+            .map((item) => ApplianceRequirementDto.fromJson(item['appliance']))
             .toList();
       } else {
         throw Exception('Failed to load appliances');
@@ -272,6 +272,26 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to load default appliances: $e');
+    }
+  }
+
+  Future<ApplianceRequirementDto> createAppliance(String name, String? description) async {
+    try {
+      final response = await _dio.post(
+        'appliance',
+        data: {
+          'name': name,
+          'description': description ?? '',
+        },
+      );
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ApplianceRequirementDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to create appliance: $e');
     }
   }
 }
