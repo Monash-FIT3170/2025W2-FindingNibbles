@@ -13,6 +13,7 @@
 
 import { PrismaClient } from '../../generated/prisma';
 import { restaurants } from './seedConstants';
+import { dietaryRestrictions } from './seedConstants';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -176,6 +177,20 @@ async function main(): Promise<void> {
       }
     } else {
       console.warn('Not enough restaurants to add 5 favorites.');
+    }
+
+    // create dietary restrictions
+    console.log('Creating dietary restrictions...');
+    for (const dietary of dietaryRestrictions) {
+      await prisma.dietaryRestriction.upsert({
+        where: { name: dietary.name },
+        update: {}, // No updates needed if it exists
+        create: {
+          name: dietary.name,
+          description: dietary.description,
+        },
+      });
+      console.log(`Created dietary restriction: ${dietary.name}`);
     }
 
     console.log('Seeding completed');
