@@ -5,12 +5,15 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
+import 'package:nibbles/service/profile/appliance_dto.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
   final _logger = getLogger();
 
-  /// Dietary Requirements
+  /**
+   * Dietary Requirements
+   */
 
   Future<List<DietaryRequirementDto>> getDietaryRequirements() async {
     try {
@@ -100,7 +103,9 @@ class ProfileService {
     }
   }
 
-  /// Restaurants
+  /**
+   * Resteraunts 
+   */
 
   Future<List<RestaurantDto>> getFavouriteRestaurants() async {
     try {
@@ -202,6 +207,71 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to update user profile: $e');
+    }
+  }
+
+    /**
+   * Updating Appliance for User
+   */
+
+    Future<List<ApplianceRequirementDto>> getApplicance() async {
+    try {
+      final response = await _dio.get('user/appliance');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => ApplianceRequirementDto.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Failed to load appliances');
+      }
+    } catch (e) {
+      throw Exception('Failed to load appliances: $e');
+    }
+  }
+
+  Future<void> addAppliance(int applianceId) async {
+    try {
+      // Pass the dietaryId in the request body
+      final response = await _dio.post(
+        '/user/appliance',
+        data: {'applianceId': applianceId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to add appliance: $e');
+    }
+  }
+
+  Future<void> removeAppliance(int applianceId) async {
+    try {
+      final response = await _dio.delete(
+        '/user/appliance',
+        data: {'applianceId': applianceId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove appliance: $e');
+    }
+  }
+
+  Future<List<ApplianceRequirementDto>> getDefaultAppliances() async {
+    try {
+      final response = await _dio.get('appliance');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => ApplianceRequirementDto.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Failed to load default appliances');
+      }
+    } catch (e) {
+      throw Exception('Failed to load default appliances: $e');
     }
   }
 }
