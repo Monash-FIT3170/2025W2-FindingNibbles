@@ -48,9 +48,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await _profileService.addAppliance(appliance.id!);
       setState(() {
-        if (appliances.any((a) => a.id == appliance.id)) {
           appliances.add(appliance);
-        }
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
