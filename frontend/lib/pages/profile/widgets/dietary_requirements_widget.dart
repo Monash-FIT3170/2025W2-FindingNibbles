@@ -48,6 +48,36 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
     }
   }
 
+  Future<void> _createCustomDietaryRestriction(
+    String name,
+    String description,
+  ) async {
+    try {
+      final newDietary = await _profileService.createDietaryRestriction(
+        name,
+        description,
+      );
+      widget.onAdd(newDietary);
+    } catch (e) {
+      print('Error creating custom dietary restriction: $e');
+      // Optionally, show a snackbar or dialog to inform the user
+    }
+  }
+
+  Future<void> _addDietaryRequirement(int item) async {
+    try {
+      await _profileService.addDietaryRestriction(item);
+      final dietaryRequirement = _allDefaults.firstWhere(
+        (d) => d.id == item,
+        orElse: () => throw Exception('Dietary requirement not found'),
+      );
+      widget.onAdd(dietaryRequirement);
+    } catch (e) {
+      print('Error adding dietary requirement: $e');
+      // Optionally, show a snackbar or dialog to inform the user
+    }
+  }
+
   void _openCustomCreationDialog() {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
@@ -82,9 +112,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 final description = descriptionController.text.trim();
 
                 if (name.isNotEmpty && description.isNotEmpty) {
-                  final newDietary = await _profileService
-                      .createDietaryRestriction(name, description);
-                  widget.onAdd(newDietary);
+                  await _createCustomDietaryRestriction(name, description);
                   Navigator.of(context).pop();
                 } else {
                   // Optionally, show an error message if fields are empty
@@ -140,10 +168,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                               return ListTile(
                                 title: Text(item.name),
                                 onTap: () async {
-                                  await _profileService.addDietaryRestriction(
-                                    item.id,
-                                  );
-                                  widget.onAdd(item);
+                                  await _addDietaryRequirement(item.id);
                                   Navigator.of(context).pop();
                                 },
                               );

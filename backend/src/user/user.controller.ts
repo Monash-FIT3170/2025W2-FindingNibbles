@@ -1,15 +1,6 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Get,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, Get, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
-import { JwtAuthGuard } from 'src/auth/strategies/jwt/jwt-auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -37,14 +28,13 @@ export class UserController {
     return this.userService.getFavouritedRestaurants(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Post('dietary-restriction')
   addDietaryRestriction(
     @Req() req: RequestUser,
     @Body('dietaryId') dietaryId: number,
   ) {
-    const userId: number = req.user.id;
-    return this.userService.addDietaryRestriction(userId, dietaryId);
+    console.log(`Adding dietary restriction for user ${req.user.id}`);
+    return this.userService.addDietaryRestriction(req.user.id, dietaryId);
   }
 
   @Delete('dietary-restriction')
