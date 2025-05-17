@@ -29,23 +29,17 @@ export class RecipeService {
     recipe: CreateRecipeDto,
     user: User,
   ): Promise<RecipeGenerated[]> {
-    let userDietaryTags: string[] = [];
-
     try {
-      // If 'saved' is included in dietaryRequirements, get user-stored preferences
-      if (recipe.dietaryRequirements.includes('saved')) {
-        const userProfile = await this.db.user.findUnique({
-          where: { id: user.id },
-          include: { userDietaries: true },
-        });
-        userDietaryTags = userProfile.userDietaries.map((pref) => pref.name);
-      }
+      const dietaries = await this.db.dietaryrestriction.findMany({
+        where: {
+          id: {
+            in: recipe.dietaryRequirements,
+          },
+        },
+      });
+      const dietaryRequirements = dietaries.map(dr => dr.name);
 
-      // Merge any non-'saved' dietary tags
-      const customTags = recipe.dietaryRequirements.filter(tag => tag !== 'saved');
-      userDietaryTags = [...userDietaryTags, ...customTags];
-
-      const appliances = await this.db.appliances.findMany({
+      const appliances = await this.db.appliance.findMany({
         where: {
           id: {
             in: recipe.kitchenAppliances,
@@ -97,8 +91,8 @@ export class RecipeService {
       const prompt = `
         Generate 3 recipes that meet the following criteria:
         - Use British English and the metric system.
-        - Dietary restrictions: ${userDietaryTags.join(', ') || 'none'}.
-        - ${recipe.includeAllIngredients ? 'Use all of the following ingredients:' : 'Use the following ingredients:'} ${recipe.ingredients.join(', ') || 'none'}.
+        - Dietary restrictions: ${dietaryRequirements.join(', ') || 'none'}.
+        - Use the following ingredients: ${recipe.ingredients.join(', ') || 'none'}.
         - Must be cookable using: ${kitchenAppliances.join(', ') || 'any tools'}.
         ${difficultyLine}
         Return the recipes in a JSON object with a 'recipes' key containing a list of three recipes.
@@ -138,7 +132,7 @@ export class RecipeService {
         instructions: recipeData.steps,
         estimatedTimeMinutes: recipeData.cook_time,
         servings: recipeData.servings,
-        dietaryTags: userDietaryTags,
+        dietaryTags: dietaryRequirements,
         nutritionalInfo: recipeData.nutritional_info,
         difficultyLevel: recipeData.difficulty as RecipeDifficulty,
         cuisine: recipeData.cuisine || 'unknown',
