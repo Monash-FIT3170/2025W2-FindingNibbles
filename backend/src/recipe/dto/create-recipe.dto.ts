@@ -3,6 +3,7 @@ import {
   IsBoolean,
   IsArray,
   IsEnum,
+  ArrayNotEmpty
 } from 'class-validator';
 
 export enum RecipeDifficulty {
@@ -13,13 +14,13 @@ export enum RecipeDifficulty {
 }
 
 export class CreateRecipeDto {
-  @IsArray()
+  @ArrayNotEmpty()
   ingredients: string[];
 
-  @IsArray()
-  dietaryRequirements: string[]; // Can include 'saved', custom tags, or both
+  @ArrayNotEmpty()
+  dietaryRequirements: number[]; 
 
-  @IsArray()
+  @ArrayNotEmpty()
   kitchenAppliances: number[]; // Appliance IDs
 
   @IsBoolean()
@@ -27,5 +28,6 @@ export class CreateRecipeDto {
   includeAllIngredients: boolean;
 
   @IsEnum(RecipeDifficulty)
+  @IsNotEmpty()
   difficulty_level: RecipeDifficulty;
 }
