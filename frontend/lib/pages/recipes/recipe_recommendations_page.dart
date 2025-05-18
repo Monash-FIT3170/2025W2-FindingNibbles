@@ -7,7 +7,8 @@ class RecipeRecommendationsPage extends StatefulWidget {
   const RecipeRecommendationsPage({super.key});
 
   @override
-  State<RecipeRecommendationsPage> createState() => _RecipeRecommendationsPageState();
+  State<RecipeRecommendationsPage> createState() =>
+      _RecipeRecommendationsPageState();
 }
 
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
@@ -53,17 +54,16 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     }
   }
 
-void _toggleFavorite(int index) {
-  setState(() {
-    recipes[index].isFavorite = !recipes[index].isFavorite;
-  });
-}
+  void _toggleFavorite(int index) {
+    setState(() {
+      recipes[index].isFavorite = !recipes[index].isFavorite;
+    });
+  }
 
-void _reloadRecipes() {
-  // Logic to reload recipes or update the list goes here
-  print("Recipes reloaded!");
-}
-
+  void _reloadRecipes() {
+    // Logic to reload recipes or update the list goes here
+    print("Recipes reloaded!");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,27 +84,24 @@ void _reloadRecipes() {
             color: colorScheme.onSurface,
           ),
         ),
-actions: [
-  IconButton(
-    icon: Icon(Icons.refresh, color: colorScheme.onSurface),
-    tooltip: 'Refresh',
-    onPressed: _reloadRecipes,
-    // currently not doing anything but when backend is ready it will be implemented to refresh the recipes.
-  ),
-  IconButton(
-    icon: Icon(Icons.filter_list, color: colorScheme.onSurface),
-    tooltip: 'Filter',
-    onPressed: () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const RecipesPage(),
-        ),
-      );
-    },
-  ),
-],
-
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: colorScheme.onSurface),
+            tooltip: 'Refresh',
+            onPressed: _reloadRecipes,
+            // currently not doing anything but when backend is ready it will be implemented to refresh the recipes.
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list, color: colorScheme.onSurface),
+            tooltip: 'Filter',
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const RecipesPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -157,7 +154,10 @@ actions: [
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _getDifficultyColor(recipe.difficulty, colorScheme),
+                            color: _getDifficultyColor(
+                              recipe.difficulty,
+                              colorScheme,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -189,20 +189,29 @@ actions: [
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.access_time, size: 16, color: colorScheme.onSurfaceVariant),
+                                Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${recipe.cookingTime} min',
-                                  style: textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                                  style: textTheme.labelMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
                             IconButton(
                               icon: Icon(
-                                recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: recipe.isFavorite
-                                    ? Colors.red.shade800
-                                    : colorScheme.onSurfaceVariant,
+                                recipe.isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color:
+                                    recipe.isFavorite
+                                        ? Colors.red.shade800
+                                        : colorScheme.onSurfaceVariant,
                               ),
                               onPressed: () => _toggleFavorite(index),
                             ),
