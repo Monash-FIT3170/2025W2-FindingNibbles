@@ -62,7 +62,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
 
   void _reloadRecipes() {
     // Logic to reload recipes or update the list goes here
-    print("Recipes reloaded!");
+    // Removed print to comply with production code standards
   }
 
   @override
@@ -89,7 +89,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
             icon: Icon(Icons.refresh, color: colorScheme.onSurface),
             tooltip: 'Refresh',
             onPressed: _reloadRecipes,
-            // currently not doing anything but when backend is ready it will be implemented to refresh the recipes.
           ),
           IconButton(
             icon: Icon(Icons.filter_list, color: colorScheme.onSurface),
@@ -124,7 +123,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withAlpha((0.05 * 255).round()),
                     blurRadius: 6,
                     offset: const Offset(0, 4),
                   ),
@@ -208,10 +207,9 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                                 recipe.isFavorite
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                color:
-                                    recipe.isFavorite
-                                        ? Colors.red.shade800
-                                        : colorScheme.onSurfaceVariant,
+                                color: recipe.isFavorite
+                                    ? Colors.red.shade800
+                                    : colorScheme.onSurfaceVariant,
                               ),
                               onPressed: () => _toggleFavorite(index),
                             ),
