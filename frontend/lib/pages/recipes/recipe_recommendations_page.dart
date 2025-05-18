@@ -54,28 +54,43 @@ class _RecipeFormatPageState extends State<RecipeFormatPage> {
     });
   }
 
-  @override
+  void _reloadRecipes() {
+    // Logic to reload recipes or update the list goes here
+    print("Recipes reloaded!");
+  }
+
+  void _openFilter() {
+    // Logic to open filter dialog or page goes here
+    print("Filter opened!");
+  }
+
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      appBar: AppBar(
+        title: const Text(
+          'Based on your ingredients:',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFFB4436C),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _reloadRecipes, // Reload function
+            tooltip: 'Reload',
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () {
+              Navigator.pop(context); // Go back to previous screen
+            },
+            tooltip: 'Filter',
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-            decoration: const BoxDecoration(
-              color: Color(0xFFB4436C),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-            ),
-            child: const Text(
-              'Based on your\ningredients:',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
