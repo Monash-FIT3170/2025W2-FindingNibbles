@@ -8,6 +8,7 @@ import 'package:nibbles/service/appliance/appliance_service.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
+import 'package:nibbles/pages/recipes/recipe_recommendations_page.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -97,39 +98,47 @@ class _RecipesPageState extends State<RecipesPage> {
     }
   }
 
-  Future<void> _generateRecipes() async {
-    try {
-      final recipeResults = await _recipeService.generateRecipes(
-        ingredients: ingredients,
-        dietaries:
-            useDietaryRestrictions
-                ? selectedDietaries.map((d) => d.id!).toList()
-                : [],
-        appliances: selectedAppliances.map((a) => a.id).toList(),
-        difficultyLevel: selectedDifficulty,
-      );
+Future<void> _generateRecipes() async {
+  try {
+    final recipeResults = await _recipeService.generateRecipes(
+      ingredients: ingredients,
+      dietaries: useDietaryRestrictions
+          ? selectedDietaries.map((d) => d.id!).toList()
+          : [],
+      appliances: selectedAppliances.map((a) => a.id).toList(),
+      difficultyLevel: selectedDifficulty,
+    );
 
-      _logger.d(recipeResults);
-    } catch (e) {
-      if (!mounted) return;
+    _logger.d(recipeResults);
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Error'),
-            content: Text('Failed to generate recipes: ${e.toString()}'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const RecipeRecommendationsPage(),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to generate recipes: ${e.toString()}'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
+}
+
 
   @override
   void dispose() {
