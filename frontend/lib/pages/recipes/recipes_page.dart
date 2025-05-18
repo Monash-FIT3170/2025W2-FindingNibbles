@@ -98,47 +98,47 @@ class _RecipesPageState extends State<RecipesPage> {
     }
   }
 
-Future<void> _generateRecipes() async {
-  try {
-    final recipeResults = await _recipeService.generateRecipes(
-      ingredients: ingredients,
-      dietaries: useDietaryRestrictions
-          ? selectedDietaries.map((d) => d.id!).toList()
-          : [],
-      appliances: selectedAppliances.map((a) => a.id).toList(),
-      difficultyLevel: selectedDifficulty,
-    );
+  Future<void> _generateRecipes() async {
+    try {
+      final recipeResults = await _recipeService.generateRecipes(
+        ingredients: ingredients,
+        dietaries:
+            useDietaryRestrictions
+                ? selectedDietaries.map((d) => d.id!).toList()
+                : [],
+        appliances: selectedAppliances.map((a) => a.id).toList(),
+        difficultyLevel: selectedDifficulty,
+      );
 
-    _logger.d(recipeResults);
+      _logger.d(recipeResults);
 
-    if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RecipeRecommendationsPage(),
-      ),
-    );
-  } catch (e) {
-    if (!mounted) return;
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const RecipeRecommendationsPage(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: Text('Failed to generate recipes: ${e.toString()}'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: Text('Failed to generate recipes: ${e.toString()}'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
-}
-
 
   @override
   void dispose() {
