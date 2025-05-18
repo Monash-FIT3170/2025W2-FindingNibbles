@@ -89,6 +89,7 @@ actions: [
     icon: Icon(Icons.refresh, color: colorScheme.onSurface),
     tooltip: 'Refresh',
     onPressed: _reloadRecipes,
+    // currently not doing anything but when backend is ready it will be implemented to refresh the recipes.
   ),
   IconButton(
     icon: Icon(Icons.filter_list, color: colorScheme.onSurface),
