@@ -169,7 +169,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                         isActive
                             ? colorScheme
                                 .primary // Active step color
-                            : colorScheme.surfaceContainerHighest, // Inactive step color
+                            : colorScheme
+                                .surfaceContainerHighest, // Inactive step color
                     shape: BoxShape.circle, // Circular shape
                   ),
                   child: Center(
@@ -237,7 +238,9 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                       child: Icon(
                         Icons.image,
                         size: 50,
-                        color: colorScheme.onSurfaceVariant.withAlpha((0.6 * 255).toInt()),
+                        color: colorScheme.onSurfaceVariant.withAlpha(
+                          (0.6 * 255).toInt(),
+                        ),
                       ),
                     ),
                   ),
