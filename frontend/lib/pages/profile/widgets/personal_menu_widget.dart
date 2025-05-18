@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/profile/liked_page.dart';
+import 'package:nibbles/pages/profile/personal_info_page.dart';
 
 class PersonalMenuWidget extends StatelessWidget {
   final VoidCallback onPersonalInfo;
@@ -24,14 +26,26 @@ class PersonalMenuWidget extends StatelessWidget {
             leading: Icon(Icons.person, color: primary),
             title: const Text('Personal Info'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: onPersonalInfo,
+            onTap: () {
+              // Navigate to LikedPage when tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PersonalInfoPage()),
+              );
+            },
           ),
           const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.favorite, color: primary),
             title: const Text('Favourites'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: onFavourites,
+            onTap: () {
+              // Navigate to LikedPage when tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LikedPage()),
+              );
+            },
           ),
           const Divider(height: 1),
           ListTile(
