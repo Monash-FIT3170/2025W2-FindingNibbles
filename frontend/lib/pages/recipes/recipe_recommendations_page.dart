@@ -207,9 +207,10 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                                 recipe.isFavorite
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                color: recipe.isFavorite
-                                    ? Colors.red.shade800
-                                    : colorScheme.onSurfaceVariant,
+                                color:
+                                    recipe.isFavorite
+                                        ? Colors.red.shade800
+                                        : colorScheme.onSurfaceVariant,
                               ),
                               onPressed: () => _toggleFavorite(index),
                             ),
