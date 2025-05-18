@@ -10,7 +10,7 @@ class RecipeIngredientsPage extends StatefulWidget {
 
 class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
-  int currentTab =  0;
+  int currentTab = 0;
 
   final Recipe recipe = Recipe(
     title: 'Traditional spare ribs baked',
@@ -48,15 +48,15 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Widget _buildIngredientsList() {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         Container(
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
-          child: const Text(
-            'Ingredients:',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          child: Text('Ingredients:', style: textTheme.titleLarge),
         ),
         Expanded(
           child: ListView.builder(
@@ -72,34 +72,48 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     InkWell(
                       onTap: () {
                         setState(() {
-                          checkedIngredients[index] = !checkedIngredients[index];
+                          checkedIngredients[index] =
+                              !checkedIngredients[index];
                         });
                       },
                       child: Container(
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: checkedIngredients[index] ? Colors.red : Colors.white,
+                          color:
+                              checkedIngredients[index]
+                                  ? colorScheme.primary
+                                  : Colors.white,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: checkedIngredients[index] ? Colors.red : Colors.grey,
+                            color:
+                                checkedIngredients[index]
+                                    ? colorScheme.primary
+                                    : colorScheme.outline,
                             width: 1.5,
                           ),
                         ),
-                        child: checkedIngredients[index]
-                            ? const Icon(Icons.check, size: 16, color: Colors.white)
-                            : null,
+                        child:
+                            checkedIngredients[index]
+                                ? Icon(
+                                  Icons.check,
+                                  size: 16,
+                                  color: colorScheme.onPrimary,
+                                )
+                                : null,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         recipe.ingredients[index],
-                        style: TextStyle(
-                          decoration: checkedIngredients[index] ? TextDecoration.lineThrough : null,
-                          color: checkedIngredients[index] ? Colors.grey : Colors.black,
-                          fontSize: 16,
-                        ),
+                        style:
+                            checkedIngredients[index]
+                                ? textTheme.bodyLarge?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: colorScheme.outline,
+                                )
+                                : textTheme.bodyLarge,
                       ),
                     ),
                   ],
@@ -113,6 +127,9 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Widget _buildInstructionList() {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         // Display the current step's instructions
@@ -121,10 +138,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
             padding: const EdgeInsets.all(16.0),
             child: Text(
               recipe.instructions[currentStep], // Display the current step
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.5, // Line height for better readability
-              ),
+              style: textTheme.bodyLarge?.copyWith(height: 1.5),
             ),
           ),
         ),
@@ -133,8 +147,11 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center, // Center the step indicators
+            mainAxisAlignment:
+                MainAxisAlignment.center, // Center the step indicators
             children: List.generate(recipe.instructions.length, (index) {
+              final isActive = currentStep == index;
+
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -142,22 +159,29 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   });
                 },
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8), // Spacing between indicators
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                  ), // Spacing between indicators
                   width: 30, // Width of the indicator
                   height: 30, // Height of the indicator
                   decoration: BoxDecoration(
-                    color: currentStep == index
-                        ? Colors.red // Active step color
-                        : Colors.grey[300], // Inactive step color
+                    color:
+                        isActive
+                            ? colorScheme
+                                .primary // Active step color
+                            : colorScheme.surfaceContainerHighest, // Inactive step color
                     shape: BoxShape.circle, // Circular shape
                   ),
                   child: Center(
                     child: Text(
                       '${index + 1}', // Step number
                       style: TextStyle(
-                        color: currentStep == index
-                            ? Colors.white // Active step text color
-                            : Colors.black, // Inactive step text color
+                        color:
+                            isActive
+                                ? colorScheme
+                                    .onPrimary // Active step text color
+                                : colorScheme
+                                    .onSurfaceVariant, // Inactive step text color
                         fontWeight: FontWeight.bold, // Font weight
                       ),
                     ),
@@ -170,26 +194,29 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       ],
     );
   }
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        leading: BackButton(color: colorScheme.onSurface),
         centerTitle: false,
-        title: const Text(
+        title: Text(
           'Recipe List',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
+          style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: Colors.black),
+            icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
             onPressed: () {},
           ),
         ],
@@ -205,9 +232,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   child: Container(
                     height: 150,
                     width: double.infinity,
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.image, size: 50, color: Colors.grey),
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Center(
+                      child: Icon(
+                        Icons.image,
+                        size: 50,
+                        color: colorScheme.onSurfaceVariant.withAlpha((0.6 * 255).toInt()),
+                      ),
                     ),
                   ),
                 ),
@@ -215,9 +246,12 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
             ),
           ),
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Colors.grey, width: 0.5),
+                bottom: BorderSide(
+                  color: colorScheme.outline.withAlpha((0.5 * 255).toInt()),
+                  width: 0.5,
+                ),
               ),
             ),
             child: Row(
@@ -231,17 +265,26 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     },
                     child: Column(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Text(
                             'Ingredients',
-                            style: TextStyle(
+                            style: textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color:
+                                  currentTab == 0
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
-                        Container(height: 2, color: currentTab == 0 ? Colors.red : Colors.transparent),
+                        Container(
+                          height: 2,
+                          color:
+                              currentTab == 0
+                                  ? colorScheme.primary
+                                  : Colors.transparent,
+                        ),
                       ],
                     ),
                   ),
@@ -255,14 +298,25 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     },
                     child: Column(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Text(
                             'Cooking Instructions',
-                            style: TextStyle(color: Colors.grey),
+                            style: textTheme.labelLarge?.copyWith(
+                              color:
+                                  currentTab == 1
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                        Container(height: 2, color: currentTab == 1 ? Colors.red : Colors.transparent),
+                        Container(
+                          height: 2,
+                          color:
+                              currentTab == 1
+                                  ? colorScheme.primary
+                                  : Colors.transparent,
+                        ),
                       ],
                     ),
                   ),
@@ -272,8 +326,11 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           ),
           // Display the appropriate content based on the active tab
           Expanded(
-            child: currentTab == 0 ? _buildIngredientsList() : _buildInstructionList(),
-          ),  
+            child:
+                currentTab == 0
+                    ? _buildIngredientsList()
+                    : _buildInstructionList(),
+          ),
         ],
       ),
     );
