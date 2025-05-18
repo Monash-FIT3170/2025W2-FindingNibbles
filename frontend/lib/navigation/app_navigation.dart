@@ -3,7 +3,6 @@ import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
 import '../pages/restaurants/restaurants_page.dart';
 import '../pages/recipes/recipes_page.dart';
-import '../pages/recipes/recipe_ingredients_page.dart';
 
 class AppNavigation extends StatefulWidget {
   const AppNavigation({super.key});
@@ -46,11 +45,6 @@ class _AppNavigationState extends State<AppNavigation> {
             icon: Icon(Icons.person_2_outlined),
             label: 'Profile',
           ),
-          NavigationDestination(
-            selectedIcon: Icon(Icons.list),
-            icon: Icon(Icons.list_outlined),
-            label: 'Recipe Ingredients',
-          ),
         ],
       ),
       body:
@@ -58,7 +52,6 @@ class _AppNavigationState extends State<AppNavigation> {
             const HomePage(),
             const RestaurantsPage(),
             const RecipesPage(),
-            const RecipeIngredientsPage(),
             ProfilePage(),
           ][currentPageIndex],
     );
