@@ -3,10 +3,8 @@ import { Prisma, User } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
 import { GoogleGenAI, Type } from '@google/genai';
+import { ConfigService } from '@nestjs/config';
 
-const ai = new GoogleGenAI({
-  apiKey: 'AIzaSyBhMQzjfUu3ICYSmCTmrD4EyE3EGhe7LyA',
-});
 
 type RecipeGenerated = {
   title: string;
@@ -23,8 +21,17 @@ type RecipeGenerated = {
 
 @Injectable()
 export class RecipeService {
-  constructor(private db: DatabaseService) {}
 
+  private ai: GoogleGenAI;
+
+  constructor(
+    private db: DatabaseService,
+    private configService: ConfigService, 
+  ) {
+    this.ai = new GoogleGenAI({
+      apiKey: this.configService.get<string>('GOOGLE_GEMINI_API_KEY'), 
+    });
+  }
   async generate(
     recipe: CreateRecipeDto,
     user: User,
