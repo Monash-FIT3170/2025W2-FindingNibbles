@@ -175,37 +175,22 @@ class AuthService {
     }
   }
 
-  Future<String?> _getAccessToken() async {
-    try {
-      return await _storage.read(key: 'access_token');
-    } catch (e) {
-      print('Error reading access token from secure storage: $e');
-      return null;
-    }
-  }
-
+  // In your auth_service.dart, modify getUserProfile():
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
-      final token = await _getAccessToken();
-      if (token == null) throw Exception('Not authenticated');
-
+      final token = await _storage.read(key: 'access_token');
       final response = await _dio.get(
         'user/profile',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-
-      if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data);
-      } else {
-        throw Exception('Failed to fetch profile: ${response.statusCode}');
-      }
+      _logger.d('User profile response: ${response.data}');
+      return response.data;
     } on DioException catch (e) {
-      throw Exception(
-        'Profile fetch failed: ${e.response?.data['message'] ?? e.message}',
-      );
+      _logger.d('DioError fetching user profile: ${e.response?.data}');
+      throw Exception('Failed to load user profile: ${e.message}');
     } catch (e) {
-      print('Error: $e');
-      throw Exception('Failed to get profile: $e');
+      _logger.d('Error fetching user profile: $e');
+      throw Exception('Failed to load user profile');
     }
   }
 }
