@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
-// import { Prisma } from 'generated/prisma';
 
 @Controller('recipe')
 export class RecipeController {
@@ -16,27 +15,28 @@ export class RecipeController {
 
   @Post()
   async create(@Body() createRecipeDto: CreateRecipeDto) {
-    const generatedRecipe = await this.recipeService.generate(createRecipeDto);
+    const generatedRecipes = await this.recipeService.generate(createRecipeDto);
 
-    const cuisine = await this.recipeService.validateAndGetCuisine(
-      generatedRecipe.cuisine,
-    );
+    for (const recipe of generatedRecipes) {
+      const cuisine = await this.recipeService.validateAndGetCuisine(recipe.cuisine);
+      if (!cuisine) throw new NotFoundException('Cuisine is not found.');
 
-    if (!cuisine) {
-      throw new NotFoundException('Cuisine is not found.');
+      /*
+      const recipe: Prisma.RecipeCreateInput = {
+        ...generatedRecipes[i],
+        ...createRecipeDto,
+        cuisine: {
+          connect: {
+            id: cuisine.id,
+          },
+        },
+      };
+
+      await this.recipeService.create(recipe);
+      */
     }
 
-    // const recipe: Prisma.RecipeCreateInput = {
-    //   ...generatedRecipe,
-    //   ...createRecipeDto,
-    //   cuisine: {
-    //     connect: {
-    //       id: cuisine.id,
-    //     },
-    //   },
-    // };
-
-    // return this.recipeService.create(recipe);
+    return { message: 'Recipes processed successfully.' };
   }
 
   @Get()
