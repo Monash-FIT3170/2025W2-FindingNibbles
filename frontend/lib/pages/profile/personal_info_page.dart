@@ -46,12 +46,17 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
           }
 
           final user = snapshot.data!;
+          final userData = {
+            'firstName': user['firstName'] ?? '',
+            'lastName': user['lastName'] ?? '',
+            'email': user['email'] ?? '',
+          };
 
           return ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
               PersonalInfo(
-                user: user,
+                user: userData,
                 onUpdateField: _handleFieldUpdate,
               ),
             ],
