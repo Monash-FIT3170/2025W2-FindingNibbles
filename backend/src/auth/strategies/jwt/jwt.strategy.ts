@@ -22,11 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // We can assume that the payload is already validated.
   validate(payload: JwtPayload) {
-    return {
-      id: payload.sub, // Extract user ID from sub claim
-      email: payload.email,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-    };
+    return payload;
   }
 }
