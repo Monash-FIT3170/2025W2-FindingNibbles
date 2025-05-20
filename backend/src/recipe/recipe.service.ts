@@ -33,11 +33,10 @@ export class RecipeService {
     });
   }
   async generate(
-    recipe: CreateRecipeDto,
-    user: User,
+    recipe: CreateRecipeDto
   ): Promise<RecipeGenerated[]> {
     try {
-      const dietaries = await this.db.userdietary.findMany({
+      const dietaries = await this.db.userDietary.findMany({
         where: {
           id: {
             in: recipe.dietaryRequirements,
@@ -46,7 +45,7 @@ export class RecipeService {
       });
       const dietaryRequirements = dietaries.map(dr => dr.name);
 
-      const appliances = await this.db.userappliance.findMany({
+      const appliances = await this.db.userAppliance.findMany({
         where: {
           id: {
             in: recipe.kitchenAppliances,
