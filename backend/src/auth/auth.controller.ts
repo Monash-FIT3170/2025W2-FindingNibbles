@@ -109,7 +109,7 @@ export class AuthController {
     @Req() req: RequestUser,
   ) {
     await this.authService.changePassword(
-      { id: req.user.id },
+      { id: req.user.sub },
       changePasswordDto,
     );
     return { message: 'Password changed successfully' };
