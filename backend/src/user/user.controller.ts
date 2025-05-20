@@ -19,7 +19,7 @@ export class UserController {
 
   @Get('profile')
   async getProfile(@Req() req: RequestUser) {
-    return this.userService.getProfile(req.user.id);
+    return this.userService.getProfile(req.user.sub);
   }
 
   @Post('favourite-restaurant')
@@ -47,7 +47,7 @@ export class UserController {
   @Post('appliance')
   addAppliance(@Req() req: RequestUser, @Body() body: { applianceId: number }) {
     const { applianceId } = body;
-    return this.userService.addAppliance(req.user.id, applianceId);
+    return this.userService.addAppliance(req.user.sub, applianceId);
   }
 
   @Delete('appliance')
@@ -56,12 +56,12 @@ export class UserController {
     @Body() body: { applianceId: number },
   ) {
     const { applianceId } = body;
-    return this.userService.removeAppliance(req.user.id, applianceId);
+    return this.userService.removeAppliance(req.user.sub, applianceId);
   }
 
   @Get('appliance')
   getUserAppliances(@Req() req: RequestUser) {
-    return this.userService.getAppliances(req.user.id);
+    return this.userService.getAppliances(req.user.sub);
   }
 
   @Post('dietary-requirement')
@@ -120,7 +120,7 @@ export class UserController {
     @Req() req: RequestUser,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const userId = req.user.id;
+    const userId = req.user.sub;
 
     console.log('Incoming Update Request:', updateUserDto);
 
