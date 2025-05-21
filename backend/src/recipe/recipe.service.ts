@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, User } from 'generated/prisma';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { Prisma } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
-import { GoogleGenAI, Type } from '@google/genai';
 import { ConfigService } from '@nestjs/config';
-
+import { getErrorMessage } from 'src/utils';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { RecipeResponseDto } from './dto/recipe-response.dto';
 
 type RecipeGenerated = {
   title: string;
@@ -19,88 +21,81 @@ type RecipeGenerated = {
   cuisine: string;
 };
 
+const responseSchema = {
+  type: 'OBJECT',
+  properties: {
+    recipes: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          title: { type: 'STRING' },
+          description: { type: 'STRING' },
+          cook_time: { type: 'INTEGER' },
+          servings: { type: 'INTEGER' },
+          ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
+          steps: { type: 'ARRAY', items: { type: 'STRING' } },
+          nutritional_info: {
+            type: 'ARRAY',
+            items: { type: 'STRING' },
+          },
+          difficulty: { type: 'STRING' },
+          cuisine: { type: 'STRING' },
+        },
+        required: [
+          'title',
+          'description',
+          'cook_time',
+          'servings',
+          'ingredients',
+          'steps',
+          'nutritional_info',
+          'difficulty',
+          'cuisine',
+        ],
+      },
+    },
+  },
+  required: ['recipes'],
+};
+
 @Injectable()
 export class RecipeService {
-
-  private ai: GoogleGenAI;
-
   constructor(
     private db: DatabaseService,
-    private configService: ConfigService, 
-  ) {
-    this.ai = new GoogleGenAI({
-      apiKey: this.configService.get<string>('GOOGLE_GEMINI_API_KEY'), 
-    });
-  }
-  async generate(
-    recipe: CreateRecipeDto
-  ): Promise<RecipeGenerated[]> {
+    private configService: ConfigService,
+  ) {}
+  async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated[]> {
     try {
-      // Fix: Query UserDietary with include to get the dietary restriction names
       const dietaries = await this.db.userDietary.findMany({
         where: {
           dietaryId: {
             in: recipe.dietaryRequirements,
           },
         },
-        include: {
-          dietary: true, // Include the DietaryRestriction relation
+        select: {
+          dietary: true,
         },
       });
-      const dietaryRequirements = dietaries.map(dr => dr.dietary.name);
+      const dietaryRequirements = dietaries.map((dr) => dr.dietary.name);
 
-      // Fix: Query UserAppliance with include to get the appliance names
       const appliances = await this.db.userAppliance.findMany({
         where: {
           applianceId: {
             in: recipe.kitchenAppliances,
           },
         },
-        include: {
-          appliance: true, // Include the Appliance relation
+        select: {
+          appliance: true,
         },
       });
-      const kitchenAppliances = appliances.map(app => app.appliance.name);
+      const kitchenAppliances = appliances.map((app) => app.appliance.name);
 
       const requestedDifficulty = recipe.difficulty_level;
-      const difficultyLine = requestedDifficulty === RecipeDifficulty.ANY
-        ? ``
-        : `- Recipes must be '${requestedDifficulty}' difficulty.`;
-
-      const responseSchema = {
-        type: Type.OBJECT,
-        properties: {
-          recipes: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                cook_time: { type: Type.INTEGER },
-                servings: { type: Type.INTEGER },
-                ingredients: { type: Type.ARRAY, items: { type: Type.STRING } },
-                steps: { type: Type.ARRAY, items: { type: Type.STRING } },
-                nutritional_info: { type: Type.ARRAY, items: { type: Type.STRING } },
-                difficulty: { type: Type.STRING },
-                cuisine: { type: Type.STRING },
-              },
-              required: [
-                'title',
-                'description',
-                'cook_time',
-                'servings',
-                'ingredients',
-                'steps',
-                'nutritional_info',
-                'difficulty',
-                'cuisine',
-              ],
-            },
-          },
-        },
-        required: ['recipes'],
-      };
+      const difficultyLine =
+        requestedDifficulty === RecipeDifficulty.ANY
+          ? ``
+          : `- Recipes must be '${requestedDifficulty}' difficulty.`;
 
       const prompt = `
         Generate 3 recipes that meet the following criteria:
@@ -117,30 +112,83 @@ export class RecipeService {
         - Cuisine type as a string.
       `;
 
-      let recipesText;
+      let responseJson: {
+        candidates?: Array<{
+          content: {
+            parts: Array<{
+              text: string;
+            }>;
+          };
+        }>;
+      };
       try {
-        // Fix: Add this.ai instead of just ai
-        const response = await this.ai.models.generateContent({
-          model: 'gemini-1.5-pro',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            responseSchema,
+        const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,
+          {
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                responseSchema,
+              },
+            }),
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
           },
-        });
-        recipesText = (response as any).text;
+        );
+        responseJson = (await response.json()) as typeof responseJson;
       } catch (error) {
-        throw new Error('Failed to get response from LLM: ' + error.message);
+        const errorMessage = getErrorMessage(error);
+        throw new Error('Failed to get response from LLM: ' + errorMessage);
       }
 
-      let parsed;
+      let responseContent: string;
       try {
-        parsed = JSON.parse(recipesText);
+        const textContent =
+          responseJson.candidates?.[0]?.content?.parts[0]?.text;
+        if (!textContent) {
+          throw new Error('No text content found in LLM response');
+        }
+        responseContent = textContent;
       } catch (error) {
-        throw new Error('Failed to parse LLM recipe response: ' + error.message);
+        const errorMessage = getErrorMessage(error);
+        throw new Error('Failed to extract response from LLM: ' + errorMessage);
       }
 
-      const recipes = parsed.recipes.map((recipeData: any) => ({
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(responseContent);
+      } catch (error: any) {
+        const errorMessage = getErrorMessage(error);
+        throw new Error('Failed to parse LLM recipe response: ' + errorMessage);
+      }
+
+      const recipeResponse = plainToInstance(RecipeResponseDto, parsed);
+      const errors = await validate(recipeResponse);
+
+      if (errors.length > 0) {
+        const errorDetails = errors
+          .map((err) => {
+            return `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`;
+          })
+          .join('; ');
+        throw new BadRequestException(
+          `LLM response validation failed: ${errorDetails}`,
+        );
+      }
+
+      const recipes = recipeResponse.recipes.map((recipeData) => ({
         title: recipeData.title,
         description: recipeData.description,
         ingredients: recipeData.ingredients,
@@ -149,13 +197,16 @@ export class RecipeService {
         servings: recipeData.servings,
         dietaryTags: dietaryRequirements,
         nutritionalInfo: recipeData.nutritional_info,
-        difficultyLevel: recipeData.difficulty as RecipeDifficulty,
+        difficultyLevel: recipeData.difficulty,
         cuisine: recipeData.cuisine || 'unknown',
       }));
 
-      return recipes;
-    } catch (err) {
-      throw new Error('An error occurred while generating recipes: ' + err.message);
+      return recipes as RecipeGenerated[];
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      throw new Error(
+        'An error occurred while generating recipes: ' + errorMessage,
+      );
     }
   }
 
