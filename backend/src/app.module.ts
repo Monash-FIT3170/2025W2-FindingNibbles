@@ -33,6 +33,7 @@ import { CuisineModule } from './cuisine/cuisine.module';
         GOOGLE_CALLBACK_URL: Joi.string().required(),
         GOOGLE_CLIENT_ID_ANDROID: Joi.string().required(),
         GOOGLE_CLIENT_ID_IOS: Joi.string().required(),
+        GOOGLE_GEMINI_MODEL: Joi.string().required(),
         GOOGLE_GEMINI_API_KEY: Joi.string().required(),
         MAIL_USER: Joi.string().email().required(),
         MAIL_PASS: Joi.string().required(),
