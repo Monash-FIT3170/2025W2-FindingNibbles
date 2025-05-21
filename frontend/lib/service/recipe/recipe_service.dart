@@ -26,15 +26,12 @@ class RecipeService {
         },
       );
 
-      if (response.statusCode == 200) {
-        _logger.d('Recipe generation successful');
+      if (response.statusCode == 201) {
         return response.data;
       } else {
-        _logger.e('Failed to generate recipes: ${response.statusCode}');
-        throw Exception('Failed to generate recipes: ${response.statusCode}');
+        throw Exception('Failed to generate recipes: ${response.data}');
       }
     } catch (e) {
-      _logger.e('Error generating recipes: ${e.toString()}');
       throw Exception('Failed to generate recipes: ${e.toString()}');
     }
   }
