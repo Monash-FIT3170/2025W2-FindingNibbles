@@ -22,8 +22,6 @@ class DietaryRequirementsWidget extends StatefulWidget {
 class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _allDefaults = [];
-  List<DietaryRequirementDto> _filtered = [];
-  String _searchTerm = '';
 
   @override
   void initState() {
@@ -36,13 +34,11 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
       final defaults = await _profileService.getDefaultDietaryRestrictions();
       setState(() {
         _allDefaults = defaults;
-        _filtered = defaults;
       });
     } catch (e) {
       print('Error loading defaults: $e');
       setState(() {
         _allDefaults = [];
-        _filtered = [];
       });
       // Optionally, show a snackbar or dialog to inform the user
     }
