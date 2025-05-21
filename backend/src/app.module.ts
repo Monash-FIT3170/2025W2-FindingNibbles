@@ -8,7 +8,7 @@ import * as Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
-import { RecipeModule } from './recipe/recipe.module';
+// import { RecipeModule } from './recipe/recipe.module';
 import { DietaryRestrictionModule } from './dietary-restriction/dietary-restriction.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
@@ -55,7 +55,7 @@ import { CuisineModule } from './cuisine/cuisine.module';
     AuthModule,
     UserModule,
     MailerModule,
-    RecipeModule,
+    // RecipeModule,
     DietaryRestrictionModule,
     RestaurantModule,
     CuisineModule,
