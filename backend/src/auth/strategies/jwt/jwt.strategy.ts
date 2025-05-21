@@ -22,8 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // We can assume that the payload is already validated.
   validate(payload: JwtPayload) {
-    // Temporarily modify this payload, this change such be made in the local / google strategy
     return payload;
   }
 }
-
