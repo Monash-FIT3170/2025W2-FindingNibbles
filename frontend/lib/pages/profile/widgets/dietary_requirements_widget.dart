@@ -130,67 +130,75 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          scrollable: true,
-          title: const Text('Add Dietary Restriction'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Search',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchTerm = value.toLowerCase();
-                      _filtered =
-                          _allDefaults
-                              .where(
-                                (d) =>
-                                    d.name.toLowerCase().contains(_searchTerm),
-                              )
-                              .toList();
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child:
-                      _filtered.isEmpty
-                          ? const Center(child: Text('No matches'))
-                          : ListView.builder(
-                            itemCount: _filtered.length,
-                            itemBuilder: (context, index) {
-                              final item = _filtered[index];
-                              return ListTile(
-                                title: Text(item.name),
-                                onTap: () async {
-                                  await _addDietaryRequirement(item.id);
-                                  Navigator.of(context).pop();
+        String localSearchTerm = '';
+        List<DietaryRequirementDto> localFiltered = [..._allDefaults];
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              scrollable: true,
+              title: const Text('Add Dietary Restriction'),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 300,
+                child: Column(
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Search',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          localSearchTerm = value.toLowerCase();
+                          localFiltered =
+                              _allDefaults
+                                  .where(
+                                    (d) => d.name.toLowerCase().contains(
+                                      localSearchTerm,
+                                    ),
+                                  )
+                                  .toList();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child:
+                          localFiltered.isEmpty
+                              ? const Center(child: Text('No matches'))
+                              : ListView.builder(
+                                itemCount: localFiltered.length,
+                                itemBuilder: (context, index) {
+                                  final item = localFiltered[index];
+                                  return ListTile(
+                                    title: Text(item.name),
+                                    onTap: () async {
+                                      await _addDietaryRequirement(item.id);
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
                                 },
-                              );
-                            },
-                          ),
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _openCustomCreationDialog();
+                  },
+                  child: const Text('Create custom'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _openCustomCreationDialog();
-              },
-              child: const Text('Create custom'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
