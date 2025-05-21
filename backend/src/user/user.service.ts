@@ -18,10 +18,6 @@ export class UserService {
     return this.db.user.create({ data: createUserDto });
   }
 
-  // async findAll() {
-  //   return this.db.user.findMany();
-  // }
-
   async findOneById(id: number) {
     return this.db.user.findUnique({ where: { id } });
   }
@@ -146,7 +142,6 @@ export class UserService {
         dietaryId: dietaryRestriction.id,
       },
     });
-    //The dietary IDs are different unsure of which is the correct one to use.
     return {
       id: userDietary.id,
       userId: userDietary.userId,
