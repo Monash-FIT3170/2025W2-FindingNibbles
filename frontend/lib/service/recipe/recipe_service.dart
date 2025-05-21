@@ -20,8 +20,8 @@ class RecipeService {
         'recipe',
         data: {
           'ingredients': ingredients,
-          'dietaries': dietaries,
-          'appliances': appliances,
+          'dietaryRequirements': dietaries,
+          'kitchenAppliances': appliances,
           'difficultyLevel': difficultyLevel.name,
         },
       );
