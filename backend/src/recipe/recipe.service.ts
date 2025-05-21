@@ -36,23 +36,31 @@ export class RecipeService {
     recipe: CreateRecipeDto
   ): Promise<RecipeGenerated[]> {
     try {
+      // Fix: Query UserDietary with include to get the dietary restriction names
       const dietaries = await this.db.userDietary.findMany({
         where: {
-          id: {
+          dietaryId: {
             in: recipe.dietaryRequirements,
           },
         },
+        include: {
+          dietary: true, // Include the DietaryRestriction relation
+        },
       });
-      const dietaryRequirements = dietaries.map(dr => dr.name);
+      const dietaryRequirements = dietaries.map(dr => dr.dietary.name);
 
+      // Fix: Query UserAppliance with include to get the appliance names
       const appliances = await this.db.userAppliance.findMany({
         where: {
-          id: {
+          applianceId: {
             in: recipe.kitchenAppliances,
           },
         },
+        include: {
+          appliance: true, // Include the Appliance relation
+        },
       });
-      const kitchenAppliances = appliances.map(app => app.name);
+      const kitchenAppliances = appliances.map(app => app.appliance.name);
 
       const requestedDifficulty = recipe.difficulty_level;
       const difficultyLine = requestedDifficulty === RecipeDifficulty.ANY
@@ -111,7 +119,8 @@ export class RecipeService {
 
       let recipesText;
       try {
-        const response = await ai.models.generateContent({
+        // Fix: Add this.ai instead of just ai
+        const response = await this.ai.models.generateContent({
           model: 'gemini-1.5-pro',
           contents: prompt,
           config: {
