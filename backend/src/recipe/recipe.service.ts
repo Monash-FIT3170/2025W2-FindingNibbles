@@ -5,7 +5,6 @@
 // import { GoogleGenAI, Type } from '@google/genai';
 // import { ConfigService } from '@nestjs/config';
 
-
 // type RecipeGenerated = {
 //   title: string;
 //   description: string;
@@ -24,35 +23,43 @@
 
 //   private ai: GoogleGenAI;
 
-//   constructor(
-//     private db: DatabaseService,
-//     private configService: ConfigService, 
-//   ) {
-//     this.ai = new GoogleGenAI({
-//       apiKey: this.configService.get<string>('GOOGLE_GEMINI_API_KEY'), 
+// constructor(
+//   private db: DatabaseService,
+//   private configService: ConfigService,
+// ) {
+//   this.ai = new GoogleGenAI({
+//     apiKey: this.configService.get<string>('GOOGLE_GEMINI_API_KEY'),
+//   });
+// }
+// async generate(
+//   recipe: CreateRecipeDto
+// ): Promise<RecipeGenerated[]> {
+//   try {
+//     // Fix: Query UserDietary with include to get the dietary restriction names
+//     const dietaries = await this.db.userDietary.findMany({
+//       where: {
+//         dietaryId: {
+//           in: recipe.dietaryRequirements,
+//         },
+//       },
+//       include: {
+//         dietary: true, // Include the DietaryRestriction relation
+//       },
 //     });
-//   }
-//   async generate(
-//     recipe: CreateRecipeDto
-//   ): Promise<RecipeGenerated[]> {
-//     try {
-//       const dietaries = await this.db.userDietary.findMany({
-//         where: {
-//           id: {
-//             in: recipe.dietaryRequirements,
-//           },
-//         },
-//       });
-//       const dietaryRequirements = dietaries.map(dr => dr.id);
+//     const dietaryRequirements = dietaries.map(dr => dr.dietary.name);
 
-//       const appliances = await this.db.userAppliance.findMany({
-//         where: {
-//           id: {
-//             in: recipe.kitchenAppliances,
-//           },
+//     // Fix: Query UserAppliance with include to get the appliance names
+//     const appliances = await this.db.userAppliance.findMany({
+//       where: {
+//         applianceId: {
+//           in: recipe.kitchenAppliances,
 //         },
-//       });
-//       const kitchenAppliances = appliances.map(app => app.id);
+//       },
+//       include: {
+//         appliance: true, // Include the Appliance relation
+//       },
+//     });
+//     const kitchenAppliances = appliances.map(app => app.appliance.name);
 
 //       const requestedDifficulty = recipe.difficulty_level;
 //       const difficultyLine = requestedDifficulty === RecipeDifficulty.ANY
