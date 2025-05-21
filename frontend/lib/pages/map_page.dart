@@ -187,10 +187,65 @@ class _MapPageState extends State<MapPage> {
     await _fetchWithBounds(bounds);
   }
 
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Filter Restaurants'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Add your filter options here
+              ListTile(
+                leading: const Icon(Icons.star),
+                title: const Text('Minimum Rating'),
+                trailing: DropdownButton<int>(
+                  value: 1,
+                  items: List.generate(5, (index) => index + 1)
+                      .map((rating) => DropdownMenuItem(
+                            value: rating,
+                            child: Text(rating.toString()),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    // Handle rating filter
+                  },
+                ),
+              ),
+              // Add more filter options as needed
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Apply filters here
+                Navigator.pop(context);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map')),
+      appBar: AppBar(
+        title: const Text('Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterDialog,
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           FlutterMap(
