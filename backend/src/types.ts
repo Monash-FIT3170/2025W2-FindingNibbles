@@ -7,7 +7,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 export interface RequestUser extends ExpressRequest {
   user: {
-    id: number;
+    sub: number;
     email: string;
     firstName: string;
     lastName: string;
