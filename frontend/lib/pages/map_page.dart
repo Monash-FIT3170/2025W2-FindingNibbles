@@ -37,6 +37,10 @@ class _MapPageState extends State<MapPage> {
   final PopupController _popupController = PopupController();
   Timer? _loadTimer; // Timer for repeated attempts
 
+  // Add these variables near the top of the class
+  int _minimumRating = 1;
+  int _priceLevel = 1;  // 1 = $, 2 = $$, 3 = $$$
+
   @override
   void initState() {
     super.initState();
@@ -154,6 +158,8 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.west,
         neLat: bounds.north,
         neLng: bounds.east,
+        //minRating: _minimumRating,
+        //priceLevel: _priceLevel,
       );
 
       if (mounted) {
@@ -191,44 +197,66 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Filter Restaurants'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Add your filter options here
-              ListTile(
-                leading: const Icon(Icons.star),
-                title: const Text('Minimum Rating'),
-                trailing: DropdownButton<int>(
-                  value: 1,
-                  items: List.generate(5, (index) => index + 1)
-                      .map((rating) => DropdownMenuItem(
-                            value: rating,
-                            child: Text(rating.toString()),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
-                    // Handle rating filter
-                  },
-                ),
+        return StatefulBuilder(  // Use StatefulBuilder to update dialog state
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Filter Restaurants'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.star),
+                    title: const Text('Minimum Rating'),
+                    trailing: DropdownButton<int>(
+                      value: _minimumRating,
+                      items: List.generate(5, (index) => index + 1)
+                          .map((rating) => DropdownMenuItem(
+                                value: rating,
+                                child: Text('$rating ⭐'),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _minimumRating = value!;
+                        });
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.attach_money),
+                    title: const Text('Price Level'),
+                    trailing: DropdownButton<int>(
+                      value: _priceLevel,
+                      items: [
+                        const DropdownMenuItem(value: 1, child: Text('\$')),
+                        const DropdownMenuItem(value: 2, child: Text('\$\$')),
+                        const DropdownMenuItem(value: 3, child: Text('\$\$\$')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _priceLevel = value!;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-              // Add more filter options as needed
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Apply filters here
-                Navigator.pop(context);
-              },
-              child: const Text('Apply'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Apply the filters
+                    _fetchRestaurantsInBounds(); // Refresh with new filters
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Apply'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -239,12 +267,6 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -310,6 +332,15 @@ class _MapPageState extends State<MapPage> {
                 }).toList(),
               ),
             ],
+          ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'filterButton',
+              onPressed: _showFilterDialog,
+              child: const Icon(Icons.filter_alt_rounded),
+            ),
           ),
           if (_isLoading)
             const Center(
