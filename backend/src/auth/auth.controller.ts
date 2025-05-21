@@ -87,7 +87,7 @@ export class AuthController {
 
   @Get('check')
   getProfile(@Req() req: RequestUser) {
-    return req.user.id;
+    return req.user.sub;
   }
 
   @Public()
