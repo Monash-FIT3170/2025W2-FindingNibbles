@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import 'package:nibbles/service/map/map_service.dart'; 
 import 'package:nibbles/service/profile/restaurant_dto.dart'; 
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
+import 'package:nibbles/service/cuisine/cuisine_service.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -40,6 +42,8 @@ class _MapPageState extends State<MapPage> {
   // Add these variables near the top of the class
   int _minimumRating = 1;
   int _priceLevel = 1;  // 1 = $, 2 = $$, 3 = $$$
+  List<CuisineDto> _availableCuisines = [];
+  CuisineDto? _selectedCuisine;
 
   @override
   void initState() {
@@ -48,6 +52,8 @@ class _MapPageState extends State<MapPage> {
     
     // Start aggressive loading attempts right away
     _startAggressiveLoading();
+
+    _fetchCuisines(); // Add this line
   }
 
   // Start aggressive attempts to load restaurants
@@ -193,11 +199,26 @@ class _MapPageState extends State<MapPage> {
     await _fetchWithBounds(bounds);
   }
 
+  // Update the _fetchCuisines method
+  Future<void> _fetchCuisines() async {
+    try {
+      final cuisines = await CuisineService().getAllCuisines();
+      if (mounted) {
+        setState(() {
+          _availableCuisines = cuisines;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching cuisines: $e');
+    }
+  }
+
+  // Update the _showFilterDialog method
   void _showFilterDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(  // Use StatefulBuilder to update dialog state
+        return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Filter Restaurants'),
@@ -235,6 +256,28 @@ class _MapPageState extends State<MapPage> {
                       onChanged: (value) {
                         setState(() {
                           _priceLevel = value!;
+                        });
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.restaurant_menu),
+                    title: const Text('Cuisine Type'),
+                    trailing: DropdownButton<CuisineDto?>(
+                      value: _selectedCuisine,
+                      items: [
+                        const DropdownMenuItem<CuisineDto?>(
+                          value: null,
+                          child: Text('All'),
+                        ),
+                        ..._availableCuisines.map((cuisine) => DropdownMenuItem(
+                              value: cuisine,
+                              child: Text(cuisine.name),
+                            )),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCuisine = value;
                         });
                       },
                     ),
