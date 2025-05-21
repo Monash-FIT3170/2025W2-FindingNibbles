@@ -6,8 +6,8 @@ import { CreateApplianceDto } from './dto/create-appliance.dto';
 export class ApplianceController {
   constructor(private readonly applianceService: ApplianceService) {}
   @Post()
-  create(@Body() creatApplianceDto: CreateApplianceDto) {
-    return this.applianceService.create(creatApplianceDto);
+  create(@Body() createApplianceDto: CreateApplianceDto) {
+    return this.applianceService.create(createApplianceDto);
   }
 
   @Get()
