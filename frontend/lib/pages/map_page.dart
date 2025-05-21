@@ -40,8 +40,7 @@ class _MapPageState extends State<MapPage> {
   Timer? _loadTimer; // Timer for repeated attempts
 
   // Add these variables near the top of the class
-  int _minimumRating = 1;
-  int _priceLevel = 1;  // 1 = $, 2 = $$, 3 = $$$
+  int _minimumRating = 1;  // 1 = $, 2 = $$, 3 = $$$
   List<CuisineDto> _availableCuisines = [];
   CuisineDto? _selectedCuisine;
 
@@ -164,8 +163,6 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.west,
         neLat: bounds.north,
         neLng: bounds.east,
-        //minRating: _minimumRating,
-        //priceLevel: _priceLevel,
       );
 
       if (mounted) {
@@ -239,23 +236,6 @@ class _MapPageState extends State<MapPage> {
                       onChanged: (value) {
                         setState(() {
                           _minimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.attach_money),
-                    title: const Text('Price Level'),
-                    trailing: DropdownButton<int>(
-                      value: _priceLevel,
-                      items: [
-                        const DropdownMenuItem(value: 1, child: Text('\$')),
-                        const DropdownMenuItem(value: 2, child: Text('\$\$')),
-                        const DropdownMenuItem(value: 3, child: Text('\$\$\$')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _priceLevel = value!;
                         });
                       },
                     ),
