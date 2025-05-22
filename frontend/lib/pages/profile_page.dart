@@ -13,10 +13,10 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
   List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
