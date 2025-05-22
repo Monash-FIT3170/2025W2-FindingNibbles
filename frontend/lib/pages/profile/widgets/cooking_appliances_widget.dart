@@ -36,9 +36,9 @@ class _CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     try {
       _availableAppliances = await _profileService.getDefaultAppliances();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading appliances: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading appliances: $e')));
     }
   }
 
@@ -65,18 +65,21 @@ class _CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 if (newApplianceName.isNotEmpty) {
                   try {
                     // First check if this appliance already exists
-                    final existingAppliance = _availableAppliances.where(
-                      (app) => app.name.toLowerCase() == newApplianceName.toLowerCase()
-                    ).toList();
-                    
+                    final existingAppliance =
+                        _availableAppliances
+                            .where(
+                              (app) =>
+                                  app.name.toLowerCase() ==
+                                  newApplianceName.toLowerCase(),
+                            )
+                            .toList();
+
                     if (existingAppliance.isNotEmpty) {
                       widget.onApplianceAdded(existingAppliance.first);
                     } else {
                       // Create new appliance
-                      final newAppliance = await _profileService.createAppliance(
-                        newApplianceName, 
-                        null
-                      );
+                      final newAppliance = await _profileService
+                          .createAppliance(newApplianceName, null);
                       widget.onApplianceAdded(newAppliance);
                       // Refresh appliances
                       _fetchAvailableAppliances();
@@ -134,20 +137,23 @@ class _CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                   vertical: 8,
                 ),
               ),
-              child: widget.appliances.isEmpty
-                  ? const Text('No appliances added')
-                  : Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: widget.appliances
-                          .map(
-                            (app) => Chip(
-                              label: Text(app.name),
-                              onDeleted: () => widget.onApplianceRemoved(app),
-                            ),
-                          )
-                          .toList(),
-                    ),
+              child:
+                  widget.appliances.isEmpty
+                      ? const Text('No appliances added')
+                      : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            widget.appliances
+                                .map(
+                                  (app) => Chip(
+                                    label: Text(app.name),
+                                    onDeleted:
+                                        () => widget.onApplianceRemoved(app),
+                                  ),
+                                )
+                                .toList(),
+                      ),
             ),
           ],
         ),

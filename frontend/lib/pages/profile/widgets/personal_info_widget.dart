@@ -3,25 +3,36 @@ import 'package:nibbles/pages/profile/change_password_page.dart';
 
 class PersonalInfo extends StatefulWidget {
   final Map<String, dynamic> user;
-  final Function(String, String)? onUpdateField; // Callback for when a field is updated - Function (fieldName, newFieldValue)
+  final Function(String, String)?
+  onUpdateField; // Callback for when a field is updated - Function (fieldName, newFieldValue)
 
-  const PersonalInfo({Key? key, required this.user, this.onUpdateField}) : super(key: key);
+  const PersonalInfo({Key? key, required this.user, this.onUpdateField})
+    : super(key: key);
 
   @override
   State<PersonalInfo> createState() => _PersonalInfoState();
 }
 
 class _PersonalInfoState extends State<PersonalInfo> {
-  final Map<String, TextEditingController> _controllers = {}; // Map to hold all texting editing controllers for user fields
-  final Map<String, bool> _isEditing = {}; // Map to track whether each field is currently being edited
-  final FocusNode _textFieldFocusNode = FocusNode(); // Manages which text field is currently active or 'focused'
+  final Map<String, TextEditingController> _controllers =
+      {}; // Map to hold all texting editing controllers for user fields
+  final Map<String, bool> _isEditing =
+      {}; // Map to track whether each field is currently being edited
+  final FocusNode _textFieldFocusNode =
+      FocusNode(); // Manages which text field is currently active or 'focused'
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    _controllers['firstName'] = TextEditingController(text: widget.user['firstName'] ?? '');
-    _controllers['lastName'] = TextEditingController(text: widget.user['lastName'] ?? '');
-    _controllers['email'] = TextEditingController(text: widget.user['email'] ?? '');
+    _controllers['firstName'] = TextEditingController(
+      text: widget.user['firstName'] ?? '',
+    );
+    _controllers['lastName'] = TextEditingController(
+      text: widget.user['lastName'] ?? '',
+    );
+    _controllers['email'] = TextEditingController(
+      text: widget.user['email'] ?? '',
+    );
     _isEditing['firstName'] = false;
     _isEditing['lastName'] = false;
     _isEditing['email'] = false;
@@ -32,10 +43,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     final primary = Theme.of(context).primaryColor;
     return Column(
       children: [
-        const CircleAvatar(
-          radius: 48,
-          child: Icon(Icons.person, size: 48),
-        ),
+        const CircleAvatar(radius: 48, child: Icon(Icons.person, size: 48)),
         const SizedBox(height: 24),
         _buildInfoTile('First Name', 'firstName', primary),
         _buildInfoTile('Last Name', 'lastName', primary),
@@ -50,42 +58,37 @@ class _PersonalInfoState extends State<PersonalInfo> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ChangePasswordPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ChangePasswordPage()),
               );
             },
-          )
-        ),       
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildInfoTile(
-    String label,
-    String fieldName,
-    Color primary,
-  ) {
+  Widget _buildInfoTile(String label, String fieldName, Color primary) {
     return Column(
       children: [
         ListTile(
           title: Text(label, style: TextStyle(color: primary)),
-          subtitle: _isEditing[fieldName]!
-              ? TextFormField(
-                  controller: _controllers[fieldName],
-                  focusNode: _textFieldFocusNode,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    isCollapsed: true, // to reduce extra padding
-                  ),
-                  onFieldSubmitted: (value) {
-                    setState(() {
-                      _isEditing[fieldName] = false;
-                    });
-                    widget.onUpdateField?.call(fieldName, value);
-                  },
-                )
-              : Text(_controllers[fieldName]!.text),
+          subtitle:
+              _isEditing[fieldName]!
+                  ? TextFormField(
+                    controller: _controllers[fieldName],
+                    focusNode: _textFieldFocusNode,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isCollapsed: true, // to reduce extra padding
+                    ),
+                    onFieldSubmitted: (value) {
+                      setState(() {
+                        _isEditing[fieldName] = false;
+                      });
+                      widget.onUpdateField?.call(fieldName, value);
+                    },
+                  )
+                  : Text(_controllers[fieldName]!.text),
           trailing: IconButton(
             icon: Icon(
               _isEditing[fieldName]! ? Icons.check : Icons.edit,
@@ -99,7 +102,10 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     FocusScope.of(context).requestFocus(_textFieldFocusNode);
                   });
                 } else {
-                  widget.onUpdateField?.call(fieldName, _controllers[fieldName]!.text);
+                  widget.onUpdateField?.call(
+                    fieldName,
+                    _controllers[fieldName]!.text,
+                  );
                 }
               });
             },

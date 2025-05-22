@@ -30,9 +30,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Personal Info'),
-      ),
+      appBar: AppBar(title: const Text('Personal Info')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _personalInfo,
         builder: (context, snapshot) {
@@ -55,10 +53,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
           return ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
-              PersonalInfo(
-                user: userData,
-                onUpdateField: _handleFieldUpdate,
-              ),
+              PersonalInfo(user: userData, onUpdateField: _handleFieldUpdate),
             ],
           );
         },
@@ -101,5 +96,6 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 }
 
 extension StringCasingExtension on String {
-  String capitalize() => length > 0 ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';
+  String capitalize() =>
+      length > 0 ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';
 }

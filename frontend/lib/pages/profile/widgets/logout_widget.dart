@@ -24,11 +24,7 @@ class LogoutWidget extends StatelessWidget {
       print('Error clearing tokens: $e');
     } finally {
       // Redirect to Login/Title Screen
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/title',
-        (route) => false,
-      );
+      Navigator.pushNamedAndRemoveUntil(context, '/title', (route) => false);
       onLogout();
     }
   }

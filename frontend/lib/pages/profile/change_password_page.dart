@@ -16,7 +16,9 @@ class ChangePasswordPage extends StatelessWidget {
       final newPassword = newPasswordController.text.trim();
       final confirmPassword = confirmPasswordController.text.trim();
 
-      if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      if (oldPassword.isEmpty ||
+          newPassword.isEmpty ||
+          confirmPassword.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please fill in all fields')),
         );
@@ -30,7 +32,11 @@ class ChangePasswordPage extends StatelessWidget {
         return;
       }
 
-      final success = await authService.changePassword(oldPassword, newPassword, confirmPassword);
+      final success = await authService.changePassword(
+        oldPassword,
+        newPassword,
+        confirmPassword,
+      );
 
       if (context.mounted) {
         if (success) {
@@ -40,7 +46,9 @@ class ChangePasswordPage extends StatelessWidget {
           Navigator.pop(context); // Go back after success
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Current password was entered incorrectly')),
+            const SnackBar(
+              content: Text('Current password was entered incorrectly'),
+            ),
           );
         }
       }
@@ -88,7 +96,7 @@ class ChangePasswordPage extends StatelessWidget {
                   onTap: () {
                     handleChangePassword();
                   },
-                )
+                ),
               ),
             ],
           ),

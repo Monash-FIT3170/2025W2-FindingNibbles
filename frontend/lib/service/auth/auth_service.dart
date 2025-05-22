@@ -156,15 +156,16 @@ class AuthService {
     }
   }
 
-  Future<bool> changePassword(String oldPassword, String newPassword, String confirmNewPassword) async {
+  Future<bool> changePassword(
+    String oldPassword,
+    String newPassword,
+    String confirmNewPassword,
+  ) async {
     try {
       _logger.d('Attempting password change...');
       final response = await _dio.put(
         'auth/password',
-        data: {
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        },
+        data: {'oldPassword': oldPassword, 'newPassword': newPassword},
       );
       _logger.d('Password change response: ${response.data}');
       return true;
