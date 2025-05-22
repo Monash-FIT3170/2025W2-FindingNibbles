@@ -60,7 +60,15 @@ export class RestaurantService {
     });
   }
 
-  findByCuisine(cuisineId: number) {
+  findByCuisine(
+    cuisineId: number,
+    params?: {
+      skip?: number;
+      take?: number;
+      orderBy?: Prisma.RestaurantOrderByWithRelationInput;
+    },
+  ) {
+    const { skip, take, orderBy } = params || {};
     return this.db.restaurant.findMany({
       where: {
         restaurantCuisines: {
@@ -69,6 +77,9 @@ export class RestaurantService {
           },
         },
       },
+      skip,
+      take,
+      orderBy,
       include: {
         restaurantCuisines: {
           include: {
@@ -108,6 +119,41 @@ export class RestaurantService {
           gte: swLng, // Greater than or equal to swLng
           lte: neLng, // Less than or equal to neLng
         },
+      },
+    });
+  }
+
+  // New method: Fetch restaurants within bounds and filtered by cuisine
+  async findInBoundsWithCuisine(
+    swLat: number,
+    swLng: number,
+    neLat: number,
+    neLng: number,
+    cuisineId: number,
+  ) {
+    return this.db.restaurant.findMany({
+      where: {
+        latitude: {
+          gte: swLat,
+          lte: neLat,
+        },
+        longitude: {
+          gte: swLng,
+          lte: neLng,
+        },
+        restaurantCuisines: {
+          some: {
+            cuisineId,
+          },
+        },
+      },
+      include: {
+        restaurantCuisines: {
+          include: {
+            cuisine: true,
+          },
+        },
+        photos: true,
       },
     });
   }
