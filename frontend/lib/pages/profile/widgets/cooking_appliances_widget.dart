@@ -17,8 +17,7 @@ class CookingAppliancesWidget extends StatefulWidget {
   });
 
   @override
-  CookingAppliancesWidgetState createState() =>
-      CookingAppliancesWidgetState();
+  CookingAppliancesWidgetState createState() => CookingAppliancesWidgetState();
 }
 
 class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
@@ -65,7 +64,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 final newApplianceName = _controller.text.trim();
                 if (newApplianceName.isNotEmpty) {
                   try {
-                    
                     // First check if this appliance already exists
                     final existingAppliance =
                         _availableAppliances
@@ -91,7 +89,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                     if (dialogContext.mounted) {
                       Navigator.pop(dialogContext);
                     }
-
                   } catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
