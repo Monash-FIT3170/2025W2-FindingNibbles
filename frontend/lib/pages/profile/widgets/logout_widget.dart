@@ -18,7 +18,7 @@ class LogoutWidget extends StatelessWidget {
       // Clear Authentication Tokens
       await storage.delete(key: 'access_token');
       await storage.delete(key: 'refresh_token');
-      
+
       scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('You have been logged out successfully.'),
