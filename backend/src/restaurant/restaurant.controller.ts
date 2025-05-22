@@ -20,14 +20,16 @@ export class RestaurantController {
     @Query('skip') skip?: string,
     @Query('take') take?: string,
     @Query('orderBy') orderBy?: string,
+    @Query('cuisineId') cuisineId?: string,
     @Query('swLat') swLat?: string,
     @Query('swLng') swLng?: string,
     @Query('neLat') neLat?: string,
     @Query('neLng') neLng?: string,
   ): Promise<Restaurant[]> {
     console.log(
-      `Received query parameters: swLat=${swLat}, swLng=${swLng}, neLat=${neLat}, neLng=${neLng}`,
+      `Received query parameters: swLat=${swLat}, swLng=${swLng}, neLat=${neLat}, neLng=${neLng}, cuisineId=${cuisineId}`,
     );
+
     // Check if bounds parameters are provided
     if (swLat && swLng && neLat && neLng) {
       const swLatNum = parseFloat(swLat);
@@ -44,6 +46,22 @@ export class RestaurantController {
       ) {
         throw new BadRequestException('Invalid latitude or longitude values.');
       }
+
+      // Handle cuisine filtering with bounds
+      if (cuisineId) {
+        const cuisineIdNum = parseInt(cuisineId);
+        if (isNaN(cuisineIdNum)) {
+          throw new BadRequestException('Invalid cuisine ID value.');
+        }
+        return this.restaurantService.findInBoundsWithCuisine(
+          swLatNum,
+          swLngNum,
+          neLatNum,
+          neLngNum,
+          cuisineIdNum,
+        );
+      }
+
       return this.restaurantService.findInBounds(
         swLatNum,
         swLngNum,
@@ -52,7 +70,29 @@ export class RestaurantController {
       );
     }
 
-    // If no bounds are provided, return paginated and sorted restaurants
+    // Handle cuisine filtering without bounds
+    if (cuisineId) {
+      const cuisineIdNum = parseInt(cuisineId);
+      if (isNaN(cuisineIdNum)) {
+        throw new BadRequestException('Invalid cuisine ID value.');
+      }
+
+      let orderByObject: Prisma.RestaurantOrderByWithRelationInput | undefined =
+        undefined;
+      if (orderBy === 'rating') {
+        orderByObject = { rating: 'desc' };
+      } else if (orderBy === 'popular') {
+        orderByObject = { viewCount: 'desc' };
+      }
+
+      return this.restaurantService.findByCuisine(cuisineIdNum, {
+        skip: skip ? Number(skip) : undefined,
+        take: take ? Number(take) : undefined,
+        orderBy: orderByObject,
+      });
+    }
+
+    // If no bounds or cuisine are provided, return paginated and sorted restaurants
     let orderByObject: Prisma.RestaurantOrderByWithRelationInput | undefined =
       undefined;
     if (orderBy === 'rating') {
