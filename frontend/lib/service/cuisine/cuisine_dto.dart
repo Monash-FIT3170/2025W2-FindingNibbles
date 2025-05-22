@@ -13,4 +13,12 @@ class CuisineDto {
       name: json['name'],
     );
   }
+  
+  // Add this method if it doesn't exist
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
 }
