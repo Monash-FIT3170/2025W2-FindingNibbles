@@ -15,6 +15,7 @@ import { Restaurant } from 'generated/prisma';
 export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
+  // Fetch all restaurants with optional pagination, sorting, and filtering
   @Get()
   async findAll(
     @Query('skip') skip?: string,
@@ -26,25 +27,8 @@ export class RestaurantController {
     @Query('neLat') neLat?: string,
     @Query('neLng') neLng?: string,
   ): Promise<Restaurant[]> {
-    console.log('🔴 BACKEND: findAll called');
-    console.log('🔴 BACKEND: cuisineId query param:', cuisineId);
-    console.log(
-      '🔴 BACKEND: swLat:',
-      swLat,
-      'swLng:',
-      swLng,
-      'neLat:',
-      neLat,
-      'neLng:',
-      neLng,
-    );
-    console.log(
-      `Received query parameters: swLat=${swLat}, swLng=${swLng}, neLat=${neLat}, neLng=${neLng}, cuisineId=${cuisineId}`,
-    );
-
     // Check if bounds parameters are provided
     if (swLat && swLng && neLat && neLng) {
-      console.log('🔴 BACKEND: Using bounds filtering');
       const swLatNum = parseFloat(swLat);
       const swLngNum = parseFloat(swLng);
       const neLatNum = parseFloat(neLat);
@@ -62,19 +46,10 @@ export class RestaurantController {
 
       // Handle cuisine filtering with bounds
       if (cuisineId) {
-        console.log('🔴 BACKEND: Using bounds + cuisine filtering');
         const cuisineIdNum = parseInt(cuisineId);
         if (isNaN(cuisineIdNum)) {
           throw new BadRequestException('Invalid cuisine ID value.');
         }
-        console.log(
-          '🔴 BACKEND: Calling findInBoundsWithCuisine with cuisineId:',
-          cuisineIdNum,
-        );
-        console.log(
-          '🔴 BACKEND: Calling findInBoundsWithCuisine with cuisineId:',
-          cuisineIdNum,
-        );
         const result = await this.restaurantService.findInBoundsWithCuisine(
           swLatNum,
           swLngNum,
@@ -82,25 +57,14 @@ export class RestaurantController {
           neLngNum,
           cuisineIdNum,
         );
-        console.log(
-          '🔴 BACKEND: findInBoundsWithCuisine returned',
-          result.length,
-          'restaurants',
-        );
         return result;
       }
 
-      console.log('🔴 BACKEND: Using bounds only (no cuisine filter)');
       const result = await this.restaurantService.findInBounds(
         swLatNum,
         swLngNum,
         neLatNum,
         neLngNum,
-      );
-      console.log(
-        '🔴 BACKEND: findInBounds returned',
-        result.length,
-        'restaurants',
       );
       return result;
     }
@@ -143,18 +107,19 @@ export class RestaurantController {
     });
   }
 
-  // Specific routes must come BEFORE parameter routes
+  // Fetch restaurants by name
   @Get('search/:name')
   findByName(@Param('name') name: string) {
     return this.restaurantService.findByName(name);
   }
 
+  // Fetch restaurants by cuisine ID
   @Get('cuisine/:id')
   findByCuisine(@Param('id', ParseIntPipe) id: number) {
     return this.restaurantService.findByCuisine(id);
   }
 
-  // Generic parameter route should come LAST
+  // Fetch restaurants by cuisine ID with bounds
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const restaurant = await this.restaurantService.findOneById(id);
