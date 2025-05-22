@@ -11,12 +11,15 @@ class LogoutWidget extends StatelessWidget {
     const storage = FlutterSecureStorage();
     final logger = getLogger();
 
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     try {
       // Clear Authentication Tokens
       await storage.delete(key: 'access_token');
       await storage.delete(key: 'refresh_token');
-
-      ScaffoldMessenger.of(context).showSnackBar(
+      
+      scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('You have been logged out successfully.'),
           duration: Duration(seconds: 2),
@@ -26,7 +29,7 @@ class LogoutWidget extends StatelessWidget {
       logger.d('Error clearing tokens: $e');
     } finally {
       // Redirect to Login/Title Screen
-      Navigator.pushNamedAndRemoveUntil(context, '/title', (route) => false);
+      navigator.pushNamedAndRemoveUntil('/title', (route) => false);
       onLogout();
     }
   }
