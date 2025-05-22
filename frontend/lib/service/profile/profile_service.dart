@@ -104,7 +104,7 @@ class ProfileService {
   }
 
   /**
-   * Resteraunts 
+   * Restaurants
    */
 
   Future<List<RestaurantDto>> getFavouriteRestaurants() async {
