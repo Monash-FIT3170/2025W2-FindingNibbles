@@ -6,8 +6,7 @@ class PersonalInfo extends StatefulWidget {
   final Function(String, String)?
   onUpdateField; // Callback for when a field is updated - Function (fieldName, newFieldValue)
 
-  const PersonalInfo({Key? key, required this.user, this.onUpdateField})
-    : super(key: key);
+  const PersonalInfo({super.key, required this.user, this.onUpdateField});
 
   @override
   State<PersonalInfo> createState() => _PersonalInfoState();
