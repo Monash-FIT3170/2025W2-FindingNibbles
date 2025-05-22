@@ -40,7 +40,7 @@ class ChangePasswordPage extends StatelessWidget {
           Navigator.pop(context); // Go back after success
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to change password')),
+            const SnackBar(content: Text('Current password was entered incorrectly')),
           );
         }
       }
