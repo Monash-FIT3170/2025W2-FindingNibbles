@@ -122,8 +122,6 @@ export class UserController {
   ) {
     const userId = req.user.sub;
 
-    console.log('Incoming Update Request:', updateUserDto);
-
     // Attempt the update
     const updatedUser = await this.userService.update(userId, updateUserDto);
 
