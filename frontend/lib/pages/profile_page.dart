@@ -13,7 +13,6 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-
   _ProfilePageState createState() => _ProfilePageState();
 }
 
@@ -35,9 +34,9 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       appliances = await _profileService.getUserAppliances();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching appliances: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error fetching appliances: $e')));
     } finally {
       setState(() => isLoading = false);
     }
@@ -48,12 +47,12 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await _profileService.addAppliance(appliance.id!);
       setState(() {
-          appliances.add(appliance);
+        appliances.add(appliance);
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding appliance: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error adding appliance: $e')));
     } finally {
       setState(() => isLoading = false);
     }
@@ -67,9 +66,9 @@ class _ProfilePageState extends State<ProfilePage> {
         appliances.removeWhere((a) => a.id == appliance.id);
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error removing appliance: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error removing appliance: $e')));
     } finally {
       setState(() => isLoading = false);
     }
@@ -171,4 +170,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-

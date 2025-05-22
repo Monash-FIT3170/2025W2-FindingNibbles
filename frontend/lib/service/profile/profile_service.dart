@@ -275,16 +275,16 @@ class ProfileService {
     }
   }
 
-  Future<ApplianceRequirementDto> createAppliance(String name, String? description) async {
+  Future<ApplianceRequirementDto> createAppliance(
+    String name,
+    String? description,
+  ) async {
     try {
       final response = await _dio.post(
         'appliance',
-        data: {
-          'name': name,
-          'description': description ?? '',
-        },
+        data: {'name': name, 'description': description ?? ''},
       );
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         return ApplianceRequirementDto.fromJson(response.data);
       } else {
