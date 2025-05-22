@@ -6,6 +6,7 @@ import { DatabaseService } from '../database/database.service';
 export class RestaurantService {
   constructor(private readonly db: DatabaseService) {}
 
+  // Fetch all restaurants with optional pagination and sorting
   findAll(params?: {
     skip?: number;
     take?: number;
@@ -27,6 +28,7 @@ export class RestaurantService {
     });
   }
 
+  // Fetch a single restaurant by ID
   findOneById(id: number) {
     return this.db.restaurant.findUnique({
       where: { id },
@@ -41,6 +43,7 @@ export class RestaurantService {
     });
   }
 
+  // Fetch restaurants by name
   findByName(name: string) {
     return this.db.restaurant.findMany({
       where: {
@@ -60,6 +63,7 @@ export class RestaurantService {
     });
   }
 
+  // Fetch restaurants by cuisine ID
   findByCuisine(
     cuisineId: number,
     params?: {
@@ -130,7 +134,7 @@ export class RestaurantService {
     });
   }
 
-  // New method: Fetch restaurants within bounds and filtered by cuisine
+  // Fetch restaurants within bounds and filtered by cuisine
   async findInBoundsWithCuisine(
     swLat: number,
     swLng: number,
@@ -154,7 +158,6 @@ export class RestaurantService {
           },
         },
       },
-      // 🟢 ADD THIS INCLUDE:
       include: {
         restaurantCuisines: {
           include: {

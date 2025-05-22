@@ -157,7 +157,6 @@ class _MapPageState extends State<MapPage> {
   });
   
   try {
-    debugPrint('🟢 Making API call to MapService.getRestaurants');
     // Fetch restaurants from the backend using MapService with cuisine filter
     final allRestaurants = await MapService().getRestaurants(
       swLat: bounds.south,
@@ -167,12 +166,8 @@ class _MapPageState extends State<MapPage> {
       cuisineId: _selectedCuisine?.id, // Backend cuisine filter
     );
 
-    debugPrint('🟢 API returned ${allRestaurants.length} restaurants');
-
     // Apply frontend rating filter
     final filteredRestaurants = _applyRatingFilter(allRestaurants);
-    
-    debugPrint('🟢 After rating filter: ${filteredRestaurants.length} restaurants');
 
     if (mounted) {
       setState(() {
@@ -185,7 +180,6 @@ class _MapPageState extends State<MapPage> {
       }
     }
   } catch (e) {
-    debugPrint('🔴 ERROR in _fetchWithBounds: $e');
     if (mounted) {
       setState(() {
         _isLoading = false;
@@ -194,15 +188,13 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
-  return restaurants.where((restaurant) {
-    // If restaurant has no rating, include it (assuming unrated restaurants are acceptable)
-    if (restaurant.rating == null) return true;
-    
-    // Filter by minimum rating
-    return restaurant.rating! >= _minimumRating;
-  }).toList();
-}
+  // Apply rating filter to the list of restaurants
+  List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
+    return restaurants.where((restaurant) {
+      // Filter by minimum rating
+      return restaurant.rating! >= _minimumRating;
+    }).toList();
+  }
 
   // Fetch restaurants in response to user actions (like dragging the map)
   Future<void> _fetchRestaurantsInBounds() async {
@@ -215,7 +207,7 @@ List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
     await _fetchWithBounds(bounds);
   }
 
-  // Update the _fetchCuisines method
+  // Fetch all available cuisines
   Future<void> _fetchCuisines() async {
     try {
       final cuisines = await CuisineService().getAllCuisines();
@@ -229,7 +221,7 @@ List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
     }
   }
 
-  // Update the _showFilterDialog method
+  // Show filter dialog
   void _showFilterDialog() {
     showDialog(
       context: context,
@@ -296,13 +288,7 @@ List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
                 ),
                 TextButton(
                   onPressed: () {
-                    debugPrint('🔵 APPLY CLICKED');
-                    debugPrint('🔵 Selected cuisine: $_selectedCuisine');
-                    debugPrint('🔵 Selected cuisine ID: ${_selectedCuisine?.id}');
-                    debugPrint('🔵 Minimum rating: $_minimumRating');
-      
                     Navigator.pop(context);
-      
                     // Re-apply filters to currently loaded restaurants
                     if (_restaurants.isNotEmpty) {
                       _refreshFilters();
@@ -321,13 +307,13 @@ List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
     );
   }
 
+  // Refresh filters and re-fetch restaurants
   void _refreshFilters() {
-    debugPrint('🟣 Refreshing filters on existing data');
-    
     // Re-fetch from API (for cuisine filter) and apply rating filter
     _forceFetchRestaurants();
   }
 
+  // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<String> activeFilters = [];
     
@@ -336,7 +322,7 @@ List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
     }
     
     if (_minimumRating > 1) {
-      activeFilters.add('${_minimumRating}+ ⭐');
+      activeFilters.add('$_minimumRating+ ⭐');
     }
     
     if (activeFilters.isEmpty) return const SizedBox.shrink();
