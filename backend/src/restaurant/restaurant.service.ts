@@ -112,12 +112,19 @@ export class RestaurantService {
     return this.db.restaurant.findMany({
       where: {
         latitude: {
-          gte: swLat, // Greater than or equal to swLat
-          lte: neLat, // Less than or equal to neLat
+          gte: swLat,
+          lte: neLat,
         },
         longitude: {
-          gte: swLng, // Greater than or equal to swLng
-          lte: neLng, // Less than or equal to neLng
+          gte: swLng,
+          lte: neLng,
+        },
+      },
+      include: {
+        restaurantCuisines: {
+          include: {
+            cuisine: true,
+          },
         },
       },
     });
@@ -147,13 +154,13 @@ export class RestaurantService {
           },
         },
       },
+      // 🟢 ADD THIS INCLUDE:
       include: {
         restaurantCuisines: {
           include: {
             cuisine: true,
           },
         },
-        photos: true,
       },
     });
   }
