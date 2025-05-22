@@ -30,7 +30,9 @@ class PersonalMenuWidget extends StatelessWidget {
               // Navigate to LikedPage when tapped
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const PersonalInfoPage()),
+                MaterialPageRoute(
+                  builder: (context) => const PersonalInfoPage(),
+                ),
               );
             },
           ),
