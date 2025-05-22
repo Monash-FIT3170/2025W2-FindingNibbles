@@ -34,6 +34,7 @@ class ProfilePageState extends State<ProfilePage> {
     try {
       appliances = await _profileService.getUserAppliances();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error fetching appliances: $e')));
@@ -50,6 +51,7 @@ class ProfilePageState extends State<ProfilePage> {
         appliances.add(appliance);
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error adding appliance: $e')));
@@ -66,6 +68,7 @@ class ProfilePageState extends State<ProfilePage> {
         appliances.removeWhere((a) => a.id == appliance.id);
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error removing appliance: $e')));

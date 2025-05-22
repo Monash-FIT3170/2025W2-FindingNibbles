@@ -36,6 +36,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     try {
       _availableAppliances = await _profileService.getDefaultAppliances();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error loading appliances: $e')));
@@ -45,7 +46,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
   void _showAddApplianceDialog() {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Add Appliance'),
           content: TextField(
@@ -55,7 +56,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const Text('Cancel'),
             ),
@@ -64,6 +65,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 final newApplianceName = _controller.text.trim();
                 if (newApplianceName.isNotEmpty) {
                   try {
+                    
                     // First check if this appliance already exists
                     final existingAppliance =
                         _availableAppliances
@@ -80,17 +82,24 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                       // Create new appliance
                       final newAppliance = await _profileService
                           .createAppliance(newApplianceName, null);
+                      if (!mounted) return;
                       widget.onApplianceAdded(newAppliance);
                       // Refresh appliances
                       _fetchAvailableAppliances();
                     }
                     _controller.clear();
-                    Navigator.pop(context);
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
+
                   } catch (e) {
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error adding appliance: $e')),
                     );
-                    Navigator.pop(context);
+                    if (dialogContext.mounted) {
+                      Navigator.pop(dialogContext);
+                    }
                   }
                 }
               },
