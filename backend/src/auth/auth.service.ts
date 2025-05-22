@@ -180,12 +180,7 @@ export class AuthService {
     user: { id: number },
     changePasswordDto: ChangePasswordDto,
   ): Promise<void> {
-    const { oldPassword, newPassword, confirmNewPassword } = changePasswordDto;
-
-    // Check if confirmation password matches
-    if (newPassword !== confirmNewPassword) {
-      throw new BadRequestException('New passwords do not match');
-    }
+    const { oldPassword, newPassword } = changePasswordDto;
 
     // Find the user
     const existingUser = await this.userService.findOneById(user.id);
@@ -196,7 +191,9 @@ export class AuthService {
 
     // Compare old password with that stored in database
     if (!existingUser.passwordHash) {
-      throw new BadRequestException('User has no password set');
+      throw new BadRequestException(
+        'User has no password set. Ensure this account was not created using Google login.',
+      );
     }
 
     const isPasswordValid = await argon2.verify(
