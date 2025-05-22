@@ -57,15 +57,15 @@ class UserDto {
   }
 }
 
-class updateUserDto {
+class UpdateUserDto {
   final String? firstName;
   final String? lastName;
   final String? email;
 
-  updateUserDto({this.firstName, this.lastName, this.email});
+  UpdateUserDto({this.firstName, this.lastName, this.email});
 
-  factory updateUserDto.fromJson(Map<String, dynamic> json) {
-    return updateUserDto(
+  factory UpdateUserDto.fromJson(Map<String, dynamic> json) {
+    return UpdateUserDto(
       firstName: json['firstName'] as String?,
       lastName: json['lastName'] as String?,
       email: json['email'] as String?,

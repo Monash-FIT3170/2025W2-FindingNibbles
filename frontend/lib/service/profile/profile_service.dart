@@ -11,9 +11,7 @@ class ProfileService {
   final Dio _dio = DioClient().client;
   final _logger = getLogger();
 
-  /**
-   * Dietary Requirements
-   */
+  /// Dietary Requirements
 
   Future<List<DietaryRequirementDto>> getDietaryRequirements() async {
     try {
@@ -103,9 +101,7 @@ class ProfileService {
     }
   }
 
-  /**
-   * Restaurants
-   */
+  /// Restaurants
 
   Future<List<RestaurantDto>> getFavouriteRestaurants() async {
     try {
@@ -192,7 +188,7 @@ class ProfileService {
     }
   }
 
-  Future<UserDto> updateUserProfile(updateUserDto updateUserDto) async {
+  Future<UserDto> updateUserProfile(UpdateUserDto updateUserDto) async {
     try {
       final response = await _dio.patch(
         '/user/update',
@@ -210,9 +206,7 @@ class ProfileService {
     }
   }
 
-  /**
-   * Updating Appliance for User
-   */
+  /// Updating Appliance for User
 
   Future<List<ApplianceRequirementDto>> getUserAppliances() async {
     try {

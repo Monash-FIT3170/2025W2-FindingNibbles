@@ -9,19 +9,19 @@ class CookingAppliancesWidget extends StatefulWidget {
   final Function() onRefresh;
 
   const CookingAppliancesWidget({
-    Key? key,
+    super.key,
     required this.appliances,
     required this.onApplianceRemoved,
     required this.onApplianceAdded,
     required this.onRefresh,
-  }) : super(key: key);
+  });
 
   @override
-  _CookingAppliancesWidgetState createState() =>
-      _CookingAppliancesWidgetState();
+  CookingAppliancesWidgetState createState() =>
+      CookingAppliancesWidgetState();
 }
 
-class _CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
+class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
   final TextEditingController _controller = TextEditingController();
   final ProfileService _profileService = ProfileService();
   List<ApplianceRequirementDto> _availableAppliances = [];

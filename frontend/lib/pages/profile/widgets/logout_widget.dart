@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:nibbles/core/logger.dart';
 
 class LogoutWidget extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const LogoutWidget({Key? key, required this.onLogout}) : super(key: key);
+  const LogoutWidget({super.key, required this.onLogout});
 
   Future<void> _handleLogout(BuildContext context) async {
     const storage = FlutterSecureStorage();
+    final logger = getLogger();
 
     try {
       // Clear Authentication Tokens
@@ -21,7 +23,7 @@ class LogoutWidget extends StatelessWidget {
         ),
       );
     } catch (e) {
-      print('Error clearing tokens: $e');
+      logger.d('Error clearing tokens: $e');
     } finally {
       // Redirect to Login/Title Screen
       Navigator.pushNamedAndRemoveUntil(context, '/title', (route) => false);
