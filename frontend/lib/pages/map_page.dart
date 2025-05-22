@@ -4,14 +4,14 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
-import 'package:nibbles/service/map/map_service.dart'; 
-import 'package:nibbles/service/profile/restaurant_dto.dart'; 
+import 'package:nibbles/service/map/map_service.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
- 
+
   RestaurantMarker({required this.restaurant})
     : super(
         point: LatLng(restaurant.latitude, restaurant.longitude),
@@ -40,7 +40,7 @@ class _MapPageState extends State<MapPage> {
   Timer? _loadTimer; // Timer for repeated attempts
 
   // Add these variables near the top of the class
-  int _minimumRating = 1;  // 1 = $, 2 = $$, 3 = $$$
+  int _minimumRating = 1; // 1 = $, 2 = $$, 3 = $$$
   List<CuisineDto> _availableCuisines = [];
   CuisineDto? _selectedCuisine;
 
@@ -48,7 +48,7 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _getCurrentLocation();
-    
+
     // Start aggressive loading attempts right away
     _startAggressiveLoading();
 
@@ -59,19 +59,19 @@ class _MapPageState extends State<MapPage> {
   void _startAggressiveLoading() {
     // Cancel any existing timer
     _loadTimer?.cancel();
-    
+
     // Immediate attempt
     _forceFetchRestaurants();
-    
+
     // Set up a timer for repeated attempts
     _loadTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       _forceFetchRestaurants();
-      
+
       // Stop after 10 seconds to prevent infinite attempts
       if (timer.tick > 20) {
         timer.cancel();
       }
-      
+
       // Stop if we successfully loaded restaurants
       if (_restaurants.isNotEmpty) {
         timer.cancel();
@@ -108,7 +108,7 @@ class _MapPageState extends State<MapPage> {
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
       });
-      
+
       // Force fetch after getting location
       _forceFetchRestaurants();
     }
@@ -130,7 +130,7 @@ class _MapPageState extends State<MapPage> {
   // Force fetch restaurants even if bounds might not be fully initialized
   Future<void> _forceFetchRestaurants() async {
     if (!mounted) return;
-    
+
     // Try to get current bounds
     final bounds = _mapController.bounds;
     if (bounds == null) {
@@ -140,50 +140,69 @@ class _MapPageState extends State<MapPage> {
         LatLng(defaultLocation.latitude - 0.1, defaultLocation.longitude - 0.1),
         LatLng(defaultLocation.latitude + 0.1, defaultLocation.longitude + 0.1),
       );
-      
+
       await _fetchWithBounds(defaultBounds);
     } else {
       // If bounds are available, use them
       await _fetchWithBounds(bounds);
     }
   }
-  
+
   // Helper to fetch with known bounds
   Future<void> _fetchWithBounds(LatLngBounds bounds) async {
-    if (_isLoading) return; // Prevent multiple simultaneous requests
-    
-    setState(() {
-      _isLoading = true;
-    });
-    
-    try {
-      // Fetch restaurants from the backend using MapService
-      final restaurants = await MapService().getRestaurants(
-        swLat: bounds.south,
-        swLng: bounds.west,
-        neLat: bounds.north,
-        neLng: bounds.east,
-      );
+  if (_isLoading) return;
+  
+  setState(() {
+    _isLoading = true;
+  });
+  
+  try {
+    debugPrint('🟢 Making API call to MapService.getRestaurants');
+    // Fetch restaurants from the backend using MapService with cuisine filter
+    final allRestaurants = await MapService().getRestaurants(
+      swLat: bounds.south,
+      swLng: bounds.west,
+      neLat: bounds.north,
+      neLng: bounds.east,
+      cuisineId: _selectedCuisine?.id, // Backend cuisine filter
+    );
 
-      if (mounted) {
-        setState(() {
-          _restaurants = restaurants;
-          _isLoading = false;
-        });
-        
-        // If we got restaurants, cancel any loading timer
-        if (restaurants.isNotEmpty) {
-          _loadTimer?.cancel();
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+    debugPrint('🟢 API returned ${allRestaurants.length} restaurants');
+
+    // Apply frontend rating filter
+    final filteredRestaurants = _applyRatingFilter(allRestaurants);
+    
+    debugPrint('🟢 After rating filter: ${filteredRestaurants.length} restaurants');
+
+    if (mounted) {
+      setState(() {
+        _restaurants = filteredRestaurants; // Use filtered list
+        _isLoading = false;
+      });
+      
+      if (filteredRestaurants.isNotEmpty) {
+        _loadTimer?.cancel();
       }
     }
+  } catch (e) {
+    debugPrint('🔴 ERROR in _fetchWithBounds: $e');
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
+}
+
+List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
+  return restaurants.where((restaurant) {
+    // If restaurant has no rating, include it (assuming unrated restaurants are acceptable)
+    if (restaurant.rating == null) return true;
+    
+    // Filter by minimum rating
+    return restaurant.rating! >= _minimumRating;
+  }).toList();
+}
 
   // Fetch restaurants in response to user actions (like dragging the map)
   Future<void> _fetchRestaurantsInBounds() async {
@@ -192,7 +211,7 @@ class _MapPageState extends State<MapPage> {
     // Get current map bounds
     final bounds = _mapController.bounds;
     if (bounds == null) return;
-    
+
     await _fetchWithBounds(bounds);
   }
 
@@ -227,12 +246,15 @@ class _MapPageState extends State<MapPage> {
                     title: const Text('Minimum Rating'),
                     trailing: DropdownButton<int>(
                       value: _minimumRating,
-                      items: List.generate(5, (index) => index + 1)
-                          .map((rating) => DropdownMenuItem(
-                                value: rating,
-                                child: Text('$rating ⭐'),
-                              ))
-                          .toList(),
+                      items:
+                          List.generate(5, (index) => index + 1)
+                              .map(
+                                (rating) => DropdownMenuItem(
+                                  value: rating,
+                                  child: Text('$rating ⭐'),
+                                ),
+                              )
+                              .toList(),
                       onChanged: (value) {
                         setState(() {
                           _minimumRating = value!;
@@ -250,10 +272,12 @@ class _MapPageState extends State<MapPage> {
                           value: null,
                           child: Text('All'),
                         ),
-                        ..._availableCuisines.map((cuisine) => DropdownMenuItem(
-                              value: cuisine,
-                              child: Text(cuisine.name),
-                            )),
+                        ..._availableCuisines.map(
+                          (cuisine) => DropdownMenuItem(
+                            value: cuisine,
+                            child: Text(cuisine.name),
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -271,12 +295,23 @@ class _MapPageState extends State<MapPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Apply the filters
-                    _fetchRestaurantsInBounds(); // Refresh with new filters
+                    debugPrint('🔵 APPLY CLICKED');
+                    debugPrint('🔵 Selected cuisine: $_selectedCuisine');
+                    debugPrint('🔵 Selected cuisine ID: ${_selectedCuisine?.id}');
+                    debugPrint('🔵 Minimum rating: $_minimumRating');
+      
                     Navigator.pop(context);
+      
+                    // Re-apply filters to currently loaded restaurants
+                    if (_restaurants.isNotEmpty) {
+                      _refreshFilters();
+                    } else {
+                      // If no restaurants loaded, fetch fresh data
+                      _forceFetchRestaurants();
+                    }
                   },
-                  child: const Text('Apply'),
-                ),
+                child: const Text('Apply'),
+              ),
               ],
             );
           },
@@ -285,12 +320,48 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void _refreshFilters() {
+    debugPrint('🟣 Refreshing filters on existing data');
+    
+    // Re-fetch from API (for cuisine filter) and apply rating filter
+    _forceFetchRestaurants();
+  }
+
+  Widget _buildActiveFiltersChip() {
+    List<String> activeFilters = [];
+    
+    if (_selectedCuisine != null) {
+      activeFilters.add(_selectedCuisine!.name);
+    }
+    
+    if (_minimumRating > 1) {
+      activeFilters.add('${_minimumRating}+ ⭐');
+    }
+    
+    if (activeFilters.isEmpty) return const SizedBox.shrink();
+    
+    return Positioned(
+      top: 80,
+      right: 16,
+      child: Chip(
+        label: Text(activeFilters.join(' • ')),
+        deleteIcon: const Icon(Icons.close, size: 18),
+        onDeleted: () {
+          setState(() {
+            _selectedCuisine = null;
+            _minimumRating = 1;
+          });
+          _forceFetchRestaurants();
+        },
+        backgroundColor: Colors.blue.shade100,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Map'),
-      ),
+      appBar: AppBar(title: const Text('Map')),
       body: Stack(
         children: [
           FlutterMap(
@@ -310,49 +381,66 @@ class _MapPageState extends State<MapPage> {
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate:
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.app',
               ),
               MarkerLayer(
-                markers: _restaurants.map((restaurant) {
-                  return Marker(
-                    point: LatLng(restaurant.latitude, restaurant.longitude),
-                    width: 40,
-                    height: 40,
-                    builder: (ctx) => GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(restaurant.name),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Rating: ${restaurant.rating}'),
-                                Text('Total reviews: : ${restaurant.userRatingsTotal}'),
-                                Text('PH: ${restaurant.formattedPhoneNum}'),
-                                Text('Address: ${restaurant.formattedAddress}'),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Close'),
+                markers:
+                    _restaurants.map((restaurant) {
+                      return Marker(
+                        point: LatLng(
+                          restaurant.latitude,
+                          restaurant.longitude,
+                        ),
+                        width: 40,
+                        height: 40,
+                        builder:
+                            (ctx) => GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (context) => AlertDialog(
+                                        title: Text(restaurant.name),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Rating: ${restaurant.rating}',
+                                            ),
+                                            Text(
+                                              'Total reviews: : ${restaurant.userRatingsTotal}',
+                                            ),
+                                            Text(
+                                              'PH: ${restaurant.formattedPhoneNum}',
+                                            ),
+                                            Text(
+                                              'Address: ${restaurant.formattedAddress}',
+                                            ),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.pop(context),
+                                            child: const Text('Close'),
+                                          ),
+                                        ],
+                                      ),
+                                );
+                              },
+                              child: const Icon(
+                                Icons.location_pin,
+                                color: Colors.red,
+                                size: 40,
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: const Icon(
-                        Icons.location_pin,
-                        color: Colors.red,
-                        size: 40,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                            ),
+                      );
+                    }).toList(),
               ),
             ],
           ),
@@ -365,10 +453,8 @@ class _MapPageState extends State<MapPage> {
               child: const Icon(Icons.filter_alt_rounded),
             ),
           ),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+          _buildActiveFiltersChip(),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );

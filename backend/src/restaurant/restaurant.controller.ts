@@ -26,12 +26,25 @@ export class RestaurantController {
     @Query('neLat') neLat?: string,
     @Query('neLng') neLng?: string,
   ): Promise<Restaurant[]> {
+    console.log('🔴 BACKEND: findAll called');
+    console.log('🔴 BACKEND: cuisineId query param:', cuisineId);
+    console.log(
+      '🔴 BACKEND: swLat:',
+      swLat,
+      'swLng:',
+      swLng,
+      'neLat:',
+      neLat,
+      'neLng:',
+      neLng,
+    );
     console.log(
       `Received query parameters: swLat=${swLat}, swLng=${swLng}, neLat=${neLat}, neLng=${neLng}, cuisineId=${cuisineId}`,
     );
 
     // Check if bounds parameters are provided
     if (swLat && swLng && neLat && neLng) {
+      console.log('🔴 BACKEND: Using bounds filtering');
       const swLatNum = parseFloat(swLat);
       const swLngNum = parseFloat(swLng);
       const neLatNum = parseFloat(neLat);
@@ -49,25 +62,47 @@ export class RestaurantController {
 
       // Handle cuisine filtering with bounds
       if (cuisineId) {
+        console.log('🔴 BACKEND: Using bounds + cuisine filtering');
         const cuisineIdNum = parseInt(cuisineId);
         if (isNaN(cuisineIdNum)) {
           throw new BadRequestException('Invalid cuisine ID value.');
         }
-        return this.restaurantService.findInBoundsWithCuisine(
+        console.log(
+          '🔴 BACKEND: Calling findInBoundsWithCuisine with cuisineId:',
+          cuisineIdNum,
+        );
+        console.log(
+          '🔴 BACKEND: Calling findInBoundsWithCuisine with cuisineId:',
+          cuisineIdNum,
+        );
+        const result = await this.restaurantService.findInBoundsWithCuisine(
           swLatNum,
           swLngNum,
           neLatNum,
           neLngNum,
           cuisineIdNum,
         );
+        console.log(
+          '🔴 BACKEND: findInBoundsWithCuisine returned',
+          result.length,
+          'restaurants',
+        );
+        return result;
       }
 
-      return this.restaurantService.findInBounds(
+      console.log('🔴 BACKEND: Using bounds only (no cuisine filter)');
+      const result = await this.restaurantService.findInBounds(
         swLatNum,
         swLngNum,
         neLatNum,
         neLngNum,
       );
+      console.log(
+        '🔴 BACKEND: findInBounds returned',
+        result.length,
+        'restaurants',
+      );
+      return result;
     }
 
     // Handle cuisine filtering without bounds
