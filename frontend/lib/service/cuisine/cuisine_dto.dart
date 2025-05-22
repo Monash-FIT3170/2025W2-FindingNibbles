@@ -14,7 +14,7 @@ class CuisineDto {
     );
   }
   
-  // Add this method if it doesn't exist
+  // Converts the CuisineDto object to a JSON map.
   Map<String, dynamic> toJson() {
     return {
       'id': id,

@@ -6,6 +6,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 class MapService {
   final Dio _dio = DioClient().client;
 
+  // Method to get restaurants within a bounding box
   Future<List<RestaurantDto>> getRestaurants({
     required double swLat, 
     required double swLng, 
@@ -13,8 +14,6 @@ class MapService {
     required double neLng,
     int? cuisineId, // Optional cuisine filter
   }) async {
-    debugPrint('🟠 MapService.getRestaurants called');
-    debugPrint('🟠 cuisineId parameter: $cuisineId');
     try {
       // Build query parameters
       Map<String, dynamic> queryParams = {
@@ -41,7 +40,7 @@ class MapService {
         throw Exception('Failed to load restaurants');
       }
     } catch (e) {
-      print('Error fetching restaurants: $e');
+      debugPrint('Error fetching restaurants: $e');
       return [];
     }
   }
@@ -104,7 +103,7 @@ class MapService {
         throw Exception('Failed to load all restaurants');
       }
     } catch (e) {
-      print('Error fetching all restaurants: $e');
+      debugPrint('Error fetching all restaurants: $e');
       return [];
     }
   }
