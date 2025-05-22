@@ -160,11 +160,10 @@ class AuthService {
     try {
       _logger.d('Attempting password change...');
       final response = await _dio.put(
-        'auth/change-password',
+        'auth/password',
         data: {
           'oldPassword': oldPassword,
           'newPassword': newPassword,
-          'confirmNewPassword': confirmNewPassword,
         },
       );
       _logger.d('Password change response: ${response.data}');
@@ -175,7 +174,6 @@ class AuthService {
     }
   }
 
-  // In your auth_service.dart, modify getUserProfile():
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
       final token = await _storage.read(key: 'access_token');

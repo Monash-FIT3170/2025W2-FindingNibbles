@@ -102,8 +102,7 @@ export class AuthController {
     return this.authService.newValidationCode(email);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Put('change-password')
+  @Put('password')
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
     @Req() req: RequestUser,
