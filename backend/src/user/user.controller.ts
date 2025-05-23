@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Req, Get, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
+import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
 
 @Controller('user')
 export class UserController {
@@ -53,7 +54,7 @@ export class UserController {
   @Post('create-dietary-restriction')
   createDietaryRestriction(
     @Req() req: RequestUser,
-    @Body() data: { name: string; description: string },
+    @Body() data: CreateDietaryRestrictionDto,
   ) {
     return this.userService.createUserSpecificDietaryRestriction(
       req.user.sub,
