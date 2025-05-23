@@ -47,6 +47,7 @@ model UserLocation {
   name      String // Home, Work, etc.
   latitude  Float
   longitude Float
+  isDefault Boolean @default(false)
   user      User   @relation(fields: [userId], references: [id])
 }
 

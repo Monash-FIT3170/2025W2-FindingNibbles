@@ -6,6 +6,9 @@ import {
   CreateDietaryRequirementDto,
   DietaryRequirementDto,
 } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
+import { CreateUserLocationDto } from './dto/create-user-location.dto';
+import { UpdateUserLocationDto } from './dto/update-user-location.dto';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
@@ -224,5 +227,103 @@ export class UserService {
 
   async remove(id: number) {
     return this.db.user.delete({ where: { id } });
+  }
+
+  async getUserDefaultLocation(userId: number) {
+    const location = await this.db.userLocation.findFirst({
+      where: {
+        userId: userId,
+        isDefault: true,
+      },
+    });
+    return location;
+  }
+
+  async createUserLocation(
+    userId: number,
+    createUserLocationDto: CreateUserLocationDto,
+  ) {
+    console.log('Received userId in service:', userId);
+    // If the new location is intended to be default, unset others first
+    if (createUserLocationDto.isDefault === true) {
+      await this.db.userLocation.updateMany({
+        where: { userId: userId },
+        data: { isDefault: false },
+      });
+    }
+
+    const dataToCreate = {
+      name: createUserLocationDto.name,
+      latitude: createUserLocationDto.latitude,
+      longitude: createUserLocationDto.longitude,
+      isDefault: createUserLocationDto.isDefault ?? false,
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    };
+
+    return this.db.userLocation.create({
+      data: dataToCreate,
+    });
+  }
+
+  /**
+   * Update a user location
+   */
+  async updateUserLocation(
+    userId: number,
+    updateUserLocationDto: UpdateUserLocationDto,
+  ) {
+    const locationId = updateUserLocationDto.id;
+
+    const existingLocation = await this.db.userLocation.findUnique({
+      where: { id: locationId },
+    });
+
+    if (!existingLocation || existingLocation.userId !== userId) {
+      throw new NotFoundException(
+        'User location with ID ${locationId} not found or unauthorized.',
+      );
+    }
+
+    // If 'isDefault' is explicitly being set to true, unset others
+    if (updateUserLocationDto.isDefault === true) {
+      await this.db.userLocation.updateMany({
+        where: { userId: userId, NOT: { id: locationId } },
+        data: { isDefault: false },
+      });
+    }
+
+    try {
+      return await this.db.userLocation.update({
+        where: {
+          id: locationId,
+        },
+        data: updateUserLocationDto,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new Error('Location name must be unique.');
+        }
+      }
+      throw error;
+    }
+  }
+
+  async removeUserLocation(userId: number, locationId: number) {
+    const locationToDelete = await this.db.userLocation.findUnique({
+      where: { id: locationId },
+    });
+
+    if (!locationToDelete || locationToDelete.userId !== userId) {
+      throw new NotFoundException('User location not found or unauthorized.');
+    }
+
+    return this.db.userLocation.delete({
+      where: { id: locationId },
+    });
   }
 }
