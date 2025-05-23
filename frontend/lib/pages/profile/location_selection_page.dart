@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:geocoding/geocoding.dart'; // Already imported
 import 'package:location/location.dart' as loc;
 
 class LocationSelectionPage extends StatefulWidget {
@@ -24,6 +24,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   String? selectedAddressName;
   String? locationName;
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController(); // New: Search controller
 
   final loc.Location _location = loc.Location();
   bool _serviceEnabled = false;
@@ -48,6 +49,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _searchController.dispose(); // Dispose search controller
     super.dispose();
   }
 
@@ -98,7 +100,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     });
   }
 
-
   Future<void> _reverseGeocodeAndSetName(LatLng position) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -110,6 +111,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         setState(() {
           selectedAddressName =
               '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
+          // Optionally set the name controller text if you want the full address to appear
+          // _nameController.text = selectedAddressName!;
         });
       } else {
         setState(() {
@@ -157,6 +160,38 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     mapController.move(mapController.camera.center, mapController.camera.zoom - 1);
   }
 
+  // New: Search Address Function
+  Future<void> _searchAddress() async {
+    final address = _searchController.text.trim();
+    if (address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an address to search.')),
+      );
+      return;
+    }
+
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        final foundLatLng = LatLng(locations.first.latitude, locations.first.longitude);
+        setState(() {
+          selectedLocation = foundLatLng;
+        });
+        mapController.move(foundLatLng, 15); // Move map to found location with a reasonable zoom
+        _reverseGeocodeAndSetName(foundLatLng); // Update the displayed address below
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Address not found. Please try again.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error searching address: ${e.toString()}')),
+      );
+      print("Error searching address: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +203,25 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search Address',
+                hintText: 'e.g., 123 Main St, Anytown',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: _searchAddress, // Call search function on button press
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+              ),
+              onSubmitted: (_) => _searchAddress(), // Also search on keyboard enter
+            ),
+          ),
           Expanded(
             child: Stack(
               children: [
@@ -200,7 +254,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                       ),
                   ],
                 ),
-                // --- Zoom Buttons Overlay ---
                 Positioned(
                   top: 10,
                   right: 10,
@@ -208,7 +261,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                     children: [
                       FloatingActionButton(
                         mini: true,
-                        heroTag: 'zoomInBtn', // Unique tag for hero animations
+                        heroTag: 'zoomInBtn',
                         backgroundColor: const Color(0xFFAD2C50),
                         foregroundColor: Colors.white,
                         onPressed: _zoomIn,
@@ -217,7 +270,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                       const SizedBox(height: 8),
                       FloatingActionButton(
                         mini: true,
-                        heroTag: 'zoomOutBtn', // Unique tag for hero animations
+                        heroTag: 'zoomOutBtn',
                         backgroundColor: const Color(0xFFAD2C50),
                         foregroundColor: Colors.white,
                         onPressed: _zoomOut,
@@ -226,7 +279,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                     ],
                   ),
                 ),
-                // --- End Zoom Buttons ---
               ],
             ),
           ),
@@ -251,7 +303,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  selectedAddressName ?? 'Tap on the map to select a location',
+                  selectedAddressName ?? 'Tap on the map or search for a location', // Updated hint
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
