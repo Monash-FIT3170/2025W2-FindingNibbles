@@ -6,12 +6,15 @@ import {
   Get,
   Delete,
   Patch,
+  Put,
 } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
 import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
 import { UpdateUserDto } from './dto/update-user_dto';
+import { CreateUserLocationDto } from './dto/create-user-location.dto';
+import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 
 @Controller('user')
 export class UserController {
@@ -138,5 +141,33 @@ export class UserController {
       firstName: updatedUser.firstName,
       lastName: updatedUser.lastName,
     };
+  }
+
+  @Get('default-location')
+  async getDefaultLocation(@Req() req: RequestUser) {
+    return await this.userService.getUserDefaultLocation(req.user.sub);
+  }
+
+  @Post('location')
+  createLocation(
+    @Req() req: RequestUser,
+    @Body() createUserLocationDto: CreateUserLocationDto,
+  ) {
+    console.log('User ID from request in controller:', req.user.sub);
+    return this.userService.createUserLocation(
+      req.user.sub,
+      createUserLocationDto,
+    );
+  }
+
+  @Put('location')
+  updateLocation(
+    @Req() req: RequestUser,
+    @Body() updateUserLocationDto: UpdateUserLocationDto,
+  ) {
+    return this.userService.updateUserLocation(
+      req.user.sub,
+      updateUserLocationDto,
+    );
   }
 }
