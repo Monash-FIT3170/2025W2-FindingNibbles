@@ -7,6 +7,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
+import 'package:nibbles/core/logger.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
@@ -321,7 +322,7 @@ class ProfileService {
       if (response.statusCode == 201) {
         return UserLocationDto.fromJson(response.data);
       } else {
-        print('Failed to create location: ${response.statusCode} ${response.data}');
+        _logger.d('Failed to create location: ${response.statusCode} ${response.data}');
         throw Exception('Failed to create location');
       }
     } on DioException catch (e) {
@@ -341,7 +342,7 @@ class ProfileService {
       if (response.statusCode == 200) {
         return UserLocationDto.fromJson(response.data);
       } else {
-        print('Failed to update location: ${response.statusCode} ${response.data}');
+        _logger.d('Failed to update location: ${response.statusCode} ${response.data}');
         throw Exception('Failed to update location');
       }
     } on DioException catch (e) {

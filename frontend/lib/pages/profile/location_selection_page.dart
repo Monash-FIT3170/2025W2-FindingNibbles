@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geocoding/geocoding.dart'; // Already imported
+import 'package:geocoding/geocoding.dart';
 import 'package:location/location.dart' as loc;
+import 'package:nibbles/core/logger.dart';
 
 class LocationSelectionPage extends StatefulWidget {
   final LatLng? initialLocation;
@@ -24,13 +25,14 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   String? selectedAddressName;
   String? locationName;
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController(); // New: Search controller
+  final TextEditingController _searchController = TextEditingController();
 
   final loc.Location _location = loc.Location();
   bool _serviceEnabled = false;
   loc.PermissionStatus _permissionGranted = loc.PermissionStatus.denied;
 
-  final LatLng _defaultInitialCenter = const LatLng(51.5, -0.09); // Example: London
+  final LatLng _defaultInitialCenter = const LatLng(-37.8136, 144.9631);  // Melbourne coordinates
+  final _logger = getLogger();
 
   @override
   void initState() {
@@ -49,7 +51,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _searchController.dispose(); // Dispose search controller
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -84,7 +86,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         }
         _setInitialCameraPosition(userLatLng);
       } catch (e) {
-        print("Error getting current location: $e");
+        _logger.d('Error getting current location: $e');
         _setInitialCameraPosition(selectedLocation ?? _defaultInitialCenter, defaultZoom: true);
       }
     } else {
@@ -111,8 +113,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         setState(() {
           selectedAddressName =
               '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
-          // Optionally set the name controller text if you want the full address to appear
-          // _nameController.text = selectedAddressName!;
         });
       } else {
         setState(() {
@@ -123,7 +123,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       setState(() {
         selectedAddressName = 'Error getting address';
       });
-      print("Error reverse geocoding: $e");
+      _logger.d('Error reverse geocoding: $e');
     }
   }
 
@@ -180,15 +180,17 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         mapController.move(foundLatLng, 15); // Move map to found location with a reasonable zoom
         _reverseGeocodeAndSetName(foundLatLng); // Update the displayed address below
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Address not found. Please try again.')),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error searching address: ${e.toString()}')),
       );
-      print("Error searching address: $e");
+      _logger.d('Error searching address: $e');
     }
   }
 
