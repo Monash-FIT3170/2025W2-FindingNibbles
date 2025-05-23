@@ -31,7 +31,10 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   bool _serviceEnabled = false;
   loc.PermissionStatus _permissionGranted = loc.PermissionStatus.denied;
 
-  final LatLng _defaultInitialCenter = const LatLng(-37.8136, 144.9631);  // Melbourne coordinates
+  final LatLng _defaultInitialCenter = const LatLng(
+    -37.8136,
+    144.9631,
+  ); // Melbourne coordinates
   final _logger = getLogger();
 
   @override
@@ -60,7 +63,10 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     if (!_serviceEnabled) {
       _serviceEnabled = await _location.requestService();
       if (!_serviceEnabled) {
-        _setInitialCameraPosition(selectedLocation ?? _defaultInitialCenter, defaultZoom: true);
+        _setInitialCameraPosition(
+          selectedLocation ?? _defaultInitialCenter,
+          defaultZoom: true,
+        );
         return;
       }
     }
@@ -69,7 +75,10 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     if (_permissionGranted == loc.PermissionStatus.denied) {
       _permissionGranted = await _location.requestPermission();
       if (_permissionGranted != loc.PermissionStatus.granted) {
-        _setInitialCameraPosition(selectedLocation ?? _defaultInitialCenter, defaultZoom: true);
+        _setInitialCameraPosition(
+          selectedLocation ?? _defaultInitialCenter,
+          defaultZoom: true,
+        );
         return;
       }
     }
@@ -77,7 +86,10 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     if (_permissionGranted == loc.PermissionStatus.granted) {
       try {
         final currentLocation = await _location.getLocation();
-        final userLatLng = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+        final userLatLng = LatLng(
+          currentLocation.latitude!,
+          currentLocation.longitude!,
+        );
         if (selectedLocation == null) {
           setState(() {
             selectedLocation = userLatLng;
@@ -87,10 +99,16 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         _setInitialCameraPosition(userLatLng);
       } catch (e) {
         _logger.d('Error getting current location: $e');
-        _setInitialCameraPosition(selectedLocation ?? _defaultInitialCenter, defaultZoom: true);
+        _setInitialCameraPosition(
+          selectedLocation ?? _defaultInitialCenter,
+          defaultZoom: true,
+        );
       }
     } else {
-      _setInitialCameraPosition(selectedLocation ?? _defaultInitialCenter, defaultZoom: true);
+      _setInitialCameraPosition(
+        selectedLocation ?? _defaultInitialCenter,
+        defaultZoom: true,
+      );
     }
   }
 
@@ -136,28 +154,33 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
 
   void _saveLocation() {
     if (selectedLocation != null && _nameController.text.isNotEmpty) {
-      Navigator.pop(
-        context,
-        {
-          'name': _nameController.text,
-          'latitude': selectedLocation!.latitude,
-          'longitude': selectedLocation!.longitude,
-          'isDefault': true,
-        },
-      );
+      Navigator.pop(context, {
+        'name': _nameController.text,
+        'latitude': selectedLocation!.latitude,
+        'longitude': selectedLocation!.longitude,
+        'isDefault': true,
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a location and enter a name.')),
+        const SnackBar(
+          content: Text('Please select a location and enter a name.'),
+        ),
       );
     }
   }
 
   void _zoomIn() {
-    mapController.move(mapController.camera.center, mapController.camera.zoom + 1);
+    mapController.move(
+      mapController.camera.center,
+      mapController.camera.zoom + 1,
+    );
   }
 
   void _zoomOut() {
-    mapController.move(mapController.camera.center, mapController.camera.zoom - 1);
+    mapController.move(
+      mapController.camera.center,
+      mapController.camera.zoom - 1,
+    );
   }
 
   // New: Search Address Function
@@ -173,12 +196,20 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     try {
       List<Location> locations = await locationFromAddress(address);
       if (locations.isNotEmpty) {
-        final foundLatLng = LatLng(locations.first.latitude, locations.first.longitude);
+        final foundLatLng = LatLng(
+          locations.first.latitude,
+          locations.first.longitude,
+        );
         setState(() {
           selectedLocation = foundLatLng;
         });
-        mapController.move(foundLatLng, 15); // Move map to found location with a reasonable zoom
-        _reverseGeocodeAndSetName(foundLatLng); // Update the displayed address below
+        mapController.move(
+          foundLatLng,
+          15,
+        ); // Move map to found location with a reasonable zoom
+        _reverseGeocodeAndSetName(
+          foundLatLng,
+        ); // Update the displayed address below
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,7 +224,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       _logger.d('Error searching address: $e');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -214,14 +244,16 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 hintText: 'e.g., 123 Main St, Anytown',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed: _searchAddress, // Call search function on button press
+                  onPressed:
+                      _searchAddress, // Call search function on button press
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
               ),
-              onSubmitted: (_) => _searchAddress(), // Also search on keyboard enter
+              onSubmitted:
+                  (_) => _searchAddress(), // Also search on keyboard enter
             ),
           ),
           Expanded(
@@ -236,7 +268,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.example.app',
                     ),
                     if (selectedLocation != null)
@@ -305,7 +338,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  selectedAddressName ?? 'Tap on the map or search for a location', // Updated hint
+                  selectedAddressName ??
+                      'Tap on the map or search for a location', // Updated hint
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
@@ -319,7 +353,10 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('Save Location', style: TextStyle(fontSize: 18)),
+                  child: const Text(
+                    'Save Location',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
               ],
             ),

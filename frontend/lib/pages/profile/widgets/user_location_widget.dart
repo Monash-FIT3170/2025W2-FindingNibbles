@@ -13,7 +13,8 @@ class UserLocationDisplayWidget extends StatefulWidget {
   });
 
   @override
-  State<UserLocationDisplayWidget> createState() => _UserLocationDisplayWidgetState();
+  State<UserLocationDisplayWidget> createState() =>
+      _UserLocationDisplayWidgetState();
 }
 
 class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
@@ -70,7 +71,7 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
-          child: Column(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -78,10 +79,7 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
               children: [
                 const Text(
                   'Home Address',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit, color: Color(0xFFAD2C50)),
@@ -96,7 +94,10 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
                 children: [
                   Text(
                     widget.location!.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     'Coordinates: ${widget.location!.latitude.toStringAsFixed(4)}, ${widget.location!.longitude.toStringAsFixed(4)}',
