@@ -10,6 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   logger: ^2.5.0
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
+  geocoding: ^3.0.0
+  location: ^8.0.0
   flutter_secure_storage: ^8.0.0
   flutter_lints: ^5.0.0
   font_awesome_flutter: ^10.5.0
