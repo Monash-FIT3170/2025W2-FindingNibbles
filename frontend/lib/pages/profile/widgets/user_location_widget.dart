@@ -55,7 +55,6 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
         setState(() {
           _readableAddress = 'Error getting address';
         });
-        print("Error reverse geocoding in widget: $e");
       }
     } else {
       setState(() {
