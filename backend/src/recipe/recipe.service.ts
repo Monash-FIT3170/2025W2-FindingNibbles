@@ -61,7 +61,7 @@ async generate(
     });
     const kitchenAppliances = appliances.map(app => app.appliance.name);
 
-      const requestedDifficulty = recipe.difficulty_level;
+      const requestedDifficulty = recipe.difficultyLevel;
       const difficultyLine = requestedDifficulty === RecipeDifficulty.ANY
         ? ``
         : `- Recipes must be '${requestedDifficulty}' difficulty.`;

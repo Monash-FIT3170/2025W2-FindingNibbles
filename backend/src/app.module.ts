@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { MailerModule } from './mailer/mailer.module';
 import { RecipeModule } from './recipe/recipe.module';
-import { DietaryRestrictionModule } from './dietary-restriction/dietary-restriction.module';
+import { DietaryRequirementModule } from './dietary-requirement/dietary-requirement.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
 
@@ -57,7 +57,7 @@ import { CuisineModule } from './cuisine/cuisine.module';
     UserModule,
     MailerModule,
     RecipeModule,
-    DietaryRestrictionModule,
+    DietaryRequirementModule,
     RestaurantModule,
     CuisineModule,
   ],

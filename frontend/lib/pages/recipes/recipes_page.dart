@@ -28,7 +28,7 @@ class _RecipesPageState extends State<RecipesPage> {
   List<DietaryRequirementDto> availableDietaries = [];
   List<DietaryRequirementDto> selectedDietaries = [];
   bool isLoading = false;
-  bool useDietaryRestrictions = true;
+  bool useDietaryRequirements = true;
 
   // Services
   final ProfileService _profileService = ProfileService();
@@ -67,7 +67,7 @@ class _RecipesPageState extends State<RecipesPage> {
 
   Future<void> _fetchDietaries() async {
     try {
-      final fetchedDietaries = await _profileService.getDietaryRestrictions();
+      final fetchedDietaries = await _profileService.getDietaryRequirements();
       setState(() {
         availableDietaries = fetchedDietaries;
       });
@@ -103,7 +103,7 @@ class _RecipesPageState extends State<RecipesPage> {
       final recipeResults = await _recipeService.generateRecipes(
         ingredients: ingredients,
         dietaries:
-            useDietaryRestrictions
+            useDietaryRequirements
                 ? selectedDietaries.map((d) => d.id).toList()
                 : [],
         appliances: selectedAppliances.map((a) => a.id).toList(),
@@ -229,9 +229,9 @@ class _RecipesPageState extends State<RecipesPage> {
     });
   }
 
-  void _toggleDietaryRestrictions(bool value) {
+  void _toggleDietaryRequirements(bool value) {
     setState(() {
-      useDietaryRestrictions = value;
+      useDietaryRequirements = value;
     });
   }
 
@@ -280,11 +280,11 @@ class _RecipesPageState extends State<RecipesPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             DietaryRequirements(
-                              useDietaryRestrictions: useDietaryRestrictions,
+                              useDietaryRequirements: useDietaryRequirements,
                               availableDietaries: availableDietaries,
                               selectedDietaries: selectedDietaries,
-                              onToggleDietaryRestrictions:
-                                  _toggleDietaryRestrictions,
+                              onToggleDietaryRequirements:
+                                  _toggleDietaryRequirements,
                               onToggleDietary: _toggleDietary,
                               onToggleAll: _toggleAllDietaries,
                               isDietarySelected: _isDietarySelected,

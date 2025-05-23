@@ -2,7 +2,7 @@ import { RestaurantData } from './seedTypes';
 
 
 // Defined the list of dietary restrictions
-export const dietaryRestrictions = [] = [
+export const dietaryRequirements = [] = [
   {
     id: 1,
     name: 'Vegetarian',
