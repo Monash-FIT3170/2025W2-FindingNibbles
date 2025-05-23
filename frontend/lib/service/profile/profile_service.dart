@@ -295,25 +295,34 @@ class ProfileService {
     try {
       final response = await _dio.get('user/default-location');
       if (response.statusCode == 200) {
-        if (response.data == null || response.data is String && (response.data as String).isEmpty) {
+        if (response.data == null ||
+            response.data is String && (response.data as String).isEmpty) {
           return null;
         }
         if (response.data is Map<String, dynamic>) {
           return UserLocationDto.fromJson(response.data);
         } else {
-          throw Exception('Received unexpected data format for default location.');
+          throw Exception(
+            'Received unexpected data format for default location.',
+          );
         }
       } else {
-        throw Exception('Failed to load default location with status: ${response.statusCode}');
+        throw Exception(
+          'Failed to load default location with status: ${response.statusCode}',
+        );
       }
     } on DioException catch (e) {
-      throw Exception('Network or server error while fetching default location: ${e.message}');
+      throw Exception(
+        'Network or server error while fetching default location: ${e.message}',
+      );
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
     }
   }
 
-  Future<UserLocationDto> createLocation(CreateUserLocationDto locationData) async {
+  Future<UserLocationDto> createLocation(
+    CreateUserLocationDto locationData,
+  ) async {
     try {
       final response = await _dio.post(
         'user/location',
@@ -322,7 +331,9 @@ class ProfileService {
       if (response.statusCode == 201) {
         return UserLocationDto.fromJson(response.data);
       } else {
-        _logger.d('Failed to create location: ${response.statusCode} ${response.data}');
+        _logger.d(
+          'Failed to create location: ${response.statusCode} ${response.data}',
+        );
         throw Exception('Failed to create location');
       }
     } on DioException catch (e) {
@@ -332,8 +343,10 @@ class ProfileService {
     }
   }
 
-  
-  Future<UserLocationDto> updateLocation(int locationId, UpdateUserLocationDto locationData) async {
+  Future<UserLocationDto> updateLocation(
+    int locationId,
+    UpdateUserLocationDto locationData,
+  ) async {
     try {
       final response = await _dio.put(
         'user/location',
@@ -342,7 +355,9 @@ class ProfileService {
       if (response.statusCode == 200) {
         return UserLocationDto.fromJson(response.data);
       } else {
-        _logger.d('Failed to update location: ${response.statusCode} ${response.data}');
+        _logger.d(
+          'Failed to update location: ${response.statusCode} ${response.data}',
+        );
         throw Exception('Failed to update location');
       }
     } on DioException catch (e) {
