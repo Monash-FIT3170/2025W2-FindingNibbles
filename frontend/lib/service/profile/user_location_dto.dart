@@ -38,7 +38,7 @@ class CreateUserLocationDto {
   final String name;
   final double latitude;
   final double longitude;
-  final bool? isDefault; 
+  final bool? isDefault;
 
   CreateUserLocationDto({
     required this.name,
