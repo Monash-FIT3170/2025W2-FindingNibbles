@@ -12,6 +12,7 @@ import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/pages/profile/widgets/user_location_widget.dart';
 import 'package:nibbles/pages/profile/location_selection_page.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:nibbles/core/logger.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,6 +27,7 @@ class ProfilePageState extends State<ProfilePage> {
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
   bool isLoading = true;
+  final _logger = getLogger();
 
   @override
   void initState() {
@@ -37,15 +39,13 @@ class ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchHomeLocation() async {
     try {
-      // --- CHANGE START ---
-      final location = await _profileService.getDefaultLocation(); // Use the method from ProfileService
-      // --- CHANGE END ---
+      final location = await _profileService.getDefaultLocation();
       setState(() {
         _homeLocation = location;
       });
     } catch (e) {
-      // Handle error, e.g., show a snackbar or log
-      print('Failed to fetch home location: $e');
+      _logger.d('Failed to fetch home location: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load home location: $e')),
       );
@@ -65,17 +65,16 @@ class ProfilePageState extends State<ProfilePage> {
       ),
     );
 
+    // If a successful result is returned, update the home location and backend
     if (result != null && result is Map<String, dynamic>) {
       final String name = result['name'];
       final double latitude = result['latitude'];
       final double longitude = result['longitude'];
-      final bool isDefault = true; // Assume location selected/edited here becomes the default
+      final bool isDefault = true;
 
       try {
         if (initialLocation == null) {
-          // CREATE new location
-          // --- CHANGE START ---
-          final newLocation = await _profileService.createLocation( // Use method from ProfileService
+          final newLocation = await _profileService.createLocation(
             CreateUserLocationDto(
               name: name,
               latitude: latitude,
@@ -83,16 +82,14 @@ class ProfilePageState extends State<ProfilePage> {
               isDefault: isDefault,
             ),
           );
-          // --- CHANGE END ---
-          _homeLocation = newLocation; // Update state with the newly created default
+          _homeLocation = newLocation;
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Home location added successfully!')),
           );
         } else {
-          // UPDATE existing location
-          // --- CHANGE START ---
-          final updatedLocation = await _profileService.updateLocation( // Use method from ProfileService
-            initialLocation.id!, // ID must exist for update
+          final updatedLocation = await _profileService.updateLocation(
+            initialLocation.id!,
             UpdateUserLocationDto(
               name: name,
               latitude: latitude,
@@ -100,14 +97,15 @@ class ProfilePageState extends State<ProfilePage> {
               isDefault: isDefault,
             ),
           );
-          // --- CHANGE END ---
-          _homeLocation = updatedLocation; // Update state with the updated default
+          _homeLocation = updatedLocation;
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Home location updated successfully!')),
           );
         }
-        setState(() {}); // Trigger rebuild to reflect changes
+        setState(() {});
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to save location: $e')),
         );
