@@ -7,6 +7,11 @@ import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
+import 'package:nibbles/service/profile/user_location_dto.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/pages/profile/widgets/user_location_widget.dart';
+import 'package:nibbles/pages/profile/location_selection_page.dart';
+import 'package:latlong2/latlong.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,6 +21,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
+  UserLocationDto? _homeLocation;
   List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
@@ -26,6 +32,87 @@ class ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadDietaryRequirements();
     _fetchAppliances();
+    _fetchHomeLocation();
+  }
+
+  Future<void> _fetchHomeLocation() async {
+    try {
+      // --- CHANGE START ---
+      final location = await _profileService.getDefaultLocation(); // Use the method from ProfileService
+      // --- CHANGE END ---
+      setState(() {
+        _homeLocation = location;
+      });
+    } catch (e) {
+      // Handle error, e.g., show a snackbar or log
+      print('Failed to fetch home location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load home location: $e')),
+      );
+    }
+  }
+
+  Future<void> _navigateToLocationSelection({UserLocationDto? initialLocation}) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationSelectionPage(
+          initialLocation: initialLocation != null
+              ? LatLng(initialLocation.latitude, initialLocation.longitude)
+              : null,
+          initialLocationName: initialLocation?.name,
+        ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final String name = result['name'];
+      final double latitude = result['latitude'];
+      final double longitude = result['longitude'];
+      final bool isDefault = true; // Assume location selected/edited here becomes the default
+
+      try {
+        if (initialLocation == null) {
+          // CREATE new location
+          // --- CHANGE START ---
+          final newLocation = await _profileService.createLocation( // Use method from ProfileService
+            CreateUserLocationDto(
+              name: name,
+              latitude: latitude,
+              longitude: longitude,
+              isDefault: isDefault,
+            ),
+          );
+          // --- CHANGE END ---
+          _homeLocation = newLocation; // Update state with the newly created default
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Home location added successfully!')),
+          );
+        } else {
+          // UPDATE existing location
+          // --- CHANGE START ---
+          final updatedLocation = await _profileService.updateLocation( // Use method from ProfileService
+            initialLocation.id!, // ID must exist for update
+            UpdateUserLocationDto(
+              name: name,
+              latitude: latitude,
+              longitude: longitude,
+              isDefault: isDefault,
+            ),
+          );
+          // --- CHANGE END ---
+          _homeLocation = updatedLocation; // Update state with the updated default
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Home location updated successfully!')),
+          );
+        }
+        setState(() {}); // Trigger rebuild to reflect changes
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save location: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _fetchAppliances() async {
