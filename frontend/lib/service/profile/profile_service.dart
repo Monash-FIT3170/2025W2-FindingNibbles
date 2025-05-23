@@ -11,9 +11,9 @@ class ProfileService {
 
   /// Dietary Requirements
 
-  Future<List<DietaryRequirementDto>> getDietaryRestrictions() async {
+  Future<List<DietaryRequirementDto>> getDietaryRequirements() async {
     try {
-      final response = await _dio.get('user/dietary-restriction');
+      final response = await _dio.get('user/dietary-requirement');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
@@ -27,15 +27,15 @@ class ProfileService {
     }
   }
 
-  Future<void> addDietaryRestriction(int dietaryId) async {
+  Future<void> addDietaryRequirement(int dietaryId) async {
     try {
       // Pass the dietaryId in the request body
       _logger.d(
-        'Adding dietary restriction with ID: $dietaryId',
+        'Adding dietary requirement with ID: $dietaryId',
       ); // Log the dietaryId
 
       final response = await _dio.post(
-        'user/dietary-restriction',
+        'user/dietary-requirement',
         data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
       );
       if (response.statusCode != 201) {
@@ -46,10 +46,10 @@ class ProfileService {
     }
   }
 
-  Future<void> removeDietaryRestriction(int dietaryId) async {
+  Future<void> removeDietaryRequirement(int dietaryId) async {
     try {
       final response = await _dio.delete(
-        '/user/dietary-restriction',
+        '/user/dietary-requirement',
         data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
       );
       if (response.statusCode != 200) {
@@ -60,9 +60,9 @@ class ProfileService {
     }
   }
 
-  Future<List<DietaryRequirementDto>> getDefaultDietaryRestrictions() async {
+  Future<List<DietaryRequirementDto>> getDefaultDietaryRequirements() async {
     try {
-      final response = await _dio.get('dietary-restriction');
+      final response = await _dio.get('dietary-requirement');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data
@@ -76,26 +76,26 @@ class ProfileService {
     }
   }
 
-  Future<DietaryRequirementDto> createDietaryRestriction(
+  Future<DietaryRequirementDto> createDietaryRequirement(
     String name,
     String description,
   ) async {
     try {
       _logger.d(
-        'Creating dietary restriction with Name: $name, Description: $description',
+        'Creating dietary requirement with Name: $name, Description: $description',
       ); // Log the name and description
 
       final response = await _dio.post(
-        'user/create-dietary-restriction',
+        'user/create-dietary-requirement',
         data: {'name': name, 'description': description},
       );
       if (response.statusCode == 201) {
         return DietaryRequirementDto.fromJson(response.data);
       } else {
-        throw Exception('Failed to create dietary restriction');
+        throw Exception('Failed to create dietary requirement');
       }
     } catch (e) {
-      throw Exception('Failed to create dietary restriction: $e');
+      throw Exception('Failed to create dietary requirement: $e');
     }
   }
 

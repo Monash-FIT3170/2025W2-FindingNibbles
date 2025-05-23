@@ -46,7 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
       isLoading = true;
     });
     try {
-      final requirements = await _profileService.getDietaryRestrictions();
+      final requirements = await _profileService.getDietaryRequirements();
       if (mounted) {
         setState(() {
           _dietaryRequirements = requirements;
@@ -88,7 +88,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 onMyReviews: () {},
               ),
               DietaryRequirementsWidget(
-                dietaryRestrictions: _dietaryRequirements,
+                dietaryRequirements: _dietaryRequirements,
                 onAdd: _addDietaryRequirement,
                 onRemove: _removeDietaryRequirement,
               ),
