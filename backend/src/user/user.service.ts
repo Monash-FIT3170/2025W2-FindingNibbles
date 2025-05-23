@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Restaurant, Recipe } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
-import { DietaryRestrictionService } from 'src/dietary-restriction/dietary-restriction.service';
+import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
 import {
-  CreateDietaryRestrictionDto,
-  DietaryRestrictionDto,
-} from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
+  CreateDietaryRequirementDto,
+  DietaryRequirementDto,
+} from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly dietaryRestrictionService: DietaryRestrictionService,
+    private readonly dietaryRequirementService: DietaryRequirementService,
   ) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
@@ -51,8 +51,8 @@ export class UserService {
    */
 
   async unfavouriteRestaurant(userId: number, restaurantId: number) {
-    await this.db.userFavouritedRestaurant.deleteMany({
-      where: { userId, restaurantId },
+    await this.db.userFavouritedRestaurant.delete({
+      where: { userId_restaurantId: { userId, restaurantId } },
     });
   }
   /**
@@ -75,12 +75,12 @@ export class UserService {
   }
 
   /**
-   * Add a dietary restriction to a user
+   * Add a dietary Requirement to a user
    * @param userId d
    * @param dietaryId d
    * @returns d
    */
-  async addDietaryRestriction(userId: number, dietaryId: number) {
+  async addDietaryRequirement(userId: number, dietaryId: number) {
     return this.db.userDietary.create({
       data: {
         userId,
@@ -90,23 +90,20 @@ export class UserService {
   }
 
   /**
-   * Remove a dietary restriction from a user
+   * Remove a dietary Requirement from a user
    * @param userId d
    * @param dietaryId d
    * @returns d
    */
-  async removeDietaryRestriction(userId: number, dietaryId: number) {
-    return this.db.userDietary.deleteMany({
-      where: {
-        userId,
-        dietaryId,
-      },
+  async deleteDietaryRequirement(userId: number, dietaryId: number) {
+    await this.db.userDietary.deleteMany({
+      where: { userId, dietaryId },
     });
   }
 
-  async getDietaryRestrictions(
+  async getDietaryRequirements(
     userId: number,
-  ): Promise<DietaryRestrictionDto[]> {
+  ): Promise<DietaryRequirementDto[]> {
     const userDietaries = await this.db.userDietary.findMany({
       where: {
         userId,
@@ -124,30 +121,30 @@ export class UserService {
   }
 
   /**
-   * Get all dietary restrictions
+   * Get all dietary Requirements
    * @returns d
    */
 
-  async createUserSpecificDietaryRestriction(
+  async createUserSpecificDietaryRequirement(
     userId: number,
-    dietaryInformation: CreateDietaryRestrictionDto,
+    dietaryInformation: CreateDietaryRequirementDto,
   ) {
-    const dietaryRestriction = await this.dietaryRestrictionService.create({
+    const dietaryRequirement = await this.dietaryRequirementService.create({
       name: dietaryInformation.name,
       description: dietaryInformation.description,
     });
     const userDietary = await this.db.userDietary.create({
       data: {
         userId: userId,
-        dietaryId: dietaryRestriction.id,
+        dietaryId: dietaryRequirement.id,
       },
     });
     return {
       id: userDietary.id,
       userId: userDietary.userId,
       dietaryId: userDietary.dietaryId,
-      name: dietaryRestriction.name,
-      description: dietaryRestriction.description,
+      name: dietaryRequirement.name,
+      description: dietaryRequirement.description,
     };
   }
 

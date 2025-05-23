@@ -3,13 +3,13 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 
 class DietaryRequirementsWidget extends StatefulWidget {
-  final List<DietaryRequirementDto> dietaryRestrictions;
+  final List<DietaryRequirementDto> dietaryRequirements;
   final void Function(DietaryRequirementDto) onAdd;
   final void Function(DietaryRequirementDto) onRemove;
 
   const DietaryRequirementsWidget({
     Key? key,
-    required this.dietaryRestrictions,
+    required this.dietaryRequirements,
     required this.onAdd,
     required this.onRemove,
   }) : super(key: key);
@@ -31,7 +31,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
 
   Future<void> _loadDefaults() async {
     try {
-      final defaults = await _profileService.getDefaultDietaryRestrictions();
+      final defaults = await _profileService.getDefaultDietaryRequirements();
       setState(() {
         _allDefaults = defaults;
       });
@@ -44,25 +44,25 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
     }
   }
 
-  Future<void> _createCustomDietaryRestriction(
+  Future<void> _createCustomDietaryRequirement(
     String name,
     String description,
   ) async {
     try {
-      final newDietary = await _profileService.createDietaryRestriction(
+      final newDietary = await _profileService.createDietaryRequirement(
         name,
         description,
       );
       widget.onAdd(newDietary);
     } catch (e) {
-      print('Error creating custom dietary restriction: $e');
+      print('Error creating custom dietary requirement: $e');
       // Optionally, show a snackbar or dialog to inform the user
     }
   }
 
   Future<void> _addDietaryRequirement(int item) async {
     try {
-      await _profileService.addDietaryRestriction(item);
+      await _profileService.addDietaryRequirement(item);
       final dietaryRequirement = _allDefaults.firstWhere(
         (d) => d.id == item,
         orElse: () => throw Exception('Dietary requirement not found'),
@@ -82,7 +82,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Create Custom Dietary Restriction'),
+          title: const Text('Create Custom Dietary Requirement'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -107,8 +107,8 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 final name = nameController.text.trim();
                 final description = descriptionController.text.trim();
 
-                if (name.isNotEmpty && description.isNotEmpty) {
-                  await _createCustomDietaryRestriction(name, description);
+                if (name.isNotEmpty) {
+                  await _createCustomDietaryRequirement(name, description);
                   Navigator.of(context).pop();
                 } else {
                   // Optionally, show an error message if fields are empty
@@ -133,7 +133,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
           builder: (context, setState) {
             return AlertDialog(
               scrollable: true,
-              title: const Text('Add Dietary Restriction'),
+              title: const Text('Add Dietary Requirement'),
               content: SizedBox(
                 width: double.maxFinite,
                 height: 300,
@@ -218,7 +218,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
+                  icon: const Icon(Icons.add),
                   onPressed: _openAddDialog,
                 ),
               ],
@@ -235,7 +235,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                   ),
                 ),
                 child:
-                    widget.dietaryRestrictions.isEmpty
+                    widget.dietaryRequirements.isEmpty
                         ? const Text(
                           'No current dietary requirements',
                           style: TextStyle(color: Colors.grey),
@@ -244,12 +244,12 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                           spacing: 8,
                           runSpacing: 8,
                           children:
-                              widget.dietaryRestrictions.map((d) {
+                              widget.dietaryRequirements.map((d) {
                                 return InputChip(
                                   label: Text(d.name),
                                   onDeleted: () async {
                                     await _profileService
-                                        .removeDietaryRestriction(d.id);
+                                        .removeDietaryRequirement(d.id);
                                     widget.onRemove(d);
                                   },
                                 );

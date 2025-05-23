@@ -50,7 +50,7 @@ model UserLocation {
   user      User   @relation(fields: [userId], references: [id])
 }
 
-model DietaryRestriction {
+model DietaryRequirement {
   id            Int           @id @default(autoincrement())
   name          String        @unique
   description   String?
@@ -65,7 +65,7 @@ model UserDietary {
   userId    Int
   dietaryId Int
   user      User                @relation(fields: [userId], references: [id])
-  dietary   DietaryRestriction  @relation(fields: [dietaryId], references: [id])
+  dietary   DietaryRequirement  @relation(fields: [dietaryId], references: [id])
   recipes   RecipeUserDietary[]
 
   @@unique([userId, dietaryId])
@@ -220,7 +220,7 @@ model DishDietary {
   dishId    Int
   dietaryId Int
   dish      Dish               @relation(fields: [dishId], references: [id])
-  dietary   DietaryRestriction @relation(fields: [dietaryId], references: [id])
+  dietary   DietaryRequirement @relation(fields: [dietaryId], references: [id])
 
   @@id([dishId, dietaryId])
   @@unique([dishId, dietaryId])

@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, Get, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
-import { CreateDietaryRestrictionDto } from 'src/dietary-restriction/dto/create-dietary-restriction.dto';
+import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
 
 @Controller('user')
 export class UserController {
@@ -29,34 +29,34 @@ export class UserController {
     return this.userService.getFavouritedRestaurants(req.user.sub);
   }
 
-  @Post('dietary-restriction')
-  addDietaryRestriction(
+  @Post('dietary-requirement')
+  addDietaryRequirement(
     @Req() req: RequestUser,
     @Body('dietaryId') dietaryId: number,
   ) {
-    console.log(`Adding dietary restriction ${dietaryId}`);
-    return this.userService.addDietaryRestriction(req.user.sub, dietaryId);
+    console.log(`Adding dietary requirement ${dietaryId}`);
+    return this.userService.addDietaryRequirement(req.user.sub, dietaryId);
   }
 
-  @Delete('dietary-restriction')
-  removeDietaryRestriction(
+  @Delete('dietary-requirement')
+  removeDietaryRequirement(
     @Req() req: RequestUser,
     @Body('dietaryId') dietaryId: number,
   ) {
-    return this.userService.removeDietaryRestriction(req.user.sub, dietaryId);
+    return this.userService.deleteDietaryRequirement(req.user.sub, dietaryId);
   }
 
-  @Get('dietary-restriction')
-  getUserDietaryRestrictions(@Req() req: RequestUser) {
-    return this.userService.getDietaryRestrictions(req.user.sub);
+  @Get('dietary-requirement')
+  getUserDietaryRequirements(@Req() req: RequestUser) {
+    return this.userService.getDietaryRequirements(req.user.sub);
   }
 
-  @Post('create-dietary-restriction')
-  createDietaryRestriction(
+  @Post('create-dietary-requirement')
+  createDietaryRequirement(
     @Req() req: RequestUser,
-    @Body() data: CreateDietaryRestrictionDto,
+    @Body() data: CreateDietaryRequirementDto,
   ) {
-    return this.userService.createUserSpecificDietaryRestriction(
+    return this.userService.createUserSpecificDietaryRequirement(
       req.user.sub,
       data,
     );

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 
 class DietaryRequirements extends StatelessWidget {
-  final bool useDietaryRestrictions;
+  final bool useDietaryRequirements;
   final List<DietaryRequirementDto> availableDietaries;
   final List<DietaryRequirementDto> selectedDietaries;
-  final Function(bool) onToggleDietaryRestrictions;
+  final Function(bool) onToggleDietaryRequirements;
   final Function(DietaryRequirementDto) onToggleDietary;
   final Function() onToggleAll;
   final Function(DietaryRequirementDto) isDietarySelected;
@@ -13,10 +13,10 @@ class DietaryRequirements extends StatelessWidget {
 
   const DietaryRequirements({
     super.key,
-    required this.useDietaryRestrictions,
+    required this.useDietaryRequirements,
     required this.availableDietaries,
     required this.selectedDietaries,
-    required this.onToggleDietaryRestrictions,
+    required this.onToggleDietaryRequirements,
     required this.onToggleDietary,
     required this.onToggleAll,
     required this.isDietarySelected,
@@ -35,12 +35,12 @@ class DietaryRequirements extends StatelessWidget {
           children: [
             Text('Dietary Requirements', style: textTheme.titleMedium),
             Switch(
-              value: useDietaryRestrictions,
-              onChanged: onToggleDietaryRestrictions,
+              value: useDietaryRequirements,
+              onChanged: onToggleDietaryRequirements,
             ),
           ],
         ),
-        if (useDietaryRestrictions)
+        if (useDietaryRequirements)
           SizedBox(
             child: Wrap(
               spacing: 8,
