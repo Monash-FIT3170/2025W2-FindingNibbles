@@ -6,6 +6,7 @@ import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
+import 'package:nibbles/service/profile/user_location_dto.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
@@ -286,6 +287,67 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to create appliance: $e');
+    }
+  }
+
+  Future<UserLocationDto?> getDefaultLocation() async {
+    try {
+      final response = await _dio.get('user/default-location');
+      if (response.statusCode == 200) {
+        if (response.data == null || response.data is String && (response.data as String).isEmpty) {
+          return null;
+        }
+        if (response.data is Map<String, dynamic>) {
+          return UserLocationDto.fromJson(response.data);
+        } else {
+          throw Exception('Received unexpected data format for default location.');
+        }
+      } else {
+        throw Exception('Failed to load default location with status: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Network or server error while fetching default location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<UserLocationDto> createLocation(CreateUserLocationDto locationData) async {
+    try {
+      final response = await _dio.post(
+        'user/location',
+        data: locationData.toJson(),
+      );
+      if (response.statusCode == 201) {
+        return UserLocationDto.fromJson(response.data);
+      } else {
+        print('Failed to create location: ${response.statusCode} ${response.data}');
+        throw Exception('Failed to create location');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to create location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  
+  Future<UserLocationDto> updateLocation(int locationId, UpdateUserLocationDto locationData) async {
+    try {
+      final response = await _dio.put(
+        'user/location',
+        data: locationData.toJson(),
+      );
+      if (response.statusCode == 200) {
+        return UserLocationDto.fromJson(response.data);
+      } else {
+        print('Failed to update location: ${response.statusCode} ${response.data}');
+        throw Exception('Failed to update location');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to update location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 }
