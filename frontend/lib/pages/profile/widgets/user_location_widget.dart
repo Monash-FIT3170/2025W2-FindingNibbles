@@ -66,66 +66,56 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Home Location', // Changed from Delivery Address
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFAD2C50),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit, color: Color(0xFFAD2C50)),
-                onPressed: widget.onEditLocation,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (widget.location != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.location!.name,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const Text(
+                  'Home Address',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(
-                  'Coordinates: ${widget.location!.latitude.toStringAsFixed(4)}, ${widget.location!.longitude.toStringAsFixed(4)}',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                Text(
-                  'Address: $_readableAddress',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Color(0xFFAD2C50)),
+                  onPressed: widget.onEditLocation,
                 ),
               ],
-            )
-          else
-            const Text(
-              'No home location set. Tap edit to add one.',
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
             ),
-        ],
+            const SizedBox(height: 10),
+            if (widget.location != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.location!.name,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Coordinates: ${widget.location!.latitude.toStringAsFixed(4)}, ${widget.location!.longitude.toStringAsFixed(4)}',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  Text(
+                    'Address: $_readableAddress',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              )
+            else
+              const Text(
+                'No home location set. Tap edit to add one.',
+                style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              ),
+          ],
+        ),
       ),
     );
   }
