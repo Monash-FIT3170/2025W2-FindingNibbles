@@ -7,7 +7,6 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
-import 'package:nibbles/core/logger.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;

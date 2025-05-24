@@ -8,7 +8,6 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
-import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/pages/profile/widgets/user_location_widget.dart';
 import 'package:nibbles/pages/profile/location_selection_page.dart';
 import 'package:latlong2/latlong.dart';
@@ -118,92 +117,6 @@ class ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to save location: $e')));
-      }
-    }
-  }
-
-  Future<void> _fetchAppliances() async {
-    setState(() => isLoading = true);
-    try {
-      appliances = await _profileService.getUserAppliances();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error fetching appliances: $e')));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _addAppliance(ApplianceRequirementDto appliance) async {
-    setState(() => isLoading = true);
-    try {
-      await _profileService.addAppliance(appliance.id!);
-      setState(() {
-        appliances.add(appliance);
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error adding appliance: $e')));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _removeAppliance(ApplianceRequirementDto appliance) async {
-    setState(() => isLoading = true);
-    try {
-      await _profileService.removeAppliance(appliance.id!);
-      setState(() {
-        appliances.removeWhere((a) => a.id == appliance.id);
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error removing appliance: $e')));
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  void _addDietaryRequirement(DietaryRequirementDto requirement) {
-    setState(() {
-      _dietaryRequirements.add(requirement);
-    });
-  }
-
-  void _removeDietaryRequirement(DietaryRequirementDto requirement) {
-    setState(() {
-      _dietaryRequirements.removeWhere((r) => r.id == requirement.id);
-    });
-  }
-
-  /*
-   * Loading user specific dietary requirments
-   */
-  Future<void> _loadDietaryRequirements() async {
-    if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
-    try {
-      final requirements = await _profileService.getDietaryRequirements();
-      if (mounted) {
-        setState(() {
-          _dietaryRequirements = requirements;
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching dietary requirements: $e');
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
       }
     }
   }
