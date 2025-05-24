@@ -290,6 +290,8 @@ class ProfileService {
     }
   }
 
+  /// User Location
+
   Future<UserLocationDto?> getDefaultLocation() async {
     try {
       final response = await _dio.get('user/default-location');
