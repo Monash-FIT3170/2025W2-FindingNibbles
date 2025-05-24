@@ -8,7 +8,7 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
-import 'package:nibbles/pages/profile/widgets/user_location_widget.dart';
+import 'package:nibbles/pages/profile/widgets/home_address_widget.dart';
 import 'package:nibbles/pages/profile/location_selection_page.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:nibbles/core/logger.dart';
@@ -256,7 +256,7 @@ class ProfilePageState extends State<ProfilePage> {
                           onApplianceAdded: _addAppliance,
                           onRefresh: _fetchAppliances,
                         ),
-                        UserLocationDisplayWidget(
+                        HomeAddressWidget(
                           location: _homeLocation,
                           onEditLocation:
                               () => _navigateToLocationSelection(

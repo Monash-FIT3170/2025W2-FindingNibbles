@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
 
-class UserLocationDisplayWidget extends StatefulWidget {
+class HomeAddressWidget extends StatefulWidget {
   final UserLocationDto? location;
   final VoidCallback onEditLocation;
 
-  const UserLocationDisplayWidget({
+  const HomeAddressWidget({
     super.key,
     this.location,
     required this.onEditLocation,
   });
 
   @override
-  State<UserLocationDisplayWidget> createState() =>
-      _UserLocationDisplayWidgetState();
+  State<HomeAddressWidget> createState() =>
+      _HomeAddressWidgetState();
 }
 
-class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
+class _HomeAddressWidgetState extends State<HomeAddressWidget> {
   String _readableAddress = 'Fetching address...';
 
   @override
@@ -27,7 +27,7 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
   }
 
   @override
-  void didUpdateWidget(covariant UserLocationDisplayWidget oldWidget) {
+  void didUpdateWidget(covariant HomeAddressWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.location != oldWidget.location) {
       _updateAddress();
@@ -93,19 +93,8 @@ class _UserLocationDisplayWidgetState extends State<UserLocationDisplayWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.location!.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Coordinates: ${widget.location!.latitude.toStringAsFixed(4)}, ${widget.location!.longitude.toStringAsFixed(4)}',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  Text(
-                    'Address: $_readableAddress',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    _readableAddress,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ],
               )
