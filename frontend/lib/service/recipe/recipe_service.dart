@@ -11,8 +11,8 @@ class RecipeService {
   /// Generate recipes based on provided criteria
   Future<dynamic> generateRecipes({
     required List<String> ingredients,
-    required List<int> dietaries,
-    required List<int> appliances,
+    required List<int> dietaryRequirements,
+    required List<int> kitchenAppliances,
     required RecipeDifficulty difficultyLevel,
   }) async {
     try {
@@ -20,8 +20,8 @@ class RecipeService {
         'recipe',
         data: {
           'ingredients': ingredients,
-          'dietaryRequirements': dietaries,
-          'kitchenAppliances': appliances,
+          'dietaryRequirements': dietaryRequirements,
+          'kitchenAppliances': kitchenAppliances,
           'difficultyLevel': difficultyLevel.name,
         },
       );

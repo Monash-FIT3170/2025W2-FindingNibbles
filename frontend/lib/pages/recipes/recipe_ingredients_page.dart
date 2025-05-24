@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'recipe_model.dart';
 
 class RecipeIngredientsPage extends StatefulWidget {
-  const RecipeIngredientsPage({super.key});
+  final RecipeModel recipe;
+  const RecipeIngredientsPage({super.key, required this.recipe});
 
   @override
   State<RecipeIngredientsPage> createState() => _RecipeIngredientsPageState();
@@ -12,39 +13,16 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
   int currentTab = 0;
 
-  final Recipe recipe = Recipe(
-    title: 'Traditional spare ribs baked',
-    imageUrl: 'placeholder',
-    cookingTime: 55,
-    ingredients: [
-      '1kg pork spare ribs',
-      '2 tablespoons fish sauce',
-      '1 shallot (finely diced)',
-      '1/2 teaspoon ground black pepper',
-      '3 cloves garlic (finely chopped)',
-      '3 tablespoons granulated sugar (divided)',
-      '1 tablespoon chicken or mushroom bouillon powder',
-      '3/4 cup coconut soda',
-      '1 green onion (optional, thinly sliced)',
-      '1/2 cup water',
-    ],
-    instructions: [
-      'Step 1 - Prepare the Pork...',
-      'Step 2 - Marinate the Pork...',
-      'Step 3 - Prepare the Caramel Sauce...',
-      'Step 4 - Cook the Pork...',
-      'Step 5 - Garnish and Serve...',
-    ],
-    isFavorite: false,
-  );
-
   late List<bool> checkedIngredients;
 
   @override
   void initState() {
     super.initState();
-    checkedIngredients = List.generate(recipe.ingredients.length, (_) => false);
-    checkedIngredients[0] = true;
+    checkedIngredients = List.generate(
+      widget.recipe.ingredients.length,
+      (_) => false,
+    );
+    if (checkedIngredients.isNotEmpty) checkedIngredients[0] = true;
   }
 
   Widget _buildIngredientsList() {
@@ -60,7 +38,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: recipe.ingredients.length,
+            itemCount: widget.recipe.ingredients.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.symmetric(
@@ -106,7 +84,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        recipe.ingredients[index],
+                        widget.recipe.ingredients[index],
                         style:
                             checkedIngredients[index]
                                 ? textTheme.bodyLarge?.copyWith(
@@ -137,7 +115,9 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              recipe.instructions[currentStep], // Display the current step
+              widget
+                  .recipe
+                  .instructions[currentStep], // Display the current step
               style: textTheme.bodyLarge?.copyWith(height: 1.5),
             ),
           ),
@@ -149,7 +129,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           child: Row(
             mainAxisAlignment:
                 MainAxisAlignment.center, // Center the step indicators
-            children: List.generate(recipe.instructions.length, (index) {
+            children: List.generate(widget.recipe.instructions.length, (index) {
               final isActive = currentStep == index;
 
               return GestureDetector(
