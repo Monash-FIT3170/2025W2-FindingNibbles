@@ -1,6 +1,6 @@
 class RestaurantDto {
   final int id;
-  final String place_id; // Google Places ID
+  final String placeId; // Google Places ID
   final String name;
   final double latitude;
   final double longitude;
@@ -23,7 +23,7 @@ class RestaurantDto {
 
   RestaurantDto({
     required this.id,
-    required this.place_id,
+    required this.placeId,
     required this.name,
     required this.latitude,
     required this.longitude,
@@ -49,7 +49,7 @@ class RestaurantDto {
   factory RestaurantDto.fromJson(Map<String, dynamic> json) {
     return RestaurantDto(
       id: json['id'] as int,
-      place_id:
+      placeId:
           json['placeId'] as String? ?? '', // Provide a default value if null
       name:
           json['name'] as String? ??
@@ -80,7 +80,7 @@ class RestaurantDto {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'place_id': place_id,
+      'place_id': placeId,
       'name': name,
       'latitude': latitude,
       'longitude': longitude,

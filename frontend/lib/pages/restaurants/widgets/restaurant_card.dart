@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 
 class RestaurantCard extends StatelessWidget {
   final RestaurantDto restaurant;

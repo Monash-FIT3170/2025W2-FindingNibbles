@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/core/logger.dart';
 
 class DietaryRequirementsWidget extends StatefulWidget {
   final List<DietaryRequirementDto> dietaryRequirements;
@@ -8,20 +9,21 @@ class DietaryRequirementsWidget extends StatefulWidget {
   final void Function(DietaryRequirementDto) onRemove;
 
   const DietaryRequirementsWidget({
-    Key? key,
+    super.key,
     required this.dietaryRequirements,
     required this.onAdd,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
-  _DietaryRequirementsWidgetState createState() =>
-      _DietaryRequirementsWidgetState();
+  DietaryRequirementsWidgetState createState() =>
+      DietaryRequirementsWidgetState();
 }
 
-class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
+class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _allDefaults = [];
+  final _logger = getLogger();
 
   @override
   void initState() {
@@ -36,11 +38,10 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
         _allDefaults = defaults;
       });
     } catch (e) {
-      print('Error loading defaults: $e');
+      _logger.e('Error loading dietary requirements defaults: $e');
       setState(() {
         _allDefaults = [];
       });
-      // Optionally, show a snackbar or dialog to inform the user
     }
   }
 
@@ -55,8 +56,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
       );
       widget.onAdd(newDietary);
     } catch (e) {
-      print('Error creating custom dietary requirement: $e');
-      // Optionally, show a snackbar or dialog to inform the user
+      _logger.e('Error creating custom dietary requirement: $e');
     }
   }
 
@@ -69,8 +69,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
       );
       widget.onAdd(dietaryRequirement);
     } catch (e) {
-      print('Error adding dietary requirement: $e');
-      // Optionally, show a snackbar or dialog to inform the user
+      _logger.e('Error adding dietary requirement: $e');
     }
   }
 
@@ -80,7 +79,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Create Custom Dietary Requirement'),
           content: Column(
@@ -99,7 +98,7 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel'),
             ),
             TextButton(
@@ -109,7 +108,8 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
 
                 if (name.isNotEmpty) {
                   await _createCustomDietaryRequirement(name, description);
-                  Navigator.of(context).pop();
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
                 } else {
                   // Optionally, show an error message if fields are empty
                 }
@@ -125,12 +125,12 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   void _openAddDialog() {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         String localSearchTerm = '';
         List<DietaryRequirementDto> localFiltered = [..._allDefaults];
 
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (dialogContext, setState) {
             return AlertDialog(
               scrollable: true,
               title: const Text('Add Dietary Requirement'),
@@ -171,7 +171,8 @@ class _DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                     title: Text(item.name),
                                     onTap: () async {
                                       await _addDietaryRequirement(item.id);
-                                      Navigator.of(context).pop();
+                                      if (!dialogContext.mounted) return;
+                                      Navigator.of(dialogContext).pop();
                                     },
                                   );
                                 },
