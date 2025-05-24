@@ -4,7 +4,8 @@ import 'recipe_model.dart';
 import 'package:nibbles/pages/recipes/recipes_page.dart';
 
 class RecipeRecommendationsPage extends StatefulWidget {
-  const RecipeRecommendationsPage({super.key});
+  final List<RecipeModel> recipes;
+  const RecipeRecommendationsPage({super.key, required this.recipes});
 
   @override
   State<RecipeRecommendationsPage> createState() =>
@@ -12,51 +13,20 @@ class RecipeRecommendationsPage extends StatefulWidget {
 }
 
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
-  final List<Recipe> recipes = [
-    Recipe(
-      title: 'Traditional spare ribs baked',
-      imageUrl: 'assets/images/spare_ribs.jpg',
-      cookingTime: 55,
-      ingredients: ['Pork', 'Garlic', 'Soy Sauce', 'Sugar'],
-      instructions: [
-        'Preheat oven to 180°C',
-        'Season ribs',
-        'Bake for 55 minutes',
-      ],
-      isFavorite: false,
-    ),
-    Recipe(
-      title: 'Spice Roasted Chicken with Flavored Rice',
-      imageUrl: 'assets/images/roasted_chicken.jpg',
-      cookingTime: 30,
-      ingredients: ['Chicken', 'Rice', 'Spices'],
-      instructions: ['Marinate chicken', 'Roast for 30 minutes', 'Cook rice'],
-      isFavorite: false,
-    ),
-    Recipe(
-      title: 'Spicy fried rice mix chicken bali',
-      imageUrl: 'assets/images/fried_rice.jpg',
-      cookingTime: 25,
-      ingredients: ['Chicken', 'Rice', 'Chili'],
-      instructions: ['Fry ingredients', 'Add rice and spices', 'Serve hot'],
-      isFavorite: false,
-    ),
-  ];
-
-  Color _getDifficultyColor(String difficulty, ColorScheme colorScheme) {
-    switch (difficulty) {
-      case 'Hard':
+  Color _getDifficultyColor(RecipeDifficulty diff, ColorScheme cs) {
+    switch (diff) {
+      case RecipeDifficulty.hard:
         return Colors.red;
-      case 'Medium':
+      case RecipeDifficulty.medium:
         return Colors.orange;
       default:
-        return colorScheme.primary;
+        return cs.primary;
     }
   }
 
   void _toggleFavorite(int index) {
     setState(() {
-      recipes[index].isFavorite = !recipes[index].isFavorite;
+      widget.recipes[index].isFavorite = !widget.recipes[index].isFavorite;
     });
   }
 
@@ -104,15 +74,15 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: recipes.length,
+        itemCount: widget.recipes.length,
         itemBuilder: (context, index) {
-          final recipe = recipes[index];
+          final r = widget.recipes[index];
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const RecipeIngredientsPage(),
+                  builder: (_) => RecipeIngredientsPage(recipe: r),
                 ),
               );
             },
@@ -138,7 +108,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                           top: Radius.circular(16),
                         ),
                         child: Image.asset(
-                          recipe.imageUrl,
+                          'imageUrl', // Placeholder for image URL, to be implemented
                           height: 160,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -154,13 +124,14 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                           ),
                           decoration: BoxDecoration(
                             color: _getDifficultyColor(
-                              recipe.difficulty,
+                              r.difficultyLevel,
                               colorScheme,
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            recipe.difficulty,
+                            r.difficultyLevel.name[0].toUpperCase() +
+                                r.difficultyLevel.name.substring(1),
                             style: textTheme.labelSmall?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -176,7 +147,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          recipe.title,
+                          r.title,
                           style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -195,7 +166,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${recipe.cookingTime} min',
+                                  '${r.estimatedTimeMinutes} min',
                                   style: textTheme.labelMedium?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -204,11 +175,11 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                             ),
                             IconButton(
                               icon: Icon(
-                                recipe.isFavorite
+                                r.isFavorite
                                     ? Icons.favorite
                                     : Icons.favorite_border,
                                 color:
-                                    recipe.isFavorite
+                                    r.isFavorite
                                         ? Colors.red.shade800
                                         : colorScheme.onSurfaceVariant,
                               ),
