@@ -3,7 +3,7 @@ import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
-import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 

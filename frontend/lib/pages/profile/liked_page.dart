@@ -4,9 +4,8 @@ import 'package:nibbles/pages/restaurants/widgets/restaurant_card.dart';
 import 'package:nibbles/pages/restaurants/widgets/recipe_card.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
-import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/core/logger.dart';
-
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -108,11 +107,7 @@ class _LikedPageState extends State<LikedPage> {
                                             restaurant: restaurant,
                                             isLiked: true,
                                             height: 80.0, // Smaller card height
-                                            onTap: () {
-                                              print(
-                                                'Tapped on ${restaurant.name}',
-                                              );
-                                            },
+                                            onTap: () {},
                                             onFavoriteTap: () async {
                                               try {
                                                 await _profileService
@@ -125,7 +120,7 @@ class _LikedPageState extends State<LikedPage> {
                                                   );
                                                 });
                                               } catch (e) {
-                                                print(
+                                                _logger.e(
                                                   'Failed to remove ${restaurant.name} from favourites: $e',
                                                 );
                                               }
@@ -147,7 +142,7 @@ class _LikedPageState extends State<LikedPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black,
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
@@ -183,11 +178,7 @@ class _LikedPageState extends State<LikedPage> {
                                             recipe: recipe,
                                             isLiked: true,
                                             height: 80.0, // Smaller card height
-                                            onTap: () {
-                                              print(
-                                                'Tapped on ${recipe.title}',
-                                              );
-                                            },
+                                            onTap: () {},
                                             onFavoriteTap: () async {
                                               try {
                                                 await _profileService
@@ -200,7 +191,7 @@ class _LikedPageState extends State<LikedPage> {
                                                   );
                                                 });
                                               } catch (e) {
-                                                print(
+                                                _logger.e(
                                                   'Failed to remove ${recipe.title} from favourites: $e',
                                                 );
                                               }

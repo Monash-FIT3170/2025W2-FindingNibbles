@@ -82,9 +82,6 @@ class ProfilePageState extends State<ProfilePage> {
     });
   }
 
-
-  
-
   void _removeDietaryRequirement(DietaryRequirementDto requirement) {
     setState(() {
       _dietaryRequirements.removeWhere((r) => r.id == requirement.id);
@@ -122,52 +119,55 @@ class ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFAD2C50),
       body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _fetchAppliances,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'Profile',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                  onRefresh: _fetchAppliances,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(
+                            'Profile',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      PersonalMenuWidget(
-                        onPersonalInfo: () {},
-                        onFavourites: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LikedPage()),
-                          );
-                        },
-                        onMyReviews: () {},
-                      ),
-                      DietaryRequirementsWidget(
-                        dietaryRequirements: _dietaryRequirements,
-                        onAdd: _addDietaryRequirement,
-                        onRemove: _removeDietaryRequirement,
-                      ),
-                      CookingAppliancesWidget(
-                        appliances: appliances,
-                        onApplianceRemoved: _removeAppliance,
-                        onApplianceAdded: _addAppliance,
-                        onRefresh: _fetchAppliances,
-                      ),
-                      LogoutWidget(onLogout: () {}),
-                    ],
+                        PersonalMenuWidget(
+                          onPersonalInfo: () {},
+                          onFavourites: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LikedPage(),
+                              ),
+                            );
+                          },
+                          onMyReviews: () {},
+                        ),
+                        DietaryRequirementsWidget(
+                          dietaryRequirements: _dietaryRequirements,
+                          onAdd: _addDietaryRequirement,
+                          onRemove: _removeDietaryRequirement,
+                        ),
+                        CookingAppliancesWidget(
+                          appliances: appliances,
+                          onApplianceRemoved: _removeAppliance,
+                          onApplianceAdded: _addAppliance,
+                          onRefresh: _fetchAppliances,
+                        ),
+                        LogoutWidget(onLogout: () {}),
+                      ],
+                    ),
                   ),
                 ),
-              ),
       ),
     );
   }
