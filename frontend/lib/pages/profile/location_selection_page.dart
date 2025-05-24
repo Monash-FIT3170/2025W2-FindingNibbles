@@ -7,8 +7,13 @@ import 'package:nibbles/core/logger.dart';
 
 class LocationSelectionPage extends StatefulWidget {
   final LatLng? initialLocation;
+  final int? initialLocationId;
 
-  const LocationSelectionPage({super.key, this.initialLocation});
+  const LocationSelectionPage({
+    super.key,
+    this.initialLocation,
+    this.initialLocationId,
+  });
 
   @override
   State<LocationSelectionPage> createState() => _LocationSelectionPageState();
@@ -29,14 +34,17 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     144.9631,
   ); // Melbourne
   final _logger = getLogger();
+
   @override
   void initState() {
     super.initState();
     if (widget.initialLocation != null) {
       selectedLocation = widget.initialLocation;
       _reverseGeocodeAndSetName(widget.initialLocation!);
+      _setInitialCameraPosition(widget.initialLocation!, defaultZoom: false);
+    } else {
+      _checkLocationPermissionsAndSetInitialMapPosition();
     }
-    _checkLocationPermissionsAndSetInitialMapPosition();
   }
 
   @override
@@ -141,12 +149,17 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
 
   void _saveLocation() {
     if (selectedLocation != null) {
-      Navigator.pop(context, {
+      final Map<String, dynamic> result = {
         'name': 'Home',
         'latitude': selectedLocation!.latitude,
         'longitude': selectedLocation!.longitude,
         'isDefault': true,
-      });
+      };
+
+      if (widget.initialLocationId != null) {
+        result['id'] = widget.initialLocationId;
+      }
+      Navigator.pop(context, result);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a location on the map.')),
