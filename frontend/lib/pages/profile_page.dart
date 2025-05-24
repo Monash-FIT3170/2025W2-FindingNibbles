@@ -66,6 +66,7 @@ class ProfilePageState extends State<ProfilePage> {
                         initialLocation.longitude,
                       )
                       : null,
+              initialLocationId: initialLocation?.id,
             ),
       ),
     );
@@ -75,9 +76,10 @@ class ProfilePageState extends State<ProfilePage> {
       final double latitude = result['latitude'];
       final double longitude = result['longitude'];
       final bool isDefault = result['isDefault'];
+      final int? id = result['id'] as int?;
 
       try {
-        if (initialLocation == null) {
+        if (id == null) {
           // CREATE new location
           final newLocation = await _profileService.createLocation(
             CreateUserLocationDto(
@@ -95,8 +97,9 @@ class ProfilePageState extends State<ProfilePage> {
         } else {
           // UPDATE existing location
           final updatedLocation = await _profileService.updateLocation(
-            initialLocation.id!,
+            id,
             UpdateUserLocationDto(
+              id: id,
               name: name,
               latitude: latitude,
               longitude: longitude,
