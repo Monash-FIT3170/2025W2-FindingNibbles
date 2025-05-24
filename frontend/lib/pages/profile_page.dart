@@ -67,20 +67,19 @@ class ProfilePageState extends State<ProfilePage> {
                         initialLocation.longitude,
                       )
                       : null,
-              initialLocationName: initialLocation?.name,
             ),
       ),
     );
 
-    // If a successful result is returned, update the home location and backend
     if (result != null && result is Map<String, dynamic>) {
       final String name = result['name'];
       final double latitude = result['latitude'];
       final double longitude = result['longitude'];
-      final bool isDefault = true;
+      final bool isDefault = result['isDefault'];
 
       try {
         if (initialLocation == null) {
+          // CREATE new location
           final newLocation = await _profileService.createLocation(
             CreateUserLocationDto(
               name: name,
@@ -95,6 +94,7 @@ class ProfilePageState extends State<ProfilePage> {
             const SnackBar(content: Text('Home location added successfully!')),
           );
         } else {
+          // UPDATE existing location
           final updatedLocation = await _profileService.updateLocation(
             initialLocation.id!,
             UpdateUserLocationDto(

@@ -7,13 +7,8 @@ import 'package:nibbles/core/logger.dart';
 
 class LocationSelectionPage extends StatefulWidget {
   final LatLng? initialLocation;
-  final String? initialLocationName;
 
-  const LocationSelectionPage({
-    super.key,
-    this.initialLocation,
-    this.initialLocationName,
-  });
+  const LocationSelectionPage({super.key, this.initialLocation});
 
   @override
   State<LocationSelectionPage> createState() => _LocationSelectionPageState();
@@ -23,8 +18,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   MapController mapController = MapController();
   LatLng? selectedLocation;
   String? selectedAddressName;
-  String? locationName;
-  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
 
   final loc.Location _location = loc.Location();
@@ -34,9 +27,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   final LatLng _defaultInitialCenter = const LatLng(
     -37.8136,
     144.9631,
-  ); // Melbourne coordinates
+  ); // Melbourne
   final _logger = getLogger();
-
   @override
   void initState() {
     super.initState();
@@ -44,16 +36,11 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       selectedLocation = widget.initialLocation;
       _reverseGeocodeAndSetName(widget.initialLocation!);
     }
-    if (widget.initialLocationName != null) {
-      _nameController.text = widget.initialLocationName!;
-      locationName = widget.initialLocationName!;
-    }
     _checkLocationPermissionsAndSetInitialMapPosition();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -98,7 +85,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         }
         _setInitialCameraPosition(userLatLng);
       } catch (e) {
-        _logger.d('Error getting current location: $e');
+        _logger.d("Error getting current location: $e");
         _setInitialCameraPosition(
           selectedLocation ?? _defaultInitialCenter,
           defaultZoom: true,
@@ -141,7 +128,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       setState(() {
         selectedAddressName = 'Error getting address';
       });
-      _logger.d('Error reverse geocoding: $e');
+      _logger.d("Error reverse geocoding: $e");
     }
   }
 
@@ -153,18 +140,16 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   }
 
   void _saveLocation() {
-    if (selectedLocation != null && _nameController.text.isNotEmpty) {
+    if (selectedLocation != null) {
       Navigator.pop(context, {
-        'name': _nameController.text,
+        'name': 'Home',
         'latitude': selectedLocation!.latitude,
         'longitude': selectedLocation!.longitude,
         'isDefault': true,
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a location and enter a name.'),
-        ),
+        const SnackBar(content: Text('Please select a location on the map.')),
       );
     }
   }
@@ -183,7 +168,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
     );
   }
 
-  // New: Search Address Function
   Future<void> _searchAddress() async {
     final address = _searchController.text.trim();
     if (address.isEmpty) {
@@ -203,13 +187,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         setState(() {
           selectedLocation = foundLatLng;
         });
-        mapController.move(
-          foundLatLng,
-          15,
-        ); // Move map to found location with a reasonable zoom
-        _reverseGeocodeAndSetName(
-          foundLatLng,
-        ); // Update the displayed address below
+        mapController.move(foundLatLng, 15);
+        _reverseGeocodeAndSetName(foundLatLng);
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,7 +200,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error searching address: ${e.toString()}')),
       );
-      _logger.d('Error searching address: $e');
+      _logger.d("Error searching address: $e");
     }
   }
 
@@ -229,14 +208,14 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Location'),
+        title: const Text('Select Home Location'),
         backgroundColor: const Color(0xFFAD2C50),
         foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -244,16 +223,28 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 hintText: 'e.g., 123 Main St, Anytown',
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.search),
-                  onPressed:
-                      _searchAddress, // Call search function on button press
+                  onPressed: _searchAddress,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFAD2C50),
+                    width: 2,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 14.0,
+                ),
               ),
-              onSubmitted:
-                  (_) => _searchAddress(), // Also search on keyboard enter
+              onSubmitted: (_) => _searchAddress(),
             ),
           ),
           Expanded(
@@ -322,24 +313,9 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Location Name (e.g., Home, Work)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      locationName = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
                 Text(
                   selectedAddressName ??
-                      'Tap on the map or search for a location', // Updated hint
+                      'Tap on the map or search for a location to set as Home.',
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
@@ -354,9 +330,9 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                     ),
                   ),
                   child: const Text(
-                    'Save Location',
+                    'Set Home Location',
                     style: TextStyle(fontSize: 18),
-                  ),
+                  ), // Updated button text
                 ),
               ],
             ),
