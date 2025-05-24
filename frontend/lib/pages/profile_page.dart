@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
-import 'package:nibbles/pages/profile/personal_info_page.dart';
 import 'package:nibbles/pages/profile/widgets/cooking_appliances_widget.dart';
 import 'package:nibbles/pages/profile/widgets/dietary_requirements_widget.dart';
 import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
