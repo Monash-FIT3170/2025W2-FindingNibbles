@@ -153,7 +153,6 @@ export class UserController {
     @Req() req: RequestUser,
     @Body() createUserLocationDto: CreateUserLocationDto,
   ) {
-    console.log('User ID from request in controller:', req.user.sub);
     return this.userService.createUserLocation(
       req.user.sub,
       createUserLocationDto,
@@ -161,13 +160,21 @@ export class UserController {
   }
 
   @Put('location')
-  updateLocation(
+  async updateLocation(
     @Req() req: RequestUser,
     @Body() updateUserLocationDto: UpdateUserLocationDto,
   ) {
-    return this.userService.updateUserLocation(
+    const updatedLocation = await this.userService.updateUserLocation(
       req.user.sub,
       updateUserLocationDto,
     );
+    console.log(
+      `[UserController] Successfully updated location ID: ${updatedLocation.id}`,
+    );
+    console.log(
+      `[UserController] Updated location details: ${JSON.stringify(updatedLocation)}`,
+    );
+
+    return updatedLocation;
   }
 }
