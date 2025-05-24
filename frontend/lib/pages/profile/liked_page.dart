@@ -5,6 +5,8 @@ import 'package:nibbles/pages/restaurants/widgets/recipe_card.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/resteraunt_dto.dart';
+import 'package:nibbles/core/logger.dart';
+
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -18,6 +20,7 @@ class _LikedPageState extends State<LikedPage> {
   List<RestaurantDto> _favoriteRestaurants = [];
   List<RecipeDto> _favoriteRecipes = [];
   bool _isLoading = true;
+  final _logger = getLogger();
 
   @override
   void initState() {
@@ -35,7 +38,7 @@ class _LikedPageState extends State<LikedPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading favorites: $e');
+      _logger.e('Error loading favorites: $e');
       setState(() {
         _isLoading = false;
       });
@@ -68,7 +71,7 @@ class _LikedPageState extends State<LikedPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black,
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
