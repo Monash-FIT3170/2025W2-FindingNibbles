@@ -229,6 +229,9 @@ export class UserService {
     return this.db.user.delete({ where: { id } });
   }
 
+  /**
+   * Get the default user location, for now it is always the home address
+   */
   async getUserDefaultLocation(userId: number) {
     const location = await this.db.userLocation.findFirst({
       where: {
