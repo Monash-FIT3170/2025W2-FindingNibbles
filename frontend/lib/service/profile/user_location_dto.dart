@@ -58,12 +58,14 @@ class CreateUserLocationDto {
 }
 
 class UpdateUserLocationDto {
+  final int id;
   final String? name;
   final double? latitude;
   final double? longitude;
   final bool? isDefault;
 
   UpdateUserLocationDto({
+    required this.id,
     this.name,
     this.latitude,
     this.longitude,
@@ -72,6 +74,7 @@ class UpdateUserLocationDto {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       if (name != null) 'name': name,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,

@@ -13,8 +13,7 @@ class HomeAddressWidget extends StatefulWidget {
   });
 
   @override
-  State<HomeAddressWidget> createState() =>
-      _HomeAddressWidgetState();
+  State<HomeAddressWidget> createState() => _HomeAddressWidgetState();
 }
 
 class _HomeAddressWidgetState extends State<HomeAddressWidget> {
@@ -92,10 +91,7 @@ class _HomeAddressWidgetState extends State<HomeAddressWidget> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _readableAddress,
-                    style: const TextStyle(fontSize: 14),
-                  ),
+                  Text(_readableAddress, style: const TextStyle(fontSize: 14)),
                 ],
               )
             else
