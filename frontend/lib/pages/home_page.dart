@@ -1,30 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-
-// Restaurant model
-class Restaurant {
-  final int id;
-  final String name;
-  final double rating;
-  final int? priceLevel;
-
-  Restaurant({
-    required this.id,
-    required this.name,
-    required this.rating,
-    this.priceLevel,
-  });
-
-  factory Restaurant.fromJson(Map<String, dynamic> json) {
-    return Restaurant(
-      id: json['id'],
-      name: json['name'],
-      rating: (json['rating'] as num).toDouble(),
-      priceLevel: json['priceLevel'],
-    );
-  }
-}
+import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/service/restaurant/restaurant_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,33 +10,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<Restaurant>> _restaurantsFuture;
+  late Future<List<RestaurantDto>> _restaurantsFuture;
 
   @override
   void initState() {
     super.initState();
-    _restaurantsFuture = fetchRestaurants();
+    _restaurantsFuture = RestaurantService().getRestaurants();
   }
 
-  Future<List<Restaurant>> fetchRestaurants() async {
-    final response = await http.get(
-      Uri.parse(
-        'http://10.0.2.2:3000/api/restaurant',
-      ), // update port/url if needed
-    );
-
-    print('fetchRestaurants called');
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      List jsonList = json.decode(response.body);
-      return jsonList.map((json) => Restaurant.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load restaurants');
-    }
-  }
-
+  // Assuming RestaurantDto has priceLevel or similar, otherwise adapt
   String formatPriceLevel(int? level) {
     if (level == null) {
       return '';
@@ -74,7 +32,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(title: const Text('Nearby Restaurants')),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: FutureBuilder<List<Restaurant>>(
+        child: FutureBuilder<List<RestaurantDto>>(
           future: _restaurantsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -103,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(),
+                        color: Colors.grey.withOpacity(0.3),
                         spreadRadius: 1,
                         blurRadius: 4,
                         offset: const Offset(2, 2),
@@ -123,8 +81,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text('⭐ ${restaurant.rating.toStringAsFixed(1)}'),
+                      Text('⭐ ${restaurant.rating?.toStringAsFixed(1)}'),
                       const SizedBox(height: 4),
+                      // Assuming priceLevel is int? on RestaurantDto
                       Text(formatPriceLevel(restaurant.priceLevel)),
                     ],
                   ),
