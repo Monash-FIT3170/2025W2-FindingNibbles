@@ -25,8 +25,9 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
   }
 
   Future<void> _loadUserInfo() async {
-    _personalInfo = _authService.getUserProfile();
-    setState(() {});
+    setState(() {
+      _personalInfo = _authService.getUserProfile();
+    });
   }
 
   @override
@@ -80,8 +81,9 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
     }
 
     try {
-      _profileService.updateUserProfile(data); // update details
-      _loadUserInfo(); // Reload user info to reflect the changes
+      await _profileService.updateUserProfile(data); // update details
+      await _loadUserInfo(); // Reload user info to reflect the changes
+      if (!mounted) return; // Check if the widget is still mounted
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$fieldName updated successfully!')),
       );
