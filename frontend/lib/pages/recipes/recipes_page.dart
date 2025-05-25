@@ -42,6 +42,13 @@ class _RecipesPageState extends State<RecipesPage> {
       isLoading = true;
     });
 
+    // Get the route arguments if they exist
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      ingredients.addAll(args['previousIngredients'] as List<String>);
+      selectedDifficulty = args['previousDifficulty'] as RecipeDifficulty;
+    }
+
     // Use Future.wait to wait for both async operations to complete
     Future.wait([_fetchDietaries(), _fetchAppliances()])
         .then((_) {
@@ -102,11 +109,11 @@ class _RecipesPageState extends State<RecipesPage> {
     try {
       final recipeResults = await _recipeService.generateRecipes(
         ingredients: ingredients,
-        dietaries:
+        dietaryRequirements:
             useDietaryRequirements
                 ? selectedDietaries.map((d) => d.id).toList()
                 : [],
-        appliances: selectedAppliances.map((a) => a.id).toList(),
+        kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
         difficultyLevel: selectedDifficulty,
       );
 
@@ -116,7 +123,7 @@ class _RecipesPageState extends State<RecipesPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const RecipeRecommendationsPage(),
+          builder: (context) => RecipeRecommendationsPage(recipes: recipeResults),
         ),
       );
     } catch (e) {
