@@ -8,7 +8,7 @@ import {
 } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
 import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
@@ -309,7 +309,10 @@ export class UserService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new Error('Location name must be unique.');
+          // Prisma unique constraint error
+          throw new BadRequestException(
+            'A location with this name already exists.',
+          );
         }
       }
       throw error;

@@ -294,7 +294,7 @@ class ProfileService {
 
   Future<UserLocationDto?> getDefaultLocation() async {
     try {
-      final response = await _dio.get('user/default-location');
+      final response = await _dio.get('user/location/default');
       if (response.statusCode == 200) {
         if (response.data == null ||
             response.data is String && (response.data as String).isEmpty) {
