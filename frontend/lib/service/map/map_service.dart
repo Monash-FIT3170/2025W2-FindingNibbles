@@ -71,7 +71,7 @@ class MapService {
         throw Exception('Failed to load restaurants by cuisine');
       }
     } catch (e) {
-      print('Error fetching restaurants by cuisine: $e');
+      debugPrint('Error fetching restaurants by cuisine: $e');
       return [];
     }
   }

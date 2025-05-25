@@ -36,7 +36,6 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<Position>? _positionStreamSubscription;
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
-  final PopupController _popupController = PopupController();
   Timer? _loadTimer; // Timer for repeated attempts
 
   // Add these variables near the top of the class
