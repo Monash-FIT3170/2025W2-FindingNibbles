@@ -6,12 +6,10 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer'; // Needed for @Type()
 
 export class UpdateUserLocationDto {
-  @IsOptional()
   @IsNumber()
-  id?: number;
+  id: number;
 
   @IsOptional()
   @IsString()
@@ -21,14 +19,12 @@ export class UpdateUserLocationDto {
   @IsNumber()
   @Min(-90)
   @Max(90)
-  @Type(() => Number)
   latitude?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(-180)
   @Max(180)
-  @Type(() => Number)
   longitude?: number;
 
   @IsOptional()
