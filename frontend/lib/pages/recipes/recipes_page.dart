@@ -269,43 +269,51 @@ class _RecipesPageState extends State<RecipesPage> {
                 ),
               )
             : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Non-scrollable ingredients section
-                  Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: IngredientsInput(
-                      ingredients: ingredients,
-                      controller: _ingredientInputController,
-                      onAddIngredient: _addIngredient,
-                      onRemoveIngredient: _removeIngredient,
+                  // Scrollable content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: IngredientsInput(
+                              ingredients: ingredients,
+                              controller: _ingredientInputController,
+                              onAddIngredient: _addIngredient,
+                              onRemoveIngredient: _removeIngredient,
+                            ),
+                          ),
+                          DietaryRequirements(
+                            useDietaryRequirements: useDietaryRequirements,
+                            availableDietaries: availableDietaries,
+                            selectedDietaries: selectedDietaries,
+                            onToggleDietaryRequirements: _toggleDietaryRequirements,
+                            onToggleDietary: _toggleDietary,
+                            onToggleAll: _toggleAllDietaries,
+                            isDietarySelected: _isDietarySelected,
+                            areAllDietariesSelected: _areAllDietariesSelected,
+                          ),
+                          SizedBox(height: 24),
+                          RecipeDifficultySelector(
+                            selectedDifficulty: selectedDifficulty,
+                            onDifficultySelected: _setDifficulty,
+                          ),
+                          SizedBox(height: 24),
+                          AppliancesSelection(
+                            availableAppliances: availableAppliances,
+                            selectedAppliances: selectedAppliances,
+                            onToggleAppliance: _toggleAppliance,
+                            isApplianceSelected: _isApplianceSelected,
+                            areAllAppliancesSelected: _areAllAppliancesSelected,
+                            onToggleAll: _toggleAllAppliances,
+                          ),
+                          SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
-                  DietaryRequirements(
-                    useDietaryRequirements: useDietaryRequirements,
-                    availableDietaries: availableDietaries,
-                    selectedDietaries: selectedDietaries,
-                    onToggleDietaryRequirements: _toggleDietaryRequirements,
-                    onToggleDietary: _toggleDietary,
-                    onToggleAll: _toggleAllDietaries,
-                    isDietarySelected: _isDietarySelected,
-                    areAllDietariesSelected: _areAllDietariesSelected,
-                  ),
-                  SizedBox(height: 24),
-                  RecipeDifficultySelector(
-                    selectedDifficulty: selectedDifficulty,
-                    onDifficultySelected: _setDifficulty,
-                  ),
-                  SizedBox(height: 24),
-                  AppliancesSelection(
-                    availableAppliances: availableAppliances,
-                    selectedAppliances: selectedAppliances,
-                    onToggleAppliance: _toggleAppliance,
-                    isApplianceSelected: _isApplianceSelected,
-                    areAllAppliancesSelected: _areAllAppliancesSelected,
-                    onToggleAll: _toggleAllAppliances,
-                  ),
-                  SizedBox(height: 24),
                   // Fixed button at bottom
                   Padding(
                     padding: EdgeInsets.all(16.0),

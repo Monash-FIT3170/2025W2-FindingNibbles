@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/recipes/recipe_model.dart'; // Add this import
 
 enum RecipeDifficulty { easy, medium, hard, any }
 
@@ -9,7 +10,7 @@ class RecipeService {
   final _logger = getLogger();
 
   /// Generate recipes based on provided criteria
-  Future<dynamic> generateRecipes({
+  Future<List<RecipeModel>> generateRecipes({
     required List<String> ingredients,
     required List<int> dietaryRequirements,
     required List<int> kitchenAppliances,
@@ -27,11 +28,13 @@ class RecipeService {
       );
 
       if (response.statusCode == 201) {
-        return response.data;
+        final List<dynamic> recipesJson = response.data as List<dynamic>;
+        return recipesJson.map((json) => RecipeModel.fromJson(json)).toList();
       } else {
         throw Exception('Failed to generate recipes: ${response.data}');
       }
     } catch (e) {
+      _logger.e('Failed to generate recipes: ${e.toString()}');
       throw Exception('Failed to generate recipes: ${e.toString()}');
     }
   }
