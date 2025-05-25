@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, Restaurant, Recipe } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
@@ -12,6 +12,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
+  private logger = new Logger(UserService.name);
   constructor(
     private readonly db: DatabaseService,
     private readonly dietaryRequirementService: DietaryRequirementService,
@@ -246,7 +247,9 @@ export class UserService {
     userId: number,
     createUserLocationDto: CreateUserLocationDto,
   ) {
-    console.log('Received userId in service:', userId);
+    this.logger.log(
+      `Creating user location for user with ID ${userId}. Data: ${JSON.stringify(createUserLocationDto)}`,
+    );
     // If the new location is intended to be default, unset others first
     if (createUserLocationDto.isDefault === true) {
       await this.db.userLocation.updateMany({
