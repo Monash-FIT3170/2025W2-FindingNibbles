@@ -167,8 +167,15 @@ async function main(): Promise<void> {
         .slice(0, 5); // Take the first 5
 
       for (const restaurant of randomRestaurants) {
-        await prisma.userFavouritedRestaurant.create({
-          data: {
+        await prisma.userFavouritedRestaurant.upsert({
+          where: {
+            userId_restaurantId: {
+              userId: defaultUser.id,
+              restaurantId: restaurant.id,
+            },
+          },
+          update: {}, // No update needed if it exists
+          create: {
             userId: defaultUser.id,
             restaurantId: restaurant.id,
           },
