@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:location/location.dart' as loc;
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/core/constants.dart';
 
 class LocationSelectionPage extends StatefulWidget {
   final LatLng? initialLocation;
@@ -29,10 +30,6 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   bool _serviceEnabled = false;
   loc.PermissionStatus _permissionGranted = loc.PermissionStatus.denied;
 
-  final LatLng _defaultInitialCenter = const LatLng(
-    -37.8136,
-    144.9631,
-  ); // Melbourne
   final _logger = getLogger();
 
   @override
@@ -59,7 +56,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       _serviceEnabled = await _location.requestService();
       if (!_serviceEnabled) {
         _setInitialCameraPosition(
-          selectedLocation ?? _defaultInitialCenter,
+          selectedLocation ?? AppConstants.defaultMapInitialCenter,
           defaultZoom: true,
         );
         return;
@@ -71,7 +68,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       _permissionGranted = await _location.requestPermission();
       if (_permissionGranted != loc.PermissionStatus.granted) {
         _setInitialCameraPosition(
-          selectedLocation ?? _defaultInitialCenter,
+          selectedLocation ?? AppConstants.defaultMapInitialCenter,
           defaultZoom: true,
         );
         return;
@@ -95,13 +92,13 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       } catch (e) {
         _logger.d("Error getting current location: $e");
         _setInitialCameraPosition(
-          selectedLocation ?? _defaultInitialCenter,
+          selectedLocation ?? AppConstants.defaultMapInitialCenter,
           defaultZoom: true,
         );
       }
     } else {
       _setInitialCameraPosition(
-        selectedLocation ?? _defaultInitialCenter,
+        selectedLocation ?? AppConstants.defaultMapInitialCenter,
         defaultZoom: true,
       );
     }
@@ -125,7 +122,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         Placemark place = placemarks.first;
         setState(() {
           selectedAddressName =
-              '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
+            '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
         });
       } else {
         setState(() {
@@ -219,11 +216,14 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Access the color scheme from the current theme
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Select Home Location'),
-        backgroundColor: const Color(0xFFAD2C50),
-        foregroundColor: Colors.white,
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
       body: Column(
         children: [
@@ -247,8 +247,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFAD2C50),
+                  borderSide: BorderSide(
+                    color: colorScheme.primary, 
                     width: 2,
                   ),
                 ),
@@ -266,7 +266,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 FlutterMap(
                   mapController: mapController,
                   options: MapOptions(
-                    initialCenter: selectedLocation ?? _defaultInitialCenter,
+                    initialCenter: selectedLocation ?? AppConstants.defaultMapInitialCenter,
                     initialZoom: selectedLocation == null ? 2 : 15,
                     onTap: _onTapMap,
                   ),
@@ -283,9 +283,9 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                             point: selectedLocation!,
                             width: 80.0,
                             height: 80.0,
-                            child: const Icon(
+                            child: Icon(
                               Icons.location_pin,
-                              color: Colors.red,
+                              color: colorScheme.error,
                               size: 40.0,
                             ),
                           ),
@@ -301,8 +301,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                       FloatingActionButton(
                         mini: true,
                         heroTag: 'zoomInBtn',
-                        backgroundColor: const Color(0xFFAD2C50),
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         onPressed: _zoomIn,
                         child: const Icon(Icons.add),
                       ),
@@ -310,8 +310,8 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                       FloatingActionButton(
                         mini: true,
                         heroTag: 'zoomOutBtn',
-                        backgroundColor: const Color(0xFFAD2C50),
-                        foregroundColor: Colors.white,
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
                         onPressed: _zoomOut,
                         child: const Icon(Icons.remove),
                       ),
@@ -329,14 +329,14 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 Text(
                   selectedAddressName ??
                       'Tap on the map or search for a location to set as Home.',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodySmall, 
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saveLocation,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFAD2C50),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colorScheme.primary, 
+                    foregroundColor: colorScheme.onPrimary,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -345,7 +345,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                   child: const Text(
                     'Set Home Location',
                     style: TextStyle(fontSize: 18),
-                  ), // Updated button text
+                  ),
                 ),
               ],
             ),

@@ -7,7 +7,6 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 export class CreateUserLocationDto {
   @IsString()
@@ -18,14 +17,12 @@ export class CreateUserLocationDto {
   @IsNotEmpty()
   @Min(-90)
   @Max(90)
-  @Type(() => Number)
   latitude: number;
 
   @IsNumber()
   @IsNotEmpty()
   @Min(-180)
   @Max(180)
-  @Type(() => Number)
   longitude: number;
 
   @IsOptional()

@@ -143,7 +143,7 @@ export class UserController {
     };
   }
 
-  @Get('default-location')
+  @Get('location/default')
   async getDefaultLocation(@Req() req: RequestUser) {
     return await this.userService.getUserDefaultLocation(req.user.sub);
   }
