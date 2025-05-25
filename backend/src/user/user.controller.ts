@@ -7,6 +7,7 @@ import {
   Delete,
   Patch,
   Put,
+  Logger,
 } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
@@ -18,6 +19,7 @@ import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 
 @Controller('user')
 export class UserController {
+  private logger = new Logger(UserController.name);
   constructor(readonly userService: UserService) {}
 
   @Get('profile')
@@ -38,7 +40,9 @@ export class UserController {
     @Req() req: RequestUser,
     @Body('restaurantId') restaurantId: number,
   ) {
-    console.log(`Unfavouriting restaurant ${restaurantId}`);
+    this.logger.log(
+      `Unfavouriting restaurant with ID: ${restaurantId} for user: ${req.user.sub}`,
+    );
     return this.userService.unfavouriteRestaurant(req.user.sub, restaurantId);
   }
 
@@ -72,7 +76,9 @@ export class UserController {
     @Req() req: RequestUser,
     @Body('dietaryId') dietaryId: number,
   ) {
-    console.log(`Adding dietary requirement ${dietaryId}`);
+    this.logger.log(
+      `User ${req.user.sub} is adding dietary requirement with ID: ${dietaryId}`,
+    );
     return this.userService.addDietaryRequirement(req.user.sub, dietaryId);
   }
 
@@ -131,8 +137,9 @@ export class UserController {
     if (!updatedUser) {
       throw new NotFoundException('User not found');
     }
-
-    console.log('Updated User:', updatedUser);
+    this.logger.log(
+      `User with ID ${userId} successfully updated. New details: ${JSON.stringify(updatedUser)}`,
+    );
 
     // Return the updated user details
     return {
@@ -168,13 +175,9 @@ export class UserController {
       req.user.sub,
       updateUserLocationDto,
     );
-    console.log(
-      `[UserController] Successfully updated location ID: ${updatedLocation.id}`,
+    this.logger.log(
+      `User with ID ${req.user.sub} updated location with ID ${updatedLocation.id}`,
     );
-    console.log(
-      `[UserController] Updated location details: ${JSON.stringify(updatedLocation)}`,
-    );
-
     return updatedLocation;
   }
 }

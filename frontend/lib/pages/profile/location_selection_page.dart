@@ -122,7 +122,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
         Placemark place = placemarks.first;
         setState(() {
           selectedAddressName =
-            '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
+              '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
         });
       } else {
         setState(() {
@@ -247,10 +247,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(
-                    color: colorScheme.primary, 
-                    width: 2,
-                  ),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
@@ -266,7 +263,9 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 FlutterMap(
                   mapController: mapController,
                   options: MapOptions(
-                    initialCenter: selectedLocation ?? AppConstants.defaultMapInitialCenter,
+                    initialCenter:
+                        selectedLocation ??
+                        AppConstants.defaultMapInitialCenter,
                     initialZoom: selectedLocation == null ? 2 : 15,
                     onTap: _onTapMap,
                   ),
@@ -329,13 +328,13 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                 Text(
                   selectedAddressName ??
                       'Tap on the map or search for a location to set as Home.',
-                  style: Theme.of(context).textTheme.bodySmall, 
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saveLocation,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary, 
+                    backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
