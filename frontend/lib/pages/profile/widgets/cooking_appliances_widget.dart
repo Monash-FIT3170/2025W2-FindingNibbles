@@ -6,14 +6,14 @@ class CookingAppliancesWidget extends StatefulWidget {
   final List<ApplianceRequirementDto> appliances;
   final void Function(ApplianceRequirementDto) onApplianceRemoved;
   final void Function(ApplianceRequirementDto) onApplianceAdded;
-  final Function() onRefresh;
+  final bool isAddingRemoving;
 
   const CookingAppliancesWidget({
     super.key,
     required this.appliances,
     required this.onApplianceRemoved,
     required this.onApplianceAdded,
-    required this.onRefresh,
+    required this.isAddingRemoving,
   });
 
   @override
@@ -60,47 +60,57 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () async {
-                final newApplianceName = _controller.text.trim();
-                if (newApplianceName.isNotEmpty) {
-                  try {
-                    // First check if this appliance already exists
-                    final existingAppliance =
-                        _availableAppliances
-                            .where(
-                              (app) =>
-                                  app.name.toLowerCase() ==
-                                  newApplianceName.toLowerCase(),
-                            )
-                            .toList();
+              onPressed: widget.isAddingRemoving
+                  ? null
+                  : () async {
+                      final newApplianceName = _controller.text.trim();
+                      if (newApplianceName.isNotEmpty) {
+                        try {
+                          // First check if this appliance already exists
+                          final existingAppliance = _availableAppliances
+                              .where(
+                                (app) =>
+                                    app.name.toLowerCase() ==
+                                    newApplianceName.toLowerCase(),
+                              )
+                              .toList();
 
-                    if (existingAppliance.isNotEmpty) {
-                      widget.onApplianceAdded(existingAppliance.first);
-                    } else {
-                      // Create new appliance
-                      final newAppliance = await _profileService
-                          .createAppliance(newApplianceName, null);
-                      if (!mounted) return;
-                      widget.onApplianceAdded(newAppliance);
-                      // Refresh appliances
-                      _fetchAvailableAppliances();
-                    }
-                    _controller.clear();
-                    if (dialogContext.mounted) {
-                      Navigator.pop(dialogContext);
-                    }
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error adding appliance: $e')),
-                    );
-                    if (dialogContext.mounted) {
-                      Navigator.pop(dialogContext);
-                    }
-                  }
-                }
-              },
-              child: const Text('Add'),
+                          if (existingAppliance.isNotEmpty) {
+                            widget.onApplianceAdded(existingAppliance.first);
+                          } else {
+                            // Create new appliance
+                            final newAppliance = await _profileService
+                                .createAppliance(newApplianceName, null);
+                            if (!mounted) return;
+                            widget.onApplianceAdded(newAppliance);
+                            // Refresh available appliances after adding a new one
+                            await _fetchAvailableAppliances();
+                          }
+                          _controller.clear();
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error adding appliance: $e')),
+                          );
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        }
+                      }
+                    },
+              child: widget.isAddingRemoving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Add'),
             ),
           ],
         );
@@ -126,8 +136,16 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _showAddApplianceDialog,
+                  icon: widget.isAddingRemoving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.add),
+                  onPressed: widget.isAddingRemoving
+                      ? null
+                      : _showAddApplianceDialog,
                 ),
               ],
             ),
@@ -143,23 +161,26 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                   vertical: 8,
                 ),
               ),
-              child:
-                  widget.appliances.isEmpty
-                      ? const Text('No appliances added')
+              child: widget.appliances.isEmpty && !widget.isAddingRemoving
+                  ? const Text('No appliances added')
+                  : widget.isAddingRemoving
+                      ? const Center(
+                          child:
+                              CircularProgressIndicator())
                       : Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children:
-                            widget.appliances
-                                .map(
-                                  (app) => Chip(
-                                    label: Text(app.name),
-                                    onDeleted:
-                                        () => widget.onApplianceRemoved(app),
-                                  ),
-                                )
-                                .toList(),
-                      ),
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: widget.appliances
+                              .map(
+                                (app) => Chip(
+                                  label: Text(app.name),
+                                  onDeleted: widget.isAddingRemoving
+                                      ? null
+                                      : () => widget.onApplianceRemoved(app),
+                                ),
+                              )
+                              .toList(),
+                        ),
             ),
           ],
         ),

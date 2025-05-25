@@ -19,17 +19,40 @@ class ProfilePageState extends State<ProfilePage> {
   List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
-  bool isLoading = true;
+  bool _isProfileLoading = true; // General profile loading
+  bool _isAppliancesLoading = false; // Specific loading for appliance operations
 
   @override
   void initState() {
     super.initState();
-    _loadDietaryRequirements();
-    _fetchAppliances();
+    _loadAllProfileData();
+  }
+
+  Future<void> _loadAllProfileData() async {
+    setState(() {
+      _isProfileLoading = true;
+    });
+    try {
+      await Future.wait([
+        _loadDietaryRequirements(),
+        _fetchAppliances(),
+      ]);
+    } catch (e) {
+      debugPrint('Error loading all profile data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProfileLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _fetchAppliances() async {
-    setState(() => isLoading = true);
+    // Only set appliance loading true if it's not already true to avoid unnecessary setState
+    if (!_isAppliancesLoading && mounted) {
+      setState(() => _isAppliancesLoading = true);
+    }
     try {
       appliances = await _profileService.getUserAppliances();
     } catch (e) {
@@ -38,12 +61,16 @@ class ProfilePageState extends State<ProfilePage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error fetching appliances: $e')));
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => _isAppliancesLoading = false);
+      }
     }
   }
 
   Future<void> _addAppliance(ApplianceRequirementDto appliance) async {
-    setState(() => isLoading = true);
+    if (!_isAppliancesLoading && mounted) {
+      setState(() => _isAppliancesLoading = true);
+    }
     try {
       await _profileService.addAppliance(appliance.id!);
       setState(() {
@@ -55,12 +82,16 @@ class ProfilePageState extends State<ProfilePage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error adding appliance: $e')));
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => _isAppliancesLoading = false);
+      }
     }
   }
 
   Future<void> _removeAppliance(ApplianceRequirementDto appliance) async {
-    setState(() => isLoading = true);
+    if (!_isAppliancesLoading && mounted) {
+      setState(() => _isAppliancesLoading = true);
+    }
     try {
       await _profileService.removeAppliance(appliance.id!);
       setState(() {
@@ -72,7 +103,9 @@ class ProfilePageState extends State<ProfilePage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error removing appliance: $e')));
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => _isAppliancesLoading = false);
+      }
     }
   }
 
@@ -92,25 +125,15 @@ class ProfilePageState extends State<ProfilePage> {
    * Loading user specific dietary requirments
    */
   Future<void> _loadDietaryRequirements() async {
-    if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
     try {
       final requirements = await _profileService.getDietaryRequirements();
       if (mounted) {
         setState(() {
           _dietaryRequirements = requirements;
-          isLoading = false;
         });
       }
     } catch (e) {
       debugPrint('Error fetching dietary requirements: $e');
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
     }
   }
 
@@ -119,55 +142,54 @@ class ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFAD2C50),
       body: SafeArea(
-        child:
-            isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                  onRefresh: _fetchAppliances,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            'Profile',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
+        child: _isProfileLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _loadAllProfileData, // Refresh all data
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          'Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        PersonalMenuWidget(
-                          onPersonalInfo: () {},
-                          onFavourites: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LikedPage(),
-                              ),
-                            );
-                          },
-                          onMyReviews: () {},
-                        ),
-                        DietaryRequirementsWidget(
-                          dietaryRequirements: _dietaryRequirements,
-                          onAdd: _addDietaryRequirement,
-                          onRemove: _removeDietaryRequirement,
-                        ),
-                        CookingAppliancesWidget(
-                          appliances: appliances,
-                          onApplianceRemoved: _removeAppliance,
-                          onApplianceAdded: _addAppliance,
-                          onRefresh: _fetchAppliances,
-                        ),
-                        LogoutWidget(onLogout: () {}),
-                      ],
-                    ),
+                      ),
+                      PersonalMenuWidget(
+                        onPersonalInfo: () {},
+                        onFavourites: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LikedPage(),
+                            ),
+                          );
+                        },
+                        onMyReviews: () {},
+                      ),
+                      DietaryRequirementsWidget(
+                        dietaryRequirements: _dietaryRequirements,
+                        onAdd: _addDietaryRequirement,
+                        onRemove: _removeDietaryRequirement,
+                      ),
+                      CookingAppliancesWidget(
+                        appliances: appliances,
+                        onApplianceRemoved: _removeAppliance,
+                        onApplianceAdded: _addAppliance,
+                        isAddingRemoving: _isAppliancesLoading,
+                      ),
+                      LogoutWidget(onLogout: () {}),
+                    ],
                   ),
                 ),
+              ),
       ),
     );
   }
