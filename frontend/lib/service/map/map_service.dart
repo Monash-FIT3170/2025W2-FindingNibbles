@@ -8,9 +8,9 @@ class MapService {
 
   // Method to get restaurants within a bounding box
   Future<List<RestaurantDto>> getRestaurants({
-    required double swLat, 
-    required double swLng, 
-    required double neLat, 
+    required double swLat,
+    required double swLng,
+    required double neLat,
     required double neLng,
     int? cuisineId, // Optional cuisine filter
   }) async {
@@ -22,7 +22,7 @@ class MapService {
         'neLat': neLat,
         'neLng': neLng,
       };
-      
+
       // Add cuisine filter if provided
       if (cuisineId != null) {
         queryParams['cuisineId'] = cuisineId;
@@ -53,10 +53,8 @@ class MapService {
     String? orderBy, // 'rating' or 'popular'
   }) async {
     try {
-      Map<String, dynamic> queryParams = {
-        'cuisineId': cuisineId,
-      };
-      
+      Map<String, dynamic> queryParams = {'cuisineId': cuisineId};
+
       if (skip != null) queryParams['skip'] = skip;
       if (take != null) queryParams['take'] = take;
       if (orderBy != null) queryParams['orderBy'] = orderBy;
@@ -86,7 +84,7 @@ class MapService {
   }) async {
     try {
       Map<String, dynamic> queryParams = {};
-      
+
       if (skip != null) queryParams['skip'] = skip;
       if (take != null) queryParams['take'] = take;
       if (orderBy != null) queryParams['orderBy'] = orderBy;
