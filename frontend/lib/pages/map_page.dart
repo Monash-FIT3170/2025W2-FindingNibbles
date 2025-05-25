@@ -150,43 +150,43 @@ class _MapPageState extends State<MapPage> {
 
   // Helper to fetch with known bounds
   Future<void> _fetchWithBounds(LatLngBounds bounds) async {
-  if (_isLoading) return;
-  
-  setState(() {
-    _isLoading = true;
-  });
-  
-  try {
-    // Fetch restaurants from the backend using MapService with cuisine filter
-    final allRestaurants = await MapService().getRestaurants(
-      swLat: bounds.south,
-      swLng: bounds.west,
-      neLat: bounds.north,
-      neLng: bounds.east,
-      cuisineId: _selectedCuisine?.id, // Backend cuisine filter
-    );
+    if (_isLoading) return;
 
-    // Apply frontend rating filter
-    final filteredRestaurants = _applyRatingFilter(allRestaurants);
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (mounted) {
-      setState(() {
-        _restaurants = filteredRestaurants; // Use filtered list
-        _isLoading = false;
-      });
-      
-      if (filteredRestaurants.isNotEmpty) {
-        _loadTimer?.cancel();
+    try {
+      // Fetch restaurants from the backend using MapService with cuisine filter
+      final allRestaurants = await MapService().getRestaurants(
+        swLat: bounds.south,
+        swLng: bounds.west,
+        neLat: bounds.north,
+        neLng: bounds.east,
+        cuisineId: _selectedCuisine?.id, // Backend cuisine filter
+      );
+
+      // Apply frontend rating filter
+      final filteredRestaurants = _applyRatingFilter(allRestaurants);
+
+      if (mounted) {
+        setState(() {
+          _restaurants = filteredRestaurants; // Use filtered list
+          _isLoading = false;
+        });
+
+        if (filteredRestaurants.isNotEmpty) {
+          _loadTimer?.cancel();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
-}
 
   // Apply rating filter to the list of restaurants
   List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
@@ -234,50 +234,51 @@ class _MapPageState extends State<MapPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                  leading: const Icon(Icons.star),
-                  title: const Text('Min Rating'),
-                  subtitle: DropdownButton<int>(
-                    value: _minimumRating,
-                    isExpanded: true,
-                    items: List.generate(5, (index) => index + 1)
-                      .map(
-                      (rating) => DropdownMenuItem(
-                        value: rating,
-                        child: Text('$rating ⭐'),
-                      ),
-                      )
-                      .toList(),
-                    onChanged: (value) {
-                    setState(() {
-                      _minimumRating = value!;
-                    });
-                    },
-                  ),
+                    leading: const Icon(Icons.star),
+                    title: const Text('Min Rating'),
+                    subtitle: DropdownButton<int>(
+                      value: _minimumRating,
+                      isExpanded: true,
+                      items:
+                          List.generate(5, (index) => index + 1)
+                              .map(
+                                (rating) => DropdownMenuItem(
+                                  value: rating,
+                                  child: Text('$rating ⭐'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _minimumRating = value!;
+                        });
+                      },
+                    ),
                   ),
                   ListTile(
-                  leading: const Icon(Icons.restaurant_menu),
-                  title: const Text('Cuisine'),
-                  subtitle: DropdownButton<CuisineDto?>(
-                    value: _selectedCuisine,
-                    isExpanded: true,
-                    items: [
-                    const DropdownMenuItem<CuisineDto?>(
-                      value: null,
-                      child: Text('All'),
+                    leading: const Icon(Icons.restaurant_menu),
+                    title: const Text('Cuisine'),
+                    subtitle: DropdownButton<CuisineDto?>(
+                      value: _selectedCuisine,
+                      isExpanded: true,
+                      items: [
+                        const DropdownMenuItem<CuisineDto?>(
+                          value: null,
+                          child: Text('All'),
+                        ),
+                        ..._availableCuisines.map(
+                          (cuisine) => DropdownMenuItem(
+                            value: cuisine,
+                            child: Text(cuisine.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCuisine = value;
+                        });
+                      },
                     ),
-                    ..._availableCuisines.map(
-                      (cuisine) => DropdownMenuItem(
-                      value: cuisine,
-                      child: Text(cuisine.name),
-                      ),
-                    ),
-                    ],
-                    onChanged: (value) {
-                    setState(() {
-                      _selectedCuisine = value;
-                    });
-                    },
-                  ),
                   ),
                 ],
               ),
@@ -297,8 +298,8 @@ class _MapPageState extends State<MapPage> {
                       _forceFetchRestaurants();
                     }
                   },
-                child: const Text('Apply'),
-              ),
+                  child: const Text('Apply'),
+                ),
               ],
             );
           },
@@ -316,17 +317,17 @@ class _MapPageState extends State<MapPage> {
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<String> activeFilters = [];
-    
+
     if (_selectedCuisine != null) {
       activeFilters.add(_selectedCuisine!.name);
     }
-    
+
     if (_minimumRating > 1) {
       activeFilters.add('$_minimumRating+ ⭐');
     }
-    
+
     if (activeFilters.isEmpty) return const SizedBox.shrink();
-    
+
     return Positioned(
       top: 80,
       right: 16,
