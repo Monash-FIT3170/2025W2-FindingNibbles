@@ -20,7 +20,8 @@ class ProfilePageState extends State<ProfilePage> {
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
   bool _isProfileLoading = true; // General profile loading
-  bool _isAppliancesLoading = false; // Specific loading for appliance operations
+  bool _isAppliancesLoading =
+      false; // Specific loading for appliance operations
 
   @override
   void initState() {
@@ -33,10 +34,7 @@ class ProfilePageState extends State<ProfilePage> {
       _isProfileLoading = true;
     });
     try {
-      await Future.wait([
-        _loadDietaryRequirements(),
-        _fetchAppliances(),
-      ]);
+      await Future.wait([_loadDietaryRequirements(), _fetchAppliances()]);
     } catch (e) {
       debugPrint('Error loading all profile data: $e');
     } finally {
@@ -142,54 +140,55 @@ class ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFAD2C50),
       body: SafeArea(
-        child: _isProfileLoading
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadAllProfileData, // Refresh all data
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Profile',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
+        child:
+            _isProfileLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                  onRefresh: _loadAllProfileData, // Refresh all data
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Text(
+                            'Profile',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      PersonalMenuWidget(
-                        onPersonalInfo: () {},
-                        onFavourites: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LikedPage(),
-                            ),
-                          );
-                        },
-                        onMyReviews: () {},
-                      ),
-                      DietaryRequirementsWidget(
-                        dietaryRequirements: _dietaryRequirements,
-                        onAdd: _addDietaryRequirement,
-                        onRemove: _removeDietaryRequirement,
-                      ),
-                      CookingAppliancesWidget(
-                        appliances: appliances,
-                        onApplianceRemoved: _removeAppliance,
-                        onApplianceAdded: _addAppliance,
-                        isAddingRemoving: _isAppliancesLoading,
-                      ),
-                      LogoutWidget(onLogout: () {}),
-                    ],
+                        PersonalMenuWidget(
+                          onPersonalInfo: () {},
+                          onFavourites: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LikedPage(),
+                              ),
+                            );
+                          },
+                          onMyReviews: () {},
+                        ),
+                        DietaryRequirementsWidget(
+                          dietaryRequirements: _dietaryRequirements,
+                          onAdd: _addDietaryRequirement,
+                          onRemove: _removeDietaryRequirement,
+                        ),
+                        CookingAppliancesWidget(
+                          appliances: appliances,
+                          onApplianceRemoved: _removeAppliance,
+                          onApplianceAdded: _addAppliance,
+                          isAddingRemoving: _isAppliancesLoading,
+                        ),
+                        LogoutWidget(onLogout: () {}),
+                      ],
+                    ),
                   ),
                 ),
-              ),
       ),
     );
   }
