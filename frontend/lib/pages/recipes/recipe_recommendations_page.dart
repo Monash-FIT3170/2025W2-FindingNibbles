@@ -31,8 +31,18 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
   }
 
   void _reloadRecipes() {
-    // Logic to reload recipes or update the list goes here
-    // Removed print to comply with production code standards
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecipesPage(),
+        settings: RouteSettings(
+          arguments: {
+            'previousIngredients': widget.recipes.first.ingredients,
+            'previousDifficulty': widget.recipes.first.difficultyLevel,
+          },
+        ),
+      ),
+    );
   }
 
   @override
