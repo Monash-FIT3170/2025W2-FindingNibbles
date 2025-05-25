@@ -3,7 +3,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
-import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
