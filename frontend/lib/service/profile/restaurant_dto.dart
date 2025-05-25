@@ -1,4 +1,5 @@
 import '../cuisine/cuisine_dto.dart';
+
 class RestaurantDto {
   final int id;
   final String placeId; // Google Places ID
@@ -24,8 +25,8 @@ class RestaurantDto {
   final int? viewCount; // Added to support popularity sorting
   final DateTime createdAt;
   final DateTime updatedAt;
-  final List<RestaurantCuisineDto>? restaurantCuisines; // Added cuisine relations
-
+  final List<RestaurantCuisineDto>?
+  restaurantCuisines; // Added cuisine relations
 
   RestaurantDto({
     required this.id,
@@ -53,7 +54,6 @@ class RestaurantDto {
     required this.createdAt,
     required this.updatedAt,
     this.restaurantCuisines,
-
   });
 
   // Factory method to create a DTO from JSON
@@ -87,11 +87,12 @@ class RestaurantDto {
       viewCount: json['viewCount'] as int?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
-      restaurantCuisines: json['restaurantCuisines'] != null
-          ? (json['restaurantCuisines'] as List)
-              .map((item) => RestaurantCuisineDto.fromJson(item))
-              .toList()
-          : null,
+      restaurantCuisines:
+          json['restaurantCuisines'] != null
+              ? (json['restaurantCuisines'] as List)
+                  .map((item) => RestaurantCuisineDto.fromJson(item))
+                  .toList()
+              : null,
     );
   }
 
@@ -122,16 +123,18 @@ class RestaurantDto {
       'viewCount': viewCount,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'restaurantCuisines': restaurantCuisines?.map((item) => item.toJson()).toList(),
+      'restaurantCuisines':
+          restaurantCuisines?.map((item) => item.toJson()).toList(),
     };
   }
 
   // Helper method to get all cuisine names
   List<String> get cuisineNames {
     return restaurantCuisines
-        ?.map((rc) => rc.cuisine?.name ?? '')
-        .where((name) => name.isNotEmpty)
-        .toList() ?? [];
+            ?.map((rc) => rc.cuisine?.name ?? '')
+            .where((name) => name.isNotEmpty)
+            .toList() ??
+        [];
   }
 
   // Helper method to check if restaurant has a specific cuisine
@@ -159,9 +162,8 @@ class RestaurantCuisineDto {
       id: json['id'] as int,
       restaurantId: json['restaurantId'] as int,
       cuisineId: json['cuisineId'] as int,
-      cuisine: json['cuisine'] != null 
-          ? CuisineDto.fromJson(json['cuisine']) 
-          : null,
+      cuisine:
+          json['cuisine'] != null ? CuisineDto.fromJson(json['cuisine']) : null,
     );
   }
 
