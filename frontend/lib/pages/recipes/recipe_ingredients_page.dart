@@ -25,10 +25,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     if (checkedIngredients.isNotEmpty) checkedIngredients[0] = true;
   }
 
-  Widget _buildIngredientsList() {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildIngredientsList(TextTheme textTheme, ColorScheme colorScheme) {
     return Column(
       children: [
         Container(
@@ -104,10 +101,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     );
   }
 
-  Widget _buildInstructionList() {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildInstructionList(TextTheme textTheme, ColorScheme colorScheme) {
     return Column(
       children: [
         // Display the current step's instructions
@@ -187,134 +181,97 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: BackButton(color: colorScheme.onSurface),
-        centerTitle: false,
         title: Text(
-          'Recipe List',
+          widget.recipe.title,  // Changed from 'Recipe List' to actual recipe title
           style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: colorScheme.onSurface),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Container(
-                    height: 150,
-                    width: double.infinity,
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 50,
-                        color: colorScheme.onSurfaceVariant.withAlpha(
-                          (0.6 * 255).toInt(),
-                        ),
-                      ),
-                    ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Recipe Image Container
+            Container(
+              height: 150,
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.image,
+                size: 50,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+
+            // Tab Navigation
+            Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant,
+                    width: 1,
                   ),
                 ),
-              ],
+              ),
+              child: Row(
+                children: [
+                  _buildTab(
+                    'Ingredients',
+                    currentTab == 0,
+                    () => setState(() => currentTab = 0),
+                    textTheme,
+                    colorScheme,
+                  ),
+                  _buildTab(
+                    'Instructions',
+                    currentTab == 1,
+                    () => setState(() => currentTab = 1),
+                    textTheme,
+                    colorScheme,
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: colorScheme.outline.withAlpha((0.5 * 255).toInt()),
-                  width: 0.5,
+
+            // Content
+            Expanded(
+              child: currentTab == 0
+                  ? _buildIngredientsList(textTheme, colorScheme)
+                  : _buildInstructionList(textTheme, colorScheme),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTab(String text, bool isSelected, VoidCallback onTap,
+      TextTheme textTheme, ColorScheme colorScheme) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                text,
+                style: textTheme.labelLarge?.copyWith(
+                  color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        currentTab = 0; // Set to Ingredients tab
-                      });
-                    },
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'Ingredients',
-                            style: textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  currentTab == 0
-                                      ? colorScheme.primary
-                                      : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 2,
-                          color:
-                              currentTab == 0
-                                  ? colorScheme.primary
-                                  : Colors.transparent,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        currentTab = 1; // Set to Cooking Instructions tab
-                      });
-                    },
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            'Cooking Instructions',
-                            style: textTheme.labelLarge?.copyWith(
-                              color:
-                                  currentTab == 1
-                                      ? colorScheme.primary
-                                      : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 2,
-                          color:
-                              currentTab == 1
-                                  ? colorScheme.primary
-                                  : Colors.transparent,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            Container(
+              height: 2,
+              color: isSelected ? colorScheme.primary : Colors.transparent,
             ),
-          ),
-          // Display the appropriate content based on the active tab
-          Expanded(
-            child:
-                currentTab == 0
-                    ? _buildIngredientsList()
-                    : _buildInstructionList(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
