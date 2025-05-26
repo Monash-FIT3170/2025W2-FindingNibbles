@@ -18,7 +18,7 @@ class _HomePageState extends State<HomePage> {
     _restaurantsFuture = RestaurantService().getRestaurants();
   }
 
-  // Assuming RestaurantDto has priceLevel or similar, otherwise adapt
+  // assuming RestaurantDto has priceLevel or similar, otherwise adapt
   String formatPriceLevel(int? level) {
     if (level == null) {
       return '';
@@ -83,7 +83,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 4),
                       Text('⭐ ${restaurant.rating?.toStringAsFixed(1)}'),
                       const SizedBox(height: 4),
-                      // Assuming priceLevel is int? on RestaurantDto
+                      // assuming priceLevel is int? on RestaurantDto
                       Text(formatPriceLevel(restaurant.priceLevel)),
                     ],
                   ),

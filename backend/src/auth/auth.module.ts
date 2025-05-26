@@ -44,7 +44,6 @@ import { JwtAuthGuard } from './strategies/jwt/jwt-auth.guard';
       },
       inject: [ConfigService],
     },
-    // REMOVE THESE COMMENTS AFTER I FIGURE OUT TOKENS
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
