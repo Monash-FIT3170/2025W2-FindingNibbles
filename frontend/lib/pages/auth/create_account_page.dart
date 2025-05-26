@@ -227,7 +227,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: register,
-
                         child: const Text(
                           'CREATE ACCOUNT',
                           style: TextStyle(
