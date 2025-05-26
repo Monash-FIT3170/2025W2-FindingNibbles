@@ -257,7 +257,7 @@ class LoginPage extends StatelessWidget {
                           color: Colors.black,
                         ),
                         label: const Text(
-                          'Continue with Google',
+                          'Google',
                           style: TextStyle(
                             color: Colors.black87,
                             fontWeight: FontWeight.w500,
