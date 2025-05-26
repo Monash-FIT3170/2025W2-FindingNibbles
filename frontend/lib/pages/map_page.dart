@@ -16,9 +16,7 @@ class RestaurantMarker extends Marker {
         point: LatLng(restaurant.latitude, restaurant.longitude),
         width: 40,
         height: 40,
-        builder:
-            (ctx) =>
-                const Icon(Icons.location_pin, color: Colors.red, size: 40),
+        child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
       );
 }
 
@@ -120,7 +118,7 @@ class _MapPageState extends State<MapPage> {
         setState(() {
           _currentPosition = newPos;
         });
-        _mapController.move(newPos, _mapController.zoom);
+        _mapController.move(newPos, _mapController.camera.zoom);
       }
     });
   }
@@ -130,20 +128,9 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     // Try to get current bounds
-    final bounds = _mapController.bounds;
-    if (bounds == null) {
-      // If bounds aren't available, use a default area around Monash
-      final defaultLocation = LatLng(37.9111, 145.1367); // Monash coordinates
-      final defaultBounds = LatLngBounds(
-        LatLng(defaultLocation.latitude - 0.1, defaultLocation.longitude - 0.1),
-        LatLng(defaultLocation.latitude + 0.1, defaultLocation.longitude + 0.1),
-      );
+    final bounds = _mapController.camera.visibleBounds;
 
-      await _fetchWithBounds(defaultBounds);
-    } else {
-      // If bounds are available, use them
-      await _fetchWithBounds(bounds);
-    }
+    await _fetchWithBounds(bounds);
   }
 
   // Helper to fetch with known bounds
@@ -157,10 +144,10 @@ class _MapPageState extends State<MapPage> {
     try {
       // Fetch restaurants from the backend using MapService with cuisine filter
       final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.south,
-        swLng: bounds.west,
-        neLat: bounds.north,
-        neLng: bounds.east,
+        swLat: bounds.southWest.latitude,
+        swLng: bounds.southWest.longitude,
+        neLat: bounds.northEast.latitude,
+        neLng: bounds.northEast.longitude,
         cuisineId: _selectedCuisine?.id, // Backend cuisine filter
       );
 
@@ -199,8 +186,8 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     // Get current map bounds
-    final bounds = _mapController.bounds;
-    if (bounds == null) return;
+    final bounds = _mapController.camera.visibleBounds;
+    // if (bounds == null) return;
 
     await _fetchWithBounds(bounds);
   }
@@ -353,13 +340,13 @@ class _MapPageState extends State<MapPage> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _currentPosition ?? LatLng(37.9111, 145.1367),
-              zoom: 13,
+              initialCenter: _currentPosition ?? LatLng(37.9111, 145.1367),
+              initialZoom: 13,
               onMapReady: () {
                 // Try to fetch when map is ready
                 _forceFetchRestaurants();
               },
-              onPositionChanged: (MapPosition position, bool hasGesture) {
+              onPositionChanged: (MapCamera camera, bool hasGesture) {
                 if (hasGesture) {
                   _fetchRestaurantsInBounds();
                 }
@@ -367,9 +354,7 @@ class _MapPageState extends State<MapPage> {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.app',
               ),
               MarkerLayer(
@@ -382,49 +367,48 @@ class _MapPageState extends State<MapPage> {
                         ),
                         width: 40,
                         height: 40,
-                        builder:
-                            (ctx) => GestureDetector(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder:
-                                      (context) => AlertDialog(
-                                        title: Text(restaurant.name),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Rating: ${restaurant.rating}',
-                                            ),
-                                            Text(
-                                              'Total reviews: : ${restaurant.userRatingsTotal}',
-                                            ),
-                                            Text(
-                                              'PH: ${restaurant.formattedPhoneNum}',
-                                            ),
-                                            Text(
-                                              'Address: ${restaurant.formattedAddress}',
-                                            ),
-                                          ],
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text(restaurant.name),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Rating: ${restaurant.rating}',
                                         ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(context),
-                                            child: const Text('Close'),
-                                          ),
-                                        ],
+                                        Text(
+                                          'Total reviews: : ${restaurant.userRatingsTotal}',
+                                        ),
+                                        Text(
+                                          'PH: ${restaurant.formattedPhoneNum}',
+                                        ),
+                                        Text(
+                                          'Address: ${restaurant.formattedAddress}',
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.pop(context),
+                                        child: const Text('Close'),
                                       ),
-                                );
-                              },
-                              child: const Icon(
-                                Icons.location_pin,
-                                color: Colors.red,
-                                size: 40,
-                              ),
-                            ),
+                                    ],
+                                  ),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.location_pin,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
                       );
                     }).toList(),
               ),
