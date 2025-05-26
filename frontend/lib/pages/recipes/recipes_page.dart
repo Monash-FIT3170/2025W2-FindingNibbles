@@ -32,7 +32,6 @@ class _RecipesPageState extends State<RecipesPage> {
 
   // Services
   final ProfileService _profileService = ProfileService();
-  final ApplianceService _applianceService = ApplianceService();
   final RecipeService _recipeService = RecipeService();
 
   @override
@@ -81,10 +80,19 @@ class _RecipesPageState extends State<RecipesPage> {
 
   Future<void> _fetchAppliances() async {
     try {
-      final fetchedAppliances = await _applianceService.fetchAppliances();
+      final fetchedAppliances = await _profileService.getUserAppliances();
 
+      if (!mounted) {
+        return;
+      } // Ensure widget is still mounted before updating state
       setState(() {
-        availableAppliances = fetchedAppliances;
+        availableAppliances =
+            fetchedAppliances
+                .map(
+                  (dto) =>
+                      Appliance(id: dto.id, name: dto.name, isSelected: false),
+                )
+                .toList();
       });
     } catch (e) {
       _logger.e('Failed to fetch appliances: ${e.toString()}');
