@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { Prisma } from 'generated/prisma';
+import { Appliance, Prisma } from 'generated/prisma';
 
 @Injectable()
 export class ApplianceService {
@@ -10,7 +10,7 @@ export class ApplianceService {
     return this.db.appliance.create({ data: newAppliance });
   }
 
-  async findAll() {
+  async findAll(): Promise<Appliance[]> {
     return this.db.appliance.findMany();
   }
 }
