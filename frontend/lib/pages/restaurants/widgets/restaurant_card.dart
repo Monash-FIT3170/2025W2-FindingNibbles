@@ -21,17 +21,22 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 2,
         child: SizedBox(
-          height: height, // Use the configurable height
+          height: height,
           child: Row(
             children: [
               // Image container
               Container(
-                width: height, // Match the height for a square image
+                width: height,
                 height: height,
                 margin: const EdgeInsets.all(10),
                 child:
@@ -45,22 +50,23 @@ class RestaurantCard extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return placeholder ??
-                                  const Icon(
+                                  Icon(
                                     Icons.error,
                                     size: 50,
-                                    color: Colors.red,
+                                    color: colorScheme.error,
                                   );
                             },
                           ),
                         )
                         : (placeholder ??
-                            const Icon(
+                            Icon(
                               Icons.restaurant,
                               size: 50,
-                              color: Colors.grey,
+                              color: Colors.grey.shade400,
                             )),
               ),
               const SizedBox(width: 12),
+
               // Text and details
               Expanded(
                 child: Column(
@@ -69,26 +75,29 @@ class RestaurantCard extends StatelessWidget {
                   children: [
                     Text(
                       restaurant.name,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       restaurant.formattedAddress ?? 'No address available',
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+
               // Favorite icon
               IconButton(
                 icon: Icon(
                   isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: isLiked ? Colors.red : Colors.grey,
+                  color: isLiked ? colorScheme.primary : Colors.grey.shade400,
                 ),
                 onPressed: onFavoriteTap,
               ),

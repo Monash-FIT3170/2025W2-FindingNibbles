@@ -212,12 +212,17 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFAD2C50),
+      backgroundColor: colorScheme.primary,
       body: SafeArea(
         child:
             isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
                 : RefreshIndicator(
                   onRefresh: _fetchAppliances,
                   child: SingleChildScrollView(
