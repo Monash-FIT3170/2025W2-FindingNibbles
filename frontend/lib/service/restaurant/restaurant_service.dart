@@ -6,7 +6,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 class RestaurantService {
   final Dio _dio = DioClient().client;
 
-  /// Get restaurants with optional bounding box and cuisine filter
+  /// get restaurants with optional bounding box and cuisine filter
   Future<List<RestaurantDto>> getRestaurants({
     double? swLat,
     double? swLng,
