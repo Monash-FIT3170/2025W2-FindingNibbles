@@ -114,7 +114,13 @@ class _RecipesPageState extends State<RecipesPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => RecipeRecommendationsPage(recipes: recipeResults),
+          builder: (context) => RecipeRecommendationsPage(
+            recipes: recipeResults,
+            dietaryRequirements: useDietaryRequirements
+                ? selectedDietaries.map((d) => d.id).toList()
+                : [],
+            kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
+          ),
         ),
       );
     } catch (e) {
