@@ -379,9 +379,7 @@ class _MapPageState extends State<MapPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          'Rating: ${restaurant.rating}',
-                                        ),
+                                        Text('Rating: ${restaurant.rating}'),
                                         Text(
                                           'Total reviews: : ${restaurant.userRatingsTotal}',
                                         ),
@@ -395,8 +393,7 @@ class _MapPageState extends State<MapPage> {
                                     ),
                                     actions: [
                                       TextButton(
-                                        onPressed:
-                                            () => Navigator.pop(context),
+                                        onPressed: () => Navigator.pop(context),
                                         child: const Text('Close'),
                                       ),
                                     ],
