@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
 import 'recipe_ingredients_page.dart';
-import 'recipe_model.dart';
 import 'package:nibbles/pages/recipes/recipes_page.dart';
+import 'recipe_model.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
 
 class RecipeRecommendationsPage extends StatefulWidget {
   final List<RecipeModel> recipes;
-  const RecipeRecommendationsPage({super.key, required this.recipes});
+  final List<int> dietaryRequirements;
+  final List<int> kitchenAppliances;
+
+  const RecipeRecommendationsPage({
+    super.key,
+    required this.recipes,
+    this.dietaryRequirements = const [],
+    this.kitchenAppliances = const [],
+  });
 
   @override
-  State<RecipeRecommendationsPage> createState() =>
-      _RecipeRecommendationsPageState();
+  State<RecipeRecommendationsPage> createState() => _RecipeRecommendationsPageState();
 }
 
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
-  Color _getDifficultyColor(RecipeDifficulty diff, ColorScheme cs) {
+  Color _getDifficultyColor(recipe_service.RecipeDifficulty diff, ColorScheme cs) {
     switch (diff) {
-      case RecipeDifficulty.hard:
+      case recipe_service.RecipeDifficulty.hard:
         return cs.error; // Using semantic color
-      case RecipeDifficulty.medium:
+      case recipe_service.RecipeDifficulty.medium:
         return cs.tertiary; // Using semantic color
       default:
         return cs.primary;
@@ -30,19 +38,68 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     });
   }
 
-  void _reloadRecipes() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecipesPage(),
-        settings: RouteSettings(
-          arguments: {
-            'previousIngredients': widget.recipes.first.ingredients,
-            'previousDifficulty': widget.recipes.first.difficultyLevel,
-          },
+  void _reloadRecipes() async {
+    try {
+      // Create loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
+      // Get data from first recipe to reuse
+      final firstRecipe = widget.recipes.first;
+      final recipeResults = await recipe_service.RecipeService().generateRecipes(
+        ingredients: firstRecipe.ingredients,
+        dietaryRequirements: widget.dietaryRequirements, // Use widget values
+        kitchenAppliances: widget.kitchenAppliances, // Use widget values
+        difficultyLevel: recipe_service.RecipeDifficulty.values
+            .firstWhere((e) => e.name == firstRecipe.difficultyLevel.name),
+      );
+
+      // Remove loading indicator
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      // Update the page with new recipes
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecipeRecommendationsPage(
+            recipes: recipeResults,
+            dietaryRequirements: widget.dietaryRequirements,
+            kitchenAppliances: widget.kitchenAppliances,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      // Remove loading indicator if there was an error
+      if (mounted) {
+        Navigator.pop(context);
+
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: Text('Failed to generate new recipes: ${e.toString()}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
   }
 
   @override
@@ -160,7 +217,12 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _getDifficultyColor(recipe.difficultyLevel, colorScheme),
+              color: _getDifficultyColor(
+                recipe_service.RecipeDifficulty.values.firstWhere(
+                  (e) => e.name == recipe.difficultyLevel.name,
+                ),
+                colorScheme,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
