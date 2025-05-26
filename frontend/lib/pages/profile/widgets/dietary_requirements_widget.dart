@@ -76,32 +76,85 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   void _openCustomCreationDialog() {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController descriptionController = TextEditingController();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Create Custom Dietary Requirement'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Create Custom Dietary Requirement',
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  labelStyle: TextStyle(color: colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  labelStyle: TextStyle(color: colorScheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                maxLines: 2,
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
               child: const Text('Cancel'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () async {
                 final name = nameController.text.trim();
                 final description = descriptionController.text.trim();
@@ -112,8 +165,18 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                   Navigator.of(dialogContext).pop();
                 } else {
                   // Optionally, show an error message if fields are empty
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a name')),
+                  );
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: const Text('Create'),
             ),
           ],
@@ -123,6 +186,9 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   }
 
   void _openAddDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -133,16 +199,46 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
           builder: (dialogContext, setState) {
             return AlertDialog(
               scrollable: true,
-              title: const Text('Add Dietary Requirement'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Add Dietary Requirement',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: SizedBox(
                 width: double.maxFinite,
                 height: 300,
                 child: Column(
                   children: [
                     TextField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Search',
-                        prefixIcon: Icon(Icons.search),
+                        labelStyle: TextStyle(color: colorScheme.primary),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: colorScheme.primary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: colorScheme.primary,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -158,17 +254,29 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                         });
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Expanded(
                       child:
                           localFiltered.isEmpty
-                              ? const Center(child: Text('No matches'))
+                              ? Center(
+                                child: Text(
+                                  'No matches',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              )
                               : ListView.builder(
                                 itemCount: localFiltered.length,
                                 itemBuilder: (context, index) {
                                   final item = localFiltered[index];
                                   return ListTile(
                                     title: Text(item.name),
+                                    tileColor:
+                                        index % 2 == 0
+                                            ? Colors.grey.shade50
+                                            : null,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                     onTap: () async {
                                       await _addDietaryRequirement(item.id);
                                       if (!dialogContext.mounted) return;
@@ -187,10 +295,20 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                     Navigator.of(context).pop();
                     _openCustomCreationDialog();
                   },
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                  ),
                   child: const Text('Create custom'),
                 ),
-                TextButton(
+                OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey[700],
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   child: const Text('Cancel'),
                 ),
               ],
@@ -203,6 +321,9 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -213,13 +334,17 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Dietary Requirements',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                    fontSize: 16,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: Icon(Icons.add, color: colorScheme.primary),
                   onPressed: _openAddDialog,
                 ),
               ],
