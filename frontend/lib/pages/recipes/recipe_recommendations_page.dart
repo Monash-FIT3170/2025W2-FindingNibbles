@@ -16,9 +16,9 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
   Color _getDifficultyColor(RecipeDifficulty diff, ColorScheme cs) {
     switch (diff) {
       case RecipeDifficulty.hard:
-        return Colors.red;
+        return cs.error; // Using semantic color
       case RecipeDifficulty.medium:
-        return Colors.orange;
+        return cs.tertiary; // Using semantic color
       default:
         return cs.primary;
     }
@@ -86,125 +86,159 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         padding: const EdgeInsets.all(16),
         itemCount: widget.recipes.length,
         itemBuilder: (context, index) {
-          final r = widget.recipes[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RecipeIngredientsPage(recipe: r),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha((0.05 * 255).round()),
-                    blurRadius: 6,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          final recipe = widget.recipes[index];
+          return _buildRecipeCard(recipe, index, textTheme, colorScheme);
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecipeCard(
+    RecipeModel recipe,
+    int index,
+    TextTheme textTheme,
+    ColorScheme colorScheme,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RecipeIngredientsPage(recipe: recipe),
+          ),
+        );
+      },
+      child: Container(
+        // Reduce bottom margin
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12), // Slightly smaller radius
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
+              blurRadius: 4, // Reduced blur
+              offset: const Offset(0, 2), // Reduced offset
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            _buildRecipeImage(recipe, textTheme, colorScheme),
+            _buildRecipeDetails(recipe, index, textTheme, colorScheme),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecipeImage(
+    RecipeModel recipe,
+    TextTheme textTheme,
+    ColorScheme colorScheme,
+  ) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          child: Container(
+            // Reduce height to half
+            height: 80,
+            width: double.infinity,
+            color: colorScheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.image,
+              // Keep icon size the same
+              size: 50,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Positioned(
+          right: 8,
+          top: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getDifficultyColor(recipe.difficultyLevel, colorScheme),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              recipe.difficultyLevel.name[0].toUpperCase() +
+                  recipe.difficultyLevel.name.substring(1),
+              // Keep text size the same
+              style: textTheme.labelSmall?.copyWith(
+                color: colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
               ),
-              child: Column(
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecipeDetails(
+    RecipeModel recipe,
+    int index,
+    TextTheme textTheme,
+    ColorScheme colorScheme,
+  ) {
+    return Padding(
+      // Reduce padding
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            recipe.title,
+            // Keep text size the same
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4), // Reduced spacing
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16),
-                        ),
-                        child: Image.asset(
-                          'imageUrl', // Placeholder for image URL, to be implemented
-                          height: 160,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getDifficultyColor(
-                              r.difficultyLevel,
-                              colorScheme,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            r.difficultyLevel.name[0].toUpperCase() +
-                                r.difficultyLevel.name.substring(1),
-                            style: textTheme.labelSmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.access_time,
+                    // Keep icon size the same
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          r.title,
-                          style: textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 16,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${r.estimatedTimeMinutes} min',
-                                  style: textTheme.labelMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                r.isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color:
-                                    r.isFavorite
-                                        ? Colors.red.shade800
-                                        : colorScheme.onSurfaceVariant,
-                              ),
-                              onPressed: () => _toggleFavorite(index),
-                            ),
-                          ],
-                        ),
-                      ],
+                  const SizedBox(width: 4),
+                  Text(
+                    '${recipe.estimatedTimeMinutes} min',
+                    // Keep text size the same
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
+              IconButton(
+                icon: Icon(
+                  recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  // Keep icon size the same
+                  size: 24,
+                  color: recipe.isFavorite
+                      ? colorScheme.error
+                      : colorScheme.onSurfaceVariant,
+                ),
+                // Reduce padding around the button
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+                padding: EdgeInsets.zero,
+                onPressed: () => _toggleFavorite(index),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
