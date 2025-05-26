@@ -257,77 +257,84 @@ class _RecipesPageState extends State<RecipesPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
-        child: isLoading
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+        // Add horizontal padding to the entire content
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: isLoading
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading recipe components...'),
+                    ],
+                  ),
+                )
+              : Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading recipe components...'),
+                    // Scrollable content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              // Adjust to vertical padding only since we have horizontal padding from parent
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: IngredientsInput(
+                                ingredients: ingredients,
+                                controller: _ingredientInputController,
+                                onAddIngredient: _addIngredient,
+                                onRemoveIngredient: _removeIngredient,
+                              ),
+                            ),
+                            DietaryRequirements(
+                              useDietaryRequirements: useDietaryRequirements,
+                              availableDietaries: availableDietaries,
+                              selectedDietaries: selectedDietaries,
+                              onToggleDietaryRequirements: _toggleDietaryRequirements,
+                              onToggleDietary: _toggleDietary,
+                              onToggleAll: _toggleAllDietaries,
+                              isDietarySelected: _isDietarySelected,
+                              areAllDietariesSelected: _areAllDietariesSelected,
+                            ),
+                            SizedBox(height: 24),
+                            RecipeDifficultySelector(
+                              selectedDifficulty: selectedDifficulty,
+                              onDifficultySelected: _setDifficulty,
+                            ),
+                            SizedBox(height: 24),
+                            AppliancesSelection(
+                              availableAppliances: availableAppliances,
+                              selectedAppliances: selectedAppliances,
+                              onToggleAppliance: _toggleAppliance,
+                              isApplianceSelected: _isApplianceSelected,
+                              areAllAppliancesSelected: _areAllAppliancesSelected,
+                              onToggleAll: _toggleAllAppliances,
+                            ),
+                            // Add bottom padding for scrollable content
+                            SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Fixed button at bottom
+                    Padding(
+                      // Adjust to vertical padding only since we have horizontal padding from parent
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _generateRecipes,
+                          icon: Icon(Icons.restaurant_menu),
+                          label: Text('Generate Recipes'),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              )
-            : Column(
-                children: [
-                  // Scrollable content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: IngredientsInput(
-                              ingredients: ingredients,
-                              controller: _ingredientInputController,
-                              onAddIngredient: _addIngredient,
-                              onRemoveIngredient: _removeIngredient,
-                            ),
-                          ),
-                          DietaryRequirements(
-                            useDietaryRequirements: useDietaryRequirements,
-                            availableDietaries: availableDietaries,
-                            selectedDietaries: selectedDietaries,
-                            onToggleDietaryRequirements: _toggleDietaryRequirements,
-                            onToggleDietary: _toggleDietary,
-                            onToggleAll: _toggleAllDietaries,
-                            isDietarySelected: _isDietarySelected,
-                            areAllDietariesSelected: _areAllDietariesSelected,
-                          ),
-                          SizedBox(height: 24),
-                          RecipeDifficultySelector(
-                            selectedDifficulty: selectedDifficulty,
-                            onDifficultySelected: _setDifficulty,
-                          ),
-                          SizedBox(height: 24),
-                          AppliancesSelection(
-                            availableAppliances: availableAppliances,
-                            selectedAppliances: selectedAppliances,
-                            onToggleAppliance: _toggleAppliance,
-                            isApplianceSelected: _isApplianceSelected,
-                            areAllAppliancesSelected: _areAllAppliancesSelected,
-                            onToggleAll: _toggleAllAppliances,
-                          ),
-                          SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Fixed button at bottom
-                  Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _generateRecipes,
-                        icon: Icon(Icons.restaurant_menu),
-                        label: Text('Generate Recipes'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        ),
       ),
     );
   }
