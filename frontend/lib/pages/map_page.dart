@@ -533,7 +533,9 @@ class _MapPageState extends State<MapPage> {
                                                       ),
                                                       TextSpan(
                                                         text:
-                                                            '${restaurant.formattedPhoneNum}',
+                                                            restaurant
+                                                                .formattedPhoneNum ??
+                                                            'Not available',
                                                       ),
                                                     ],
                                                   ),
