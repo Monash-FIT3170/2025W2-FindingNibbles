@@ -3,7 +3,7 @@ import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/recipe_model.dart'; // Add this import
 
-enum RecipeDifficulty { easy, medium, hard, any }
+enum RecipeDifficulty { any, easy, medium, hard }
 
 class RecipeService {
   final Dio _dio = DioClient().client;
