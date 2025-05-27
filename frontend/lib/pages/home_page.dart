@@ -38,7 +38,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchRestaurants() async {
     setState(() => _isLoading = true);
     try {
-      final allRestaurants = await RestaurantService().getAllRestaurants();
+      final allRestaurants = _selectedCuisine != null
+        ? await RestaurantService().getRestaurantsByCuisine(
+          cuisineId: _selectedCuisine!.id,
+            orderBy: 'rating',
+          )
+        : await RestaurantService().getAllRestaurants(orderBy: 'rating');
       setState(() {
         _restaurants = allRestaurants;
         _isLoading = false;
@@ -47,6 +52,60 @@ class _HomePageState extends State<HomePage> {
       debugPrint('Error fetching restaurants: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+    void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Filter Restaurants'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.restaurant_menu),
+                    title: const Text('Cuisine'),
+                    subtitle: DropdownButton<CuisineDto?>(
+                      value: _selectedCuisine,
+                      isExpanded: true,
+                      items: [
+                        const DropdownMenuItem<CuisineDto?>(
+                          value: null,
+                          child: Text('All'),
+                        ),
+                        ..._availableCuisines.map((cuisine) => DropdownMenuItem(
+                              value: cuisine,
+                              child: Text(cuisine.name),
+                            )),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _selectedCuisine = value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _fetchRestaurants();
+                  },
+                  child: const Text('Apply'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   // assuming RestaurantDto has priceLevel or similar, otherwise adapt
@@ -66,6 +125,12 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Nearby Restaurants'),
         automaticallyImplyLeading: false, // Hide back button
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_alt_rounded),
+            onPressed: _showFilterDialog,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
