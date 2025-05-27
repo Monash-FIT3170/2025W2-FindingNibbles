@@ -100,7 +100,7 @@ class _LikedPageState extends State<LikedPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
+                                    color: Colors.grey,
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -185,7 +185,7 @@ class _LikedPageState extends State<LikedPage> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
+                                    color: Colors.grey,
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),

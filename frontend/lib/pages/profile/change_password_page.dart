@@ -24,6 +24,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final confirmPassword = confirmPasswordController.text.trim();
 
     if (oldPassword.isEmpty || newPassword.isEmpty || confirmPassword.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -31,6 +32,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
 
     if (newPassword != confirmPassword) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('New passwords do not match')),
       );
@@ -43,19 +45,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       confirmPassword,
     );
 
-    if (context.mounted) {
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully')),
-        );
-        Navigator.pop(context); // Go back after success
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Current password was entered incorrectly'),
-          ),
-        );
-      }
+    if (!mounted) return; // Properly check if widget is still mounted
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password changed successfully')),
+      );
+      Navigator.pop(context); // Go back after success
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Current password was entered incorrectly'),
+        ),
+      );
     }
   }
 
