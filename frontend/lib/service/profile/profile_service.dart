@@ -166,7 +166,7 @@ class ProfileService {
 
   Future<void> addFavouriteRecipe(RecipeModel recipe) async {
     try {
-      _logger.d('Adding recipe with ID: ${recipe}'); // Log the recipe ID
+      _logger.d('Adding recipe with ID: $recipe'); // Log the recipe ID
       final recipeId = await _recipeService.createRecipe(recipe);
 
       _logger.d(
