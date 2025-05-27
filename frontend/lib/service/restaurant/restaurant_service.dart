@@ -39,4 +39,66 @@ class RestaurantService {
       return [];
     }
   }
+
+  /// get restaurants by cuisine only (no bounds), with optional pagination/sorting
+  Future<List<RestaurantDto>> getRestaurantsByCuisine({
+    required int cuisineId,
+    int? skip,
+    int? take,
+    String? orderBy, // 'rating' or 'popular'
+  }) async {
+    try {
+      final queryParams = {
+        'cuisineId': cuisineId,
+        if (skip != null) 'skip': skip,
+        if (take != null) 'take': take,
+        if (orderBy != null) 'orderBy': orderBy,
+      };
+
+      final response = await _dio.get(
+        'restaurant',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data.map((json) => RestaurantDto.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load restaurants by cuisine');
+      }
+    } catch (e) {
+      debugPrint('Error fetching restaurants by cuisine: $e');
+      return [];
+    }
+  }
+
+  /// get all restaurants with optional pagination and sorting (no filters)
+  Future<List<RestaurantDto>> getAllRestaurants({
+    int? skip,
+    int? take,
+    String? orderBy, // 'rating' or 'popular'
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        if (skip != null) 'skip': skip,
+        if (take != null) 'take': take,
+        if (orderBy != null) 'orderBy': orderBy,
+      };
+
+      final response = await _dio.get(
+        'restaurant',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data.map((json) => RestaurantDto.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load all restaurants');
+      }
+    } catch (e) {
+      debugPrint('Error fetching all restaurants: $e');
+      return [];
+    }
+  }
 }
