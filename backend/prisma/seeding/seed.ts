@@ -12,8 +12,7 @@
 // npx prisma studio
 
 import { PrismaClient } from '../../generated/prisma';
-import { restaurants } from './seedConstants';
-import { dietaryRequirements } from './seedConstants';
+import { restaurants, dietaryRequirements, appliances } from './seedConstants';
 import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
@@ -198,6 +197,52 @@ async function main(): Promise<void> {
         },
       });
       console.log(`Created dietary Requirement: ${dietary.name}`);
+    }
+
+    // Create appliances
+    console.log('Creating appliances...');
+    for (const appliance of appliances) {
+      await prisma.appliance.upsert({
+        where: {
+          id:
+            (
+              await prisma.appliance.findFirst({
+                where: { name: appliance.name },
+              })
+            )?.id || 0,
+        },
+        update: {}, // No updates needed if it exists
+        create: {
+          name: appliance.name,
+        },
+      });
+      console.log(`Created appliance: ${appliance.name}`);
+    }
+
+    // Add random appliances to default user
+    console.log('Adding random appliances for the default user...');
+    const allAppliances = await prisma.appliance.findMany();
+    if (allAppliances.length >= 3) {
+      const randomAppliances = allAppliances
+        .sort(() => 0.5 - Math.random()) // Shuffle the array
+        .slice(0, 3); // Take 3 random appliances
+
+      for (const appliance of randomAppliances) {
+        await prisma.userAppliance.upsert({
+          where: {
+            userId_applianceId: {
+              userId: defaultUser.id,
+              applianceId: appliance.id,
+            },
+          },
+          update: {}, // No update needed if it exists
+          create: {
+            userId: defaultUser.id,
+            applianceId: appliance.id,
+          },
+        });
+        console.log(`Added appliance to user: ${appliance.name}`);
+      }
     }
 
     console.log('Seeding completed');

@@ -120,9 +120,25 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
       );
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks.first;
+        // Get a more readable street address to display and store that includes street, suburb and city
+        final String streetPart =
+            place.street?.isNotEmpty == true
+                ? place.street!
+                : '${place.thoroughfare ?? ''} ${place.subThoroughfare ?? ''}'
+                    .trim();
+
+        final String suburbAndCity = [
+          place.locality, // suburb/neighborhood
+          place.subAdministrativeArea, // city
+        ].where((part) => part != null && part.isNotEmpty).join(', ');
+
         setState(() {
           selectedAddressName =
-              '${place.street}, ${place.locality}, ${place.postalCode}, ${place.country}';
+              streetPart.isNotEmpty
+                  ? suburbAndCity.isNotEmpty
+                      ? '$streetPart, $suburbAndCity'
+                      : streetPart
+                  : '${place.locality}, ${place.postalCode}, ${place.country}';
         });
       } else {
         setState(() {
@@ -147,7 +163,9 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
   void _saveLocation() {
     if (selectedLocation != null) {
       final Map<String, dynamic> result = {
-        'name': 'Home',
+        'name':
+            selectedAddressName ??
+            'Home', // Use the street address with suburb/city
         'latitude': selectedLocation!.latitude,
         'longitude': selectedLocation!.longitude,
         'isDefault': true,

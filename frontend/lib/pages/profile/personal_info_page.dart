@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
+import 'package:nibbles/service/profile/user_location_dto.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/profile/change_password_page.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/profile/location_selection_page.dart';
+import 'package:latlong2/latlong.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
@@ -17,18 +20,114 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
   final AuthService _authService = AuthService();
   final ProfileService _profileService = ProfileService();
   late Future<Map<String, dynamic>> _personalInfo;
+  UserLocationDto? _homeLocation;
   final _logger = getLogger();
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _fetchHomeLocation();
   }
 
   Future<void> _loadUserInfo() async {
     setState(() {
       _personalInfo = _authService.getUserProfile();
     });
+  }
+
+  Future<void> _fetchHomeLocation() async {
+    try {
+      final location = await _profileService.getDefaultLocation();
+      setState(() {
+        _homeLocation = location;
+      });
+    } catch (e) {
+      _logger.d('Failed to fetch home location: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load home location: $e')),
+      );
+    }
+  }
+
+  Future<void> _navigateToLocationSelection({
+    UserLocationDto? initialLocation,
+  }) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => LocationSelectionPage(
+              initialLocation:
+                  initialLocation != null
+                      ? LatLng(
+                        initialLocation.latitude,
+                        initialLocation.longitude,
+                      )
+                      : null,
+              initialLocationId: initialLocation?.id,
+            ),
+      ),
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final String name = result['name'];
+      final String streetAddress = result['streetAddress'] ?? '';
+      final double latitude = result['latitude'];
+      final double longitude = result['longitude'];
+      final bool isDefault = result['isDefault'];
+      final int? id = result['id'] as int?;
+
+      try {
+        if (id == null) {
+          // CREATE new location
+          final newLocation = await _profileService.createLocation(
+            CreateUserLocationDto(
+              name: name,
+              streetAddress: streetAddress,
+              latitude: latitude,
+              longitude: longitude,
+              isDefault: isDefault,
+            ),
+          );
+          setState(() {
+            _homeLocation = newLocation;
+          });
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Home location added successfully!')),
+          );
+        } else {
+          // UPDATE existing location
+          final updatedLocation = await _profileService.updateLocation(
+            id,
+            UpdateUserLocationDto(
+              id: id,
+              name: name,
+              streetAddress: streetAddress,
+              latitude: latitude,
+              longitude: longitude,
+              isDefault: isDefault,
+            ),
+          );
+          setState(() {
+            _homeLocation = updatedLocation;
+          });
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Home location updated successfully!'),
+            ),
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save location: $e')));
+      }
+    }
   }
 
   @override
@@ -130,74 +229,68 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                     ),
                   ),
                   child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          _buildInfoField(
-                            context,
-                            'First Name',
-                            user['firstName'] ?? 'Example First Name',
-                            onEdit:
-                                (value) =>
-                                    _handleFieldUpdate('firstName', value),
-                          ),
-                          _buildDivider(),
-                          _buildInfoField(
-                            context,
-                            'Last Name',
-                            user['lastName'] ?? 'Example Last Name',
-                            onEdit:
-                                (value) =>
-                                    _handleFieldUpdate('lastName', value),
-                          ),
-                          _buildDivider(),
-                          _buildInfoField(
-                            context,
-                            'Email',
-                            user['email'] ?? 'example@mail.com',
-                            onEdit:
-                                (value) => _handleFieldUpdate('email', value),
-                          ),
-                          _buildDivider(),
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFormField(
+                          context,
+                          'First Name',
+                          user['firstName'] ?? 'Example First Name',
+                          Icons.badge_outlined,
+                          onEdit:
+                              (value) => _handleFieldUpdate('firstName', value),
+                        ),
+                        _buildFormField(
+                          context,
+                          'Last Name',
+                          user['lastName'] ?? 'Example Last Name',
+                          Icons.badge_outlined,
+                          onEdit:
+                              (value) => _handleFieldUpdate('lastName', value),
+                        ),
+                        _buildFormField(
+                          context,
+                          'Email',
+                          user['email'] ?? 'example@mail.com',
+                          Icons.email_outlined,
+                          onEdit: (value) => _handleFieldUpdate('email', value),
+                        ),
+                        _buildLocationField(context),
 
-                          // Change Password button
-                          const SizedBox(height: 32),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const ChangePasswordPage(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade500,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 32),
+
+                        // Change Password button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const ChangePasswordPage(),
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  Colors.grey[600], // Gray background
+                              foregroundColor: Colors.white,
+                              elevation: 0, // Flat button style
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text('Change Password'),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.lock, size: 20),
-                                ],
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            icon: const Icon(Icons.lock_outline),
+                            label: const Text(
+                              'Change Password',
+                              style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -209,44 +302,105 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
     );
   }
 
-  Widget _buildInfoField(
+  // New method to build form-style fields
+  Widget _buildFormField(
     BuildContext context,
     String label,
-    String value, {
+    String value,
+    IconData icon, { // Keep the parameter for backward compatibility
     required Function(String) onEdit,
+    bool enabled = true,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: AppTheme.colorScheme.primary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: ListTile(
+        // Remove the leading icon
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                value,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        trailing:
+            enabled
+                ? IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  color: AppTheme.primaryColor,
+                  onPressed:
+                      () => _showEditDialog(context, label, value, onEdit),
+                )
+                : null,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      ),
+    );
+  }
+
+  // Updated location field to match the new design without the leading icon
+  Widget _buildLocationField(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: ListTile(
+        // Remove the leading icon
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Home Location',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.edit,
-                  color: AppTheme.colorScheme.primary,
-                  size: 20,
-                ),
-                onPressed: () => _showEditDialog(context, label, value, onEdit),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _homeLocation != null
+                  ? (_homeLocation!.streetAddress?.isNotEmpty ?? false
+                      ? _homeLocation!.streetAddress!
+                      : _homeLocation!.name)
+                  : 'No home location set',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                fontStyle:
+                    _homeLocation == null ? FontStyle.italic : FontStyle.normal,
+                color: _homeLocation == null ? Colors.grey : Colors.black,
               ),
-            ],
+            ),
+          ],
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            _homeLocation != null ? Icons.edit_location : Icons.add_location,
+            color: AppTheme.primaryColor,
           ),
-        ],
+          onPressed:
+              () =>
+                  _navigateToLocationSelection(initialLocation: _homeLocation),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }
@@ -288,10 +442,6 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
         );
       },
     );
-  }
-
-  Widget _buildDivider() {
-    return const Divider(thickness: 1);
   }
 
   Future<void> _handleFieldUpdate(String fieldName, String newValue) async {
