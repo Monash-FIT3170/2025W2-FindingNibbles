@@ -40,7 +40,9 @@ class TitlePage extends StatelessWidget {
               // description
               Text(
                 'AI-powered dining decisions - so you never have to “nibble” on indecision again',
-                style: AppTheme.textTheme.bodyMedium,
+                style: AppTheme.textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.colorScheme.onPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
