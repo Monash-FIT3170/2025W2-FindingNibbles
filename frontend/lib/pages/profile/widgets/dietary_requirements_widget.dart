@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class DietaryRequirementsWidget extends StatefulWidget {
   final List<DietaryRequirementDto> dietaryRequirements;
@@ -98,52 +99,12 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  labelStyle: TextStyle(color: colorScheme.primary),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                ),
+                decoration: InputDecoration(labelText: 'Name'),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  labelStyle: TextStyle(color: colorScheme.primary),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: colorScheme.primary,
-                      width: 2,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                ),
+                decoration: InputDecoration(labelText: 'Description'),
                 maxLines: 2,
               ),
             ],
@@ -222,23 +183,6 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                           Icons.search,
                           color: colorScheme.primary,
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -261,7 +205,7 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                               ? Center(
                                 child: Text(
                                   'No matches',
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: AppTheme.textTheme.displayMedium,
                                 ),
                               )
                               : ListView.builder(
@@ -303,13 +247,21 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey[700],
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.primaryColor,
                     side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                   ),
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ),
               ],
             );
