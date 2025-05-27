@@ -31,43 +31,32 @@ class RestaurantCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         child: Stack(
           children: [
-            // Background image layer
+            // Always show the default image as background
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child:
-                  restaurant.icon != null && restaurant.icon!.isNotEmpty
-                      ? Image.network(
-                        restaurant.icon!,
-                        height: adjustedHeight,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: adjustedHeight,
-                            width: double.infinity,
-                            color: Colors.grey[300],
-                            child:
-                                placeholder ??
-                                Icon(
-                                  Icons.restaurant,
-                                  size: 50,
-                                  color: Colors.grey[700],
-                                ),
-                          );
-                        },
-                      )
-                      : Container(
-                        height: adjustedHeight,
-                        width: double.infinity,
-                        color: Colors.grey[300],
-                        child:
-                            placeholder ??
-                            Icon(
-                              Icons.restaurant,
-                              size: 50,
-                              color: Colors.grey[700],
-                            ),
-                      ),
+              child: Image.asset(
+                'assets/images/default_restaurant.jpg',
+                height: adjustedHeight,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint("Error loading default restaurant image: $error");
+                  return Container(
+                    height: adjustedHeight,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: Center(
+                      child:
+                          placeholder ??
+                          Icon(
+                            Icons.restaurant,
+                            size: 50,
+                            color: Colors.grey[700],
+                          ),
+                    ),
+                  );
+                },
+              ),
             ),
 
             // Overlay layer for darkening
@@ -75,12 +64,7 @@ class RestaurantCard extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Color.fromRGBO(
-                    0,
-                    0,
-                    0,
-                    0.6,
-                  ), // Fixed opacity without withOpacity
+                  color: Color.fromRGBO(0, 0, 0, 0.6),
                 ),
               ),
             ),
