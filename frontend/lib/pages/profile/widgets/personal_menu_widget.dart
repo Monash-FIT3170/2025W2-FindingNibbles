@@ -5,8 +5,9 @@ import 'package:nibbles/pages/profile/personal_info_page.dart';
 class PersonalMenuWidget extends StatelessWidget {
   final VoidCallback onPersonalInfo;
   final VoidCallback onFavourites;
-  final VoidCallback? onMyReviews; // Nullable for now, as my reviews feature is not implemented yet
-  final bool isMyReviewsEnabled; 
+  final VoidCallback?
+  onMyReviews; // Nullable for now, as my reviews feature is not implemented yet
+  final bool isMyReviewsEnabled;
 
   const PersonalMenuWidget({
     super.key,
@@ -54,14 +55,21 @@ class PersonalMenuWidget extends StatelessWidget {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: Icon(Icons.star, color: isMyReviewsEnabled ? primary : disabledColor),
+            leading: Icon(
+              Icons.star,
+              color: isMyReviewsEnabled ? primary : disabledColor,
+            ),
             title: Text(
               'My Reviews',
               style: TextStyle(
                 color: isMyReviewsEnabled ? null : disabledColor,
               ),
             ),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: isMyReviewsEnabled ? null : disabledColor),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: isMyReviewsEnabled ? null : disabledColor,
+            ),
             enabled: isMyReviewsEnabled,
             onTap: isMyReviewsEnabled ? onMyReviews : null,
           ),
