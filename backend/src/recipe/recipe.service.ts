@@ -1,12 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { Prisma } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
 import { ConfigService } from '@nestjs/config';
 import { getErrorMessage } from 'src/utils';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { RecipeResponseDto } from './dto/recipe-response.dto';
+import { Prisma } from 'generated/prisma';
+import {
+  RecipeFromFrontEnd,
+  RecipeResponseDto,
+} from './dto/recipe-response.dto';
 
 type RecipeGenerated = {
   title: string;
@@ -176,6 +179,7 @@ export class RecipeService {
       }
 
       const recipeResponse = plainToInstance(RecipeResponseDto, parsed);
+
       const errors = await validate(recipeResponse);
 
       if (errors.length > 0) {
@@ -212,16 +216,95 @@ export class RecipeService {
   }
 
   async validateAndGetCuisine(cuisineName: string) {
-    const existingCuisine = await this.db.cuisine.findFirst({
-      where: {
-        name: cuisineName.toLowerCase(),
-      },
-    });
-    return existingCuisine;
-  }
+    try {
+      // Handle empty or null cuisine names
+      if (!cuisineName || cuisineName.trim() === '') {
+        cuisineName = 'Other';
+      }
 
-  async create(recipe: Prisma.RecipeCreateInput) {
-    return this.db.recipe.create({ data: recipe });
+      // Normalize the cuisine name for comparison (lowercase)
+      const normalizedName = cuisineName.trim().toLowerCase();
+
+      // Try to find the cuisine case-insensitively
+      const existingCuisine = await this.db.cuisine.findFirst({
+        where: {
+          name: {
+            equals: normalizedName,
+            mode: 'insensitive', // Case-insensitive search
+          },
+        },
+      });
+
+      // If found, return it
+      if (existingCuisine) {
+        console.log(
+          `Found existing cuisine: ${existingCuisine.name} with ID ${existingCuisine.id}`,
+        );
+        return existingCuisine;
+      }
+
+      // If not found, create it with proper capitalization
+      // Capitalize first letter of each word
+      const capitalizedName = cuisineName
+        .trim()
+        .split(' ')
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+        )
+        .join(' ');
+
+      console.log(`Creating new cuisine: ${capitalizedName}`);
+      return await this.db.cuisine.create({
+        data: {
+          name: capitalizedName,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error in validateAndGetCuisine: ${error.message}`);
+      } else {
+        console.error('Error in validateAndGetCuisine: Unknown error');
+      }
+
+      // If there was an error (likely a duplicate), try to find the cuisine again
+      if ((error as { code?: string }).code === 'P2002') {
+        // Unique constraint failed
+        const normalizedName = cuisineName.trim().toLowerCase();
+        const existingCuisine = await this.db.cuisine.findFirst({
+          where: {
+            name: {
+              equals: normalizedName,
+              mode: 'insensitive',
+            },
+          },
+        });
+
+        if (existingCuisine) {
+          return existingCuisine;
+        }
+      }
+
+      // If all else fails, use a default cuisine
+      const defaultCuisine = await this.db.cuisine.findFirst({
+        where: {
+          name: {
+            equals: 'other',
+            mode: 'insensitive',
+          },
+        },
+      });
+
+      if (defaultCuisine) {
+        return defaultCuisine;
+      }
+
+      // If no default cuisine exists, create it
+      return await this.db.cuisine.create({
+        data: {
+          name: 'Other',
+        },
+      });
+    }
   }
 
   async findAll() {
@@ -238,5 +321,161 @@ export class RecipeService {
         id,
       },
     });
+  }
+
+  async delete(id: number) {
+    const recipe = await this.db.recipe.findUnique({
+      where: { id },
+    });
+    if (!recipe) {
+      throw new BadRequestException(`Recipe with ID ${id} not found`);
+    }
+    return this.db.recipe.delete({
+      where: { id },
+    });
+  }
+
+  async prepareRecipeForCreation(
+    recipeData: RecipeFromFrontEnd,
+  ): Promise<Prisma.RecipeCreateInput> {
+    try {
+      console.log('Recipe data received in prepareRecipeForCreation:');
+      console.log(JSON.stringify(recipeData, null, 2));
+
+      // Check for required fields with better error messages
+      if (!recipeData.title) {
+        throw new BadRequestException('Missing required field: title');
+      }
+      if (!recipeData.description) {
+        throw new BadRequestException('Missing required field: description');
+      }
+      if (
+        !recipeData.ingredients ||
+        !Array.isArray(recipeData.ingredients) ||
+        recipeData.ingredients.length === 0
+      ) {
+        throw new BadRequestException(
+          'Missing or invalid required field: ingredients',
+        );
+      }
+      if (
+        !recipeData.instructions ||
+        !Array.isArray(recipeData.instructions) ||
+        recipeData.instructions.length === 0
+      ) {
+        throw new BadRequestException(
+          'Missing or invalid required field: instructions',
+        );
+      }
+      if (
+        recipeData.estimatedTimeMinutes === undefined ||
+        recipeData.estimatedTimeMinutes === null
+      ) {
+        console.log(
+          'Warning: Missing estimatedTimeMinutes, defaulting to 30 minutes',
+        );
+        recipeData.estimatedTimeMinutes = 30;
+      }
+      if (!recipeData.servings) {
+        console.log('Warning: Missing servings, defaulting to 1');
+        recipeData.servings = 1;
+      }
+      if (
+        !recipeData.nutritionalInfo ||
+        !Array.isArray(recipeData.nutritionalInfo)
+      ) {
+        console.log(
+          'Warning: Missing nutritionalInfo, defaulting to empty array',
+        );
+        recipeData.nutritionalInfo = [];
+      }
+      if (!recipeData.difficultyLevel) {
+        console.log('Warning: Missing difficultyLevel, defaulting to easy');
+        recipeData.difficultyLevel = RecipeDifficulty.EASY;
+      }
+      if (!recipeData.cuisine) {
+        console.log('Warning: Missing cuisine, defaulting to Other');
+        recipeData.cuisine = 'Other';
+      }
+
+      // Ensure proper enum values for difficultyLevel
+      let validatedDifficultyLevel: RecipeDifficulty;
+      try {
+        validatedDifficultyLevel = Object.values(RecipeDifficulty).includes(
+          recipeData.difficultyLevel,
+        )
+          ? recipeData.difficultyLevel
+          : RecipeDifficulty.EASY;
+      } catch {
+        console.log(
+          `Invalid difficulty level: ${recipeData.difficultyLevel}, defaulting to easy`,
+        );
+        validatedDifficultyLevel = RecipeDifficulty.EASY;
+      }
+
+      // Handle cuisine - find or create with better error handling
+      let recipeCuisine: { id: number; name: string } | null;
+      try {
+        recipeCuisine = (await this.validateAndGetCuisine(
+          recipeData.cuisine,
+        )) as { id: number; name: string };
+      } catch {
+        // Create a default cuisine
+        recipeCuisine = (await this.validateAndGetCuisine('Other')) as {
+          id: number;
+          name: string;
+        };
+      }
+
+      // Transform RecipeDataDto to Recipe entity format
+      const recipeToCreate = {
+        title: recipeData.title,
+        description: recipeData.description,
+        estimatedTimeMinutes: recipeData.estimatedTimeMinutes,
+        servings: recipeData.servings,
+        ingredients: recipeData.ingredients,
+        instructions: recipeData.instructions,
+        nutritionalInfo: recipeData.nutritionalInfo,
+        difficultyLevel: validatedDifficultyLevel,
+        cuisine: {
+          connect: {
+            id: recipeCuisine.id,
+          },
+        },
+        // Add any other fields needed by the database schema
+      };
+
+      // Log the recipe data being created
+      console.log('Recipe data prepared for creation:');
+      console.log(JSON.stringify(recipeToCreate, null, 2));
+
+      return recipeToCreate;
+    } catch (error) {
+      // More detailed error logging
+      console.error('Error in prepareRecipeForCreation:');
+      console.error(error);
+      const errorMessage = getErrorMessage(error);
+      throw new BadRequestException(
+        `Failed to prepare recipe for creation: ${errorMessage}`,
+      );
+    }
+  }
+
+  async createFromDto(recipeDto: RecipeFromFrontEnd): Promise<number> {
+    console.log('Recipe data received for creation:');
+
+    // Prepare the recipe data with proper validation and transformations
+    const recipeData = await this.prepareRecipeForCreation(recipeDto);
+
+    console.log(JSON.stringify(recipeData, null, 2));
+
+    // Create the recipe in the database
+    const newRecipe = await this.db.recipe.create({
+      data: recipeData,
+    });
+
+    console.log(`Recipe created with ID: ${newRecipe.id}`);
+
+    return newRecipe.id;
   }
 }

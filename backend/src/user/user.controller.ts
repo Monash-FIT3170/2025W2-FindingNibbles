@@ -117,11 +117,18 @@ export class UserController {
   }
 
   @Delete('favourite-recipe')
-  unfavouriteRecipe(
+  async unfavouriteRecipe(
     @Req() req: RequestUser,
     @Body('recipeId') recipeId: number,
   ) {
-    return this.userService.unfavouriteRecipe(req.user.sub, recipeId);
+    this.logger.log(
+      `User ${req.user.sub} is unfavoriting and deleting recipe ${recipeId}`,
+    );
+    await this.userService.unfavouriteRecipe(req.user.sub, recipeId);
+    return {
+      success: true,
+      message: 'Recipe unfavorited and deleted successfully',
+    };
   }
 
   @Patch('update')

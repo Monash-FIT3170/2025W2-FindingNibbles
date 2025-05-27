@@ -1,15 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/recipes/recipe_model.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
+  final RecipeService _recipeService = RecipeService();
   final _logger = getLogger();
 
   /// Dietary Requirements
@@ -161,8 +164,14 @@ class ProfileService {
     }
   }
 
-  Future<void> addFavouriteRecipe(int recipeId) async {
+  Future<void> addFavouriteRecipe(RecipeModel recipe) async {
     try {
+      _logger.d('Adding recipe with ID: ${recipe}'); // Log the recipe ID
+      final recipeId = await _recipeService.createRecipe(recipe);
+
+      _logger.d(
+        'Recipe created with ID: $recipeId',
+      ); // Log the created recipe ID
       final response = await _dio.post(
         '/user/favourite-recipe',
         data: {'recipeId': recipeId}, // Send recipeId as JSON
@@ -177,15 +186,23 @@ class ProfileService {
 
   Future<void> removeFavouriteRecipe(int recipeId) async {
     try {
+      // First, remove the recipe from favorites in the backend
       final response = await _dio.delete(
         '/user/favourite-recipe',
-        data: {'recipeId': recipeId}, // Send recipeId as JSON
+        data: {'recipeId': recipeId},
       );
+
       if (response.statusCode != 200) {
-        throw Exception('Failed to remove recipe');
+        throw Exception('Failed to remove recipe from favorites');
+      }
+      try {} catch (deleteError) {
+        // Log the error but don't rethrow - we've already unfavorited successfully
+        _logger.w(
+          'Could not delete recipe from database but unfavorited successfully: $deleteError',
+        );
       }
     } catch (e) {
-      throw Exception('Failed to remove recipe: $e');
+      throw Exception('Failed to remove recipe from favorites: $e');
     }
   }
 

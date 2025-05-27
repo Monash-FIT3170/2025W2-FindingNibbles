@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, Restaurant, Recipe } from 'generated/prisma';
+import { Prisma, Restaurant } from 'generated/prisma';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
 import {
@@ -9,6 +9,7 @@ import {
 import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
 
 @Injectable()
 export class UserService {
@@ -187,17 +188,34 @@ export class UserService {
    * Recipe specific user
    */
 
-  async getFavouritedRecipe(userId: number): Promise<Recipe[]> {
+  async getFavouritedRecipe(userId: number): Promise<RecipeDto[]> {
     const favouritedRecipes = await this.db.userFavouritedRecipe.findMany({
       where: {
         userId,
       },
       include: {
-        recipe: true,
+        recipe: {
+          include: {
+            cuisine: true,
+          },
+        },
       },
     });
 
-    return favouritedRecipes.map((fav) => fav.recipe);
+    return favouritedRecipes.map((fav) => ({
+      id: fav.recipe.id,
+      title: fav.recipe.title,
+      description: fav.recipe.description,
+      ingredients: fav.recipe.ingredients,
+      instructions: fav.recipe.instructions,
+      estimatedTimeMinutes: fav.recipe.estimatedTimeMinutes,
+      servings: fav.recipe.servings,
+      nutritionalInfo: fav.recipe.nutritionalInfo,
+      difficultyLevel: fav.recipe.difficultyLevel,
+      cuisine: fav.recipe.cuisine?.name || 'Other',
+      cuisineId: fav.recipe.cuisine?.id ?? 0, // Default to 0 if null
+      dietaryTags: fav.recipe.dietaryTags || [],
+    }));
   }
 
   async favouriteRecipe(userId: number, recipeId: number) {
@@ -209,10 +227,33 @@ export class UserService {
     });
   }
 
+  /**
+   * Remove a recipe from user's favorites and delete the recipe
+   * @param userId User ID
+   * @param recipeId Recipe ID to unfavorite and delete
+   */
   async unfavouriteRecipe(userId: number, recipeId: number) {
+    this.logger.log(`Unfavoriting recipe ${recipeId} for user ${userId}`);
+
+    // First remove the favorite relationship
     await this.db.userFavouritedRecipe.deleteMany({
       where: { userId, recipeId },
     });
+
+    this.logger.log(
+      `Favorite relationship removed, now attempting to delete recipe ${recipeId}`,
+    );
+
+    // Then delete the recipe itself
+    try {
+      await this.db.recipe.delete({
+        where: { id: recipeId },
+      });
+      this.logger.log(`Recipe ${recipeId} successfully deleted`);
+    } catch {
+      // We don't throw here because the unfavorite operation succeeded
+      // This is just a cleanup step
+    }
   }
 
   async getProfile(userId: number) {
