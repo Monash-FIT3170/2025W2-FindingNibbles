@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class CookingAppliancesWidget extends StatefulWidget {
   final List<ApplianceRequirementDto> appliances;
@@ -58,9 +59,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
   }
 
   void _openAddDialog() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -77,7 +75,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
               title: Text(
                 'Add Appliance',
                 style: TextStyle(
-                  color: colorScheme.primary,
+                  color: AppTheme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -89,10 +87,12 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                     TextField(
                       decoration: InputDecoration(
                         labelText: 'Search',
-                        labelStyle: TextStyle(color: colorScheme.primary),
+                        labelStyle: TextStyle(
+                          color: AppTheme.colorScheme.primary,
+                        ),
                         prefixIcon: Icon(
                           Icons.search,
-                          color: colorScheme.primary,
+                          color: AppTheme.colorScheme.primary,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -101,7 +101,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: colorScheme.primary,
+                            color: AppTheme.colorScheme.primary,
                             width: 2,
                           ),
                         ),
@@ -165,13 +165,21 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey[700],
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.primaryColor,
                     side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                   ),
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ),
               ],
             );

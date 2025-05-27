@@ -1,6 +1,7 @@
 class UserLocationDto {
   final int? id;
   final String name;
+  final String? streetAddress; // Optional field for street address
   final double latitude;
   final double longitude;
   final bool isDefault; // Added this field
@@ -8,6 +9,7 @@ class UserLocationDto {
   UserLocationDto({
     this.id,
     required this.name,
+    this.streetAddress, // Optional field
     required this.latitude,
     required this.longitude,
     this.isDefault = false, // Default to false
@@ -17,6 +19,7 @@ class UserLocationDto {
     return UserLocationDto(
       id: json['id'],
       name: json['name'],
+      streetAddress: json['streetAddress'], // Optional field
       latitude: json['latitude'].toDouble(),
       longitude: json['longitude'].toDouble(),
       isDefault: json['isDefault'] ?? false, // Handle null case
@@ -27,6 +30,7 @@ class UserLocationDto {
     return {
       'id': id,
       'name': name,
+      'streetAddress': streetAddress, // Optional field
       'latitude': latitude,
       'longitude': longitude,
       'isDefault': isDefault,
@@ -36,12 +40,14 @@ class UserLocationDto {
 
 class CreateUserLocationDto {
   final String name;
+  final String? streetAddress; // Optional field for street address
   final double latitude;
   final double longitude;
   final bool? isDefault;
 
   CreateUserLocationDto({
     required this.name,
+    this.streetAddress, // Optional field
     required this.latitude,
     required this.longitude,
     this.isDefault,
@@ -50,6 +56,7 @@ class CreateUserLocationDto {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'streetAddress': streetAddress, // Optional field
       'latitude': latitude,
       'longitude': longitude,
       if (isDefault != null) 'isDefault': isDefault,
@@ -60,6 +67,7 @@ class CreateUserLocationDto {
 class UpdateUserLocationDto {
   final int id;
   final String? name;
+  final String? streetAddress; // Optional field for street address
   final double? latitude;
   final double? longitude;
   final bool? isDefault;
@@ -67,6 +75,7 @@ class UpdateUserLocationDto {
   UpdateUserLocationDto({
     required this.id,
     this.name,
+    this.streetAddress, // Optional field
     this.latitude,
     this.longitude,
     this.isDefault,
@@ -76,6 +85,7 @@ class UpdateUserLocationDto {
     return {
       'id': id,
       if (name != null) 'name': name,
+      if (streetAddress != null) 'streetAddress': streetAddress,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (isDefault != null) 'isDefault': isDefault,

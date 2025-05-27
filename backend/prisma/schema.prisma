@@ -42,13 +42,14 @@ model User {
 }
 
 model UserLocation {
-  id        Int    @id @default(autoincrement())
-  userId    Int
-  name      String // Home, Work, etc.
-  latitude  Float
-  longitude Float
-  isDefault Boolean @default(false)
-  user      User   @relation(fields: [userId], references: [id])
+  id            Int     @id @default(autoincrement())
+  userId        Int
+  name          String  @unique // Home, Work, etc.
+  streetAddress String?
+  latitude      Float
+  longitude     Float
+  isDefault     Boolean @default(false)
+  user          User    @relation(fields: [userId], references: [id])
 }
 
 model DietaryRequirement {

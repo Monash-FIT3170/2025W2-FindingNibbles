@@ -16,6 +16,10 @@ export class UpdateUserLocationDto {
   name?: string;
 
   @IsOptional()
+  @IsString()
+  streetAddress?: string;
+
+  @IsOptional()
   @IsNumber()
   @Min(-90)
   @Max(90)
