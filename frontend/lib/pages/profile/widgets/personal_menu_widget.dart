@@ -40,7 +40,6 @@ class PersonalMenuWidget extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
           ListTile(
             leading: Icon(Icons.favorite, color: primary),
             title: const Text('Favourites'),
@@ -53,7 +52,6 @@ class PersonalMenuWidget extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
           ListTile(
             leading: Icon(
               Icons.star,
