@@ -182,10 +182,10 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         elevation: 0,
         leading: BackButton(color: colorScheme.onSurface),
         title: Text(
-          widget.recipe.title,  // Changed from 'Recipe List' to actual recipe title
-          style: textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurface,
-          ),
+          widget
+              .recipe
+              .title, // Changed from 'Recipe List' to actual recipe title
+          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
         ),
       ),
       body: SafeArea(
@@ -239,9 +239,10 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
 
             // Content
             Expanded(
-              child: currentTab == 0
-                  ? _buildIngredientsList(textTheme, colorScheme)
-                  : _buildInstructionList(textTheme, colorScheme),
+              child:
+                  currentTab == 0
+                      ? _buildIngredientsList(textTheme, colorScheme)
+                      : _buildInstructionList(textTheme, colorScheme),
             ),
           ],
         ),
@@ -249,8 +250,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     );
   }
 
-  Widget _buildTab(String text, bool isSelected, VoidCallback onTap,
-      TextTheme textTheme, ColorScheme colorScheme) {
+  Widget _buildTab(
+    String text,
+    bool isSelected,
+    VoidCallback onTap,
+    TextTheme textTheme,
+    ColorScheme colorScheme,
+  ) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -261,7 +267,10 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
               child: Text(
                 text,
                 style: textTheme.labelLarge?.copyWith(
-                  color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                  color:
+                      isSelected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),

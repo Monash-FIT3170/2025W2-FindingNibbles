@@ -17,11 +17,15 @@ class RecipeRecommendationsPage extends StatefulWidget {
   });
 
   @override
-  State<RecipeRecommendationsPage> createState() => _RecipeRecommendationsPageState();
+  State<RecipeRecommendationsPage> createState() =>
+      _RecipeRecommendationsPageState();
 }
 
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
-  Color _getDifficultyColor(recipe_service.RecipeDifficulty diff, ColorScheme cs) {
+  Color _getDifficultyColor(
+    recipe_service.RecipeDifficulty diff,
+    ColorScheme cs,
+  ) {
     switch (diff) {
       case recipe_service.RecipeDifficulty.hard:
         return cs.error; // Using semantic color
@@ -45,21 +49,22 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
+          return Center(child: CircularProgressIndicator());
         },
       );
 
       // Get data from first recipe to reuse
       final firstRecipe = widget.recipes.first;
-      final recipeResults = await recipe_service.RecipeService().generateRecipes(
-        ingredients: firstRecipe.ingredients,
-        dietaryRequirements: widget.dietaryRequirements, // Use widget values
-        kitchenAppliances: widget.kitchenAppliances, // Use widget values
-        difficultyLevel: recipe_service.RecipeDifficulty.values
-            .firstWhere((e) => e.name == firstRecipe.difficultyLevel.name),
-      );
+      final recipeResults = await recipe_service.RecipeService()
+          .generateRecipes(
+            ingredients: firstRecipe.ingredients,
+            dietaryRequirements:
+                widget.dietaryRequirements, // Use widget values
+            kitchenAppliances: widget.kitchenAppliances, // Use widget values
+            difficultyLevel: recipe_service.RecipeDifficulty.values.firstWhere(
+              (e) => e.name == firstRecipe.difficultyLevel.name,
+            ),
+          );
 
       // Remove loading indicator
       if (!mounted) return;
@@ -70,11 +75,12 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => RecipeRecommendationsPage(
-            recipes: recipeResults,
-            dietaryRequirements: widget.dietaryRequirements,
-            kitchenAppliances: widget.kitchenAppliances,
-          ),
+          builder:
+              (context) => RecipeRecommendationsPage(
+                recipes: recipeResults,
+                dietaryRequirements: widget.dietaryRequirements,
+                kitchenAppliances: widget.kitchenAppliances,
+              ),
         ),
       );
     } catch (e) {
@@ -286,15 +292,13 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                   recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
                   // Keep icon size the same
                   size: 24,
-                  color: recipe.isFavorite
-                      ? colorScheme.error
-                      : colorScheme.onSurfaceVariant,
+                  color:
+                      recipe.isFavorite
+                          ? colorScheme.error
+                          : colorScheme.onSurfaceVariant,
                 ),
                 // Reduce padding around the button
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 32,
-                ),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
                 onPressed: () => _toggleFavorite(index),
               ),
