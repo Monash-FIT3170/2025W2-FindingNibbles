@@ -23,6 +23,9 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
   UserLocationDto? _homeLocation;
   final _logger = getLogger();
 
+  // Feature flag for profile picture editing
+  final bool _canEditProfilePicture = false; 
+
   @override
   void initState() {
     super.initState();
@@ -182,37 +185,35 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Stack(
                     children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: AppTheme.textBody,
-                          shape: BoxShape.circle,
-                        ),
-                        child: ClipOval(
-                          child: Icon(
-                            Icons.person,
-                            size: 80,
-                            color: AppTheme.textBody,
-                          ),
+                      // Placeholder for profile picture
+                      CircleAvatar(
+                        radius: 60, 
+                        backgroundColor: AppTheme.textBody,
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade800,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 24,
+
+                      // Conditional edit button not implemented yet
+                      if (_canEditProfilePicture)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade800,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
