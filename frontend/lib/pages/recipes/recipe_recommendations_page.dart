@@ -3,6 +3,8 @@ import 'recipe_ingredients_page.dart';
 import 'package:nibbles/pages/recipes/recipes_page.dart';
 import 'recipe_model.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/core/logger.dart';
 
 class RecipeRecommendationsPage extends StatefulWidget {
   final List<RecipeModel> recipes;
@@ -22,6 +24,9 @@ class RecipeRecommendationsPage extends StatefulWidget {
 }
 
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
+  final ProfileService _profileService = ProfileService();
+  final _logger = getLogger();
+
   Color _getDifficultyColor(
     recipe_service.RecipeDifficulty diff,
     ColorScheme cs,
@@ -36,10 +41,38 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     }
   }
 
-  void _toggleFavorite(int index) {
-    setState(() {
-      widget.recipes[index].isFavorite = !widget.recipes[index].isFavorite;
-    });
+  Future<void> _toggleFavorite(int index) async {
+    final recipe = widget.recipes[index];
+    final bool newFavoriteStatus = !recipe.isFavorite;
+
+    try {
+      // Update UI optimistically
+      setState(() {
+        recipe.isFavorite = newFavoriteStatus;
+      });
+
+      if (newFavoriteStatus) {
+        // Add to favorites if it was just favorited
+        await _profileService.addFavouriteRecipe(recipe);
+        _logger.d('Added recipe ${recipe.title} to favorites');
+      } // else {
+      //   // Remove from favorites if it was just unfavorited
+      //   await _profileService.removeFavouriteRecipe(recipe.id);
+      //   _logger.d('Removed recipe ${recipe.title} from favorites');
+      // }
+    } catch (e) {
+      // If there's an error, revert the UI change
+      setState(() {
+        recipe.isFavorite = !newFavoriteStatus;
+      });
+
+      _logger.e('Error toggling favorite status: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update favorite status: $e')),
+        );
+      }
+    }
   }
 
   void _reloadRecipes() async {
