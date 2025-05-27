@@ -21,7 +21,6 @@ class RecipeDifficultySelector extends StatelessWidget {
         Text('Recipe Difficulty', style: textTheme.titleMedium),
         Wrap(
           spacing: 8,
-          runSpacing: 8,
           children:
               RecipeDifficulty.values.map((difficulty) {
                 return ChoiceChip(
