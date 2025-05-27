@@ -197,7 +197,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
               height: 150,
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
