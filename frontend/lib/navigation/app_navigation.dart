@@ -36,8 +36,8 @@ class _AppNavigationState extends State<AppNavigation> {
             label: 'Map',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.menu_book),
-            icon: Icon(Icons.menu_book_outlined),
+            selectedIcon: Icon(Icons.dining),
+            icon: Icon(Icons.dining_outlined),
             label: 'Recipes',
           ),
           NavigationDestination(

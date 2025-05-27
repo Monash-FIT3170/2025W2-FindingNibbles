@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: appName,
       navigatorKey: navigatorKey,
-      theme: AppTheme.themeData, // Use the centralized theme
+      theme: AppTheme.themeData,
       initialRoute: isAuthenticated ? '/home' : '/title',
       routes: {
         '/title':
