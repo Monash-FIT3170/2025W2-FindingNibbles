@@ -7,7 +7,6 @@ import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
-import 'package:nibbles/service/profile/user_location_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -18,7 +17,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
-  UserLocationDto? _homeLocation;
   List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
@@ -110,43 +108,65 @@ class ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: AppTheme.colorScheme.primary,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Profile',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+        child:
+            isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.surfaceColor,
+                  ),
+                )
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Profile',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // Use Expanded with SingleChildScrollView to prevent overflow
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PersonalMenuWidget(
+                              onPersonalInfo: () {},
+                              onFavourites: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LikedPage(),
+                                  ),
+                                );
+                              },
+                              onMyReviews: () {},
+                            ),
+                            DietaryRequirementsWidget(
+                              dietaryRequirements: _dietaryRequirements,
+                              onAdd: _addDietaryRequirement,
+                              onRemove: _removeDietaryRequirement,
+                            ),
+                            CookingAppliancesWidget(
+                              appliances: _appliances,
+                              onAdd: _addAppliance,
+                              onRemove: _removeAppliance,
+                            ),
+                            LogoutWidget(onLogout: () {}),
+                            // Add padding at the bottom to ensure content doesn't get cut off
+                            const SizedBox(height: 80),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            PersonalMenuWidget(
-              onPersonalInfo: () {},
-              onFavourites: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LikedPage()),
-                );
-              },
-              onMyReviews: () {},
-            ),
-            DietaryRequirementsWidget(
-              dietaryRequirements: _dietaryRequirements,
-              onAdd: _addDietaryRequirement,
-              onRemove: _removeDietaryRequirement,
-            ),
-            CookingAppliancesWidget(
-              appliances: _appliances,
-              onAdd: _addAppliance,
-              onRemove: _removeAppliance,
-            ),
-            LogoutWidget(onLogout: () {}),
-          ],
-        ),
       ),
     );
   }

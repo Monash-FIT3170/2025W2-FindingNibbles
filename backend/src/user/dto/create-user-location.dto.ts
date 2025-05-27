@@ -13,6 +13,9 @@ export class CreateUserLocationDto {
   @IsNotEmpty()
   name: string;
 
+  @IsString()
+  streetAddress?: string;
+
   @IsNumber()
   @IsNotEmpty()
   @Min(-90)
