@@ -263,6 +263,8 @@ class _MapPageState extends State<MapPage> {
 
   // Show filter dialog
   void _showFilterDialog() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -284,7 +286,18 @@ class _MapPageState extends State<MapPage> {
                               .map(
                                 (rating) => DropdownMenuItem(
                                   value: rating,
-                                  child: Text('$rating ⭐'),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text('$rating'),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.star,
+                                        size: 16,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               )
                               .toList(),
