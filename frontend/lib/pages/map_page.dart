@@ -7,6 +7,7 @@ import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -310,24 +311,34 @@ class _MapPageState extends State<MapPage> {
 
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
-    List<String> activeFilters = [];
+    List<Widget> filterWidgets = [];
 
     if (_selectedCuisine != null) {
-      activeFilters.add(_selectedCuisine!.name);
+      filterWidgets.add(Text(_selectedCuisine!.name));
     }
 
     if (_minimumRating > 1) {
-      activeFilters.add('$_minimumRating+ ⭐');
+      if (filterWidgets.isNotEmpty) {
+        filterWidgets.add(const Text(' • '));
+      }
+      filterWidgets.addAll([
+        Text('$_minimumRating'),
+        Icon(Icons.star, size: 16, color: AppTheme.colorScheme.onPrimary),
+      ]);
     }
 
-    if (activeFilters.isEmpty) return const SizedBox.shrink();
+    if (filterWidgets.isEmpty) return const SizedBox.shrink();
 
     return Positioned(
       top: 80,
       right: 16,
       child: Chip(
-        label: Text(activeFilters.join(' • ')),
-        deleteIcon: const Icon(Icons.close, size: 18),
+        label: Row(mainAxisSize: MainAxisSize.min, children: filterWidgets),
+        deleteIcon: Icon(
+          Icons.close,
+          size: 18,
+          color: AppTheme.colorScheme.onPrimary,
+        ),
         onDeleted: () {
           setState(() {
             _selectedCuisine = null;
@@ -335,7 +346,12 @@ class _MapPageState extends State<MapPage> {
           });
           _forceFetchRestaurants();
         },
-        backgroundColor: Colors.blue.shade100,
+        backgroundColor: AppTheme.colorScheme.primary,
+        side: BorderSide.none,
+        labelStyle: TextStyle(
+          color: AppTheme.colorScheme.onPrimary,
+          fontSize: 14,
+        ),
       ),
     );
   }
