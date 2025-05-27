@@ -29,7 +29,7 @@ class RecipeCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         child: Stack(
           children: [
-            // Background image layer
+            // Background image layer with default image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child:
@@ -40,27 +40,19 @@ class RecipeCard extends StatelessWidget {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                          return Image.asset(
+                            'assets/images/default_recipe.jpg',
                             height: adjustedHeight,
                             width: double.infinity,
-                            color: Colors.grey[300],
-                            child: Icon(
-                              Icons.restaurant_menu,
-                              size: 50,
-                              color: Colors.grey[700],
-                            ),
+                            fit: BoxFit.cover,
                           );
                         },
                       )
-                      : Container(
+                      : Image.asset(
+                        'assets/images/default_recipe.jpg',
                         height: adjustedHeight,
                         width: double.infinity,
-                        color: Colors.grey[300],
-                        child: Icon(
-                          Icons.restaurant_menu,
-                          size: 50,
-                          color: Colors.grey[700],
-                        ),
+                        fit: BoxFit.cover,
                       ),
             ),
 
