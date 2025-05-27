@@ -188,25 +188,15 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
           ),
         );
       },
-      child: Container(
-        // Reduce bottom margin
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12), // Slightly smaller radius
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withAlpha((0.05 * 255).toInt()),
-              blurRadius: 4, // Reduced blur
-              offset: const Offset(0, 2), // Reduced offset
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            _buildRecipeImage(recipe, textTheme, colorScheme),
-            _buildRecipeDetails(recipe, index, textTheme, colorScheme),
-          ],
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              _buildRecipeImage(recipe, textTheme, colorScheme),
+              _buildRecipeDetails(recipe, index, textTheme, colorScheme),
+            ],
+          ),
         ),
       ),
     );
