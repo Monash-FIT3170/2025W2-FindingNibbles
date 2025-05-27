@@ -58,23 +58,36 @@ class _AppliancesSelectionState extends State<AppliancesSelection> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('All'),
-                    selected: widget.areAllAppliancesSelected(),
-                    onSelected: widget.onToggleAll,
-                  ),
-                  ...widget.availableAppliances.map(
-                    (appliance) => ChoiceChip(
-                      label: Text(appliance.name),
-                      selected: widget.isApplianceSelected(appliance),
-                      onSelected:
-                          (selected) => widget.onToggleAppliance(appliance),
+              SizedBox(
+                height: 100, // Fixed height for 2 rows of chips
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width:
+                        MediaQuery.of(context).size.width *
+                        2, // Make it wider than the screen to enable scrolling
+                    child: Wrap(
+                      spacing: 8,
+                      alignment: WrapAlignment.start,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('All'),
+                          selected: widget.areAllAppliancesSelected(),
+                          onSelected: widget.onToggleAll,
+                        ),
+                        ...widget.availableAppliances.map(
+                          (appliance) => ChoiceChip(
+                            label: Text(appliance.name),
+                            selected: widget.isApplianceSelected(appliance),
+                            onSelected:
+                                (selected) =>
+                                    widget.onToggleAppliance(appliance),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ],
           ),
