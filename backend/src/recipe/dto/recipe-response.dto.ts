@@ -70,3 +70,49 @@ export class GeminiResponseDto {
     };
   }[];
 }
+
+export class RecipeFromFrontEnd {
+  title: string;
+
+  description: string;
+
+  ingredients: string[];
+
+  instructions: string[];
+
+  estimatedTimeMinutes: number;
+
+  servings: number;
+
+  nutritionalInfo: string[];
+
+  difficultyLevel: RecipeDifficulty;
+
+  cuisine: string;
+}
+
+export class RecipeDto {
+  id: number;
+
+  title: string;
+
+  description: string;
+
+  ingredients: string[];
+
+  instructions: string[];
+
+  estimatedTimeMinutes: number;
+
+  servings: number;
+
+  dietaryTags: string[];
+
+  nutritionalInfo: string[];
+
+  difficultyLevel: string;
+
+  cuisineId: number;
+
+  cuisine: string;
+}
