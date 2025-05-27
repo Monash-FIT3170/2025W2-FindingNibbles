@@ -319,12 +319,12 @@ class _RecipesPageState extends State<RecipesPage> {
                                 areAllDietariesSelected:
                                     _areAllDietariesSelected,
                               ),
-                              SizedBox(height: 24),
+                              SizedBox(height: 8),
                               RecipeDifficultySelector(
                                 selectedDifficulty: selectedDifficulty,
                                 onDifficultySelected: _setDifficulty,
                               ),
-                              SizedBox(height: 24),
+                              SizedBox(height: 8),
                               AppliancesSelection(
                                 availableAppliances: availableAppliances,
                                 selectedAppliances: selectedAppliances,
@@ -334,7 +334,6 @@ class _RecipesPageState extends State<RecipesPage> {
                                     _areAllAppliancesSelected,
                                 onToggleAll: _toggleAllAppliances,
                               ),
-                              // Add bottom padding for scrollable content
                               SizedBox(height: 32),
                             ],
                           ),

@@ -42,42 +42,36 @@ class _AppliancesSelectionState extends State<AppliancesSelection> {
         InkWell(
           onTap: _toggleExpanded,
           borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Appliances', style: textTheme.titleMedium),
-                Icon(
-                  _isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                ),
-              ],
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Appliances', style: textTheme.titleMedium),
+              Icon(
+                _isExpanded
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+              ),
+            ],
           ),
         ),
         if (_isExpanded)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
-                runSpacing: 8,
                 children: [
-                  FilterChip(
+                  ChoiceChip(
                     label: const Text('All'),
                     selected: widget.areAllAppliancesSelected(),
                     onSelected: widget.onToggleAll,
                   ),
                   ...widget.availableAppliances.map(
-                    (appliance) => FilterChip(
+                    (appliance) => ChoiceChip(
                       label: Text(appliance.name),
                       selected: widget.isApplianceSelected(appliance),
                       onSelected:
                           (selected) => widget.onToggleAppliance(appliance),
-                      showCheckmark: false,
                     ),
                   ),
                 ],
