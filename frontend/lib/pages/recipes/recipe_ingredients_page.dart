@@ -101,71 +101,101 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Widget _buildInstructionList(TextTheme textTheme, ColorScheme colorScheme) {
-    return Column(
-      children: [
-        // Display the current step's instructions
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              widget
-                  .recipe
-                  .instructions[currentStep], // Display the current step
-              style: textTheme.bodyLarge?.copyWith(height: 1.5),
+    return GestureDetector(
+      // Add swipe functionality
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! > 0) {
+          // Swipe right - go to previous step
+          if (currentStep > 0) {
+            setState(() {
+              currentStep--;
+            });
+          }
+        } else if (details.primaryVelocity! < 0) {
+          // Swipe left - go to next step
+          if (currentStep < widget.recipe.instructions.length - 1) {
+            setState(() {
+              currentStep++;
+            });
+          }
+        }
+      },
+      child: Column(
+        children: [
+          // Display the current step's instructions
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                widget
+                    .recipe
+                    .instructions[currentStep], // Display the current step
+                style: textTheme.bodyLarge?.copyWith(height: 1.5),
+              ),
             ),
           ),
-        ),
 
-        // Step navigation at the bottom
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Row(
-            mainAxisAlignment:
-                MainAxisAlignment.center, // Center the step indicators
-            children: List.generate(widget.recipe.instructions.length, (index) {
-              final isActive = currentStep == index;
+          // Step navigation at the bottom - horizontally scrollable
+          Center(
+            child: Container(
+              width:
+                  MediaQuery.of(context).size.width *
+                  5 /
+                  6, // Limit width to 5/6 of screen
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(widget.recipe.instructions.length, (
+                    index,
+                  ) {
+                    final isActive = currentStep == index;
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    currentStep = index; // Update the current step
-                  });
-                },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                  ), // Spacing between indicators
-                  width: 30, // Width of the indicator
-                  height: 30, // Height of the indicator
-                  decoration: BoxDecoration(
-                    color:
-                        isActive
-                            ? colorScheme
-                                .primary // Active step color
-                            : colorScheme
-                                .surfaceContainerHighest, // Inactive step color
-                    shape: BoxShape.circle, // Circular shape
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${index + 1}', // Step number
-                      style: TextStyle(
-                        color:
-                            isActive
-                                ? colorScheme
-                                    .onPrimary // Active step text color
-                                : colorScheme
-                                    .onSurfaceVariant, // Inactive step text color
-                        fontWeight: FontWeight.bold, // Font weight
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          currentStep = index; // Update the current step
+                        });
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ), // Spacing between indicators
+                        width: 30, // Width of the indicator
+                        height: 30, // Height of the indicator
+                        decoration: BoxDecoration(
+                          color:
+                              isActive
+                                  ? colorScheme
+                                      .primary // Active step color
+                                  : colorScheme
+                                      .surfaceContainerHighest, // Inactive step color
+                          shape: BoxShape.circle, // Circular shape
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}', // Step number
+                            style: TextStyle(
+                              color:
+                                  isActive
+                                      ? colorScheme
+                                          .onPrimary // Active step text color
+                                      : colorScheme
+                                          .onSurfaceVariant, // Inactive step text color
+                              fontWeight: FontWeight.bold, // Font weight
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ),
-              );
-            }),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
