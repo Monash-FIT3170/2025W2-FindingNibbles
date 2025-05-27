@@ -51,7 +51,7 @@ class DietaryRequirements extends StatelessWidget {
                   onSelected: (selected) => onToggleAll(),
                 ),
                 ...availableDietaries.map(
-                  (dietary) => FilterChip(
+                  (dietary) => ChoiceChip(
                     label: Text(dietary.name),
                     selected: isDietarySelected(dietary),
                     onSelected: (selected) => onToggleDietary(dietary),
