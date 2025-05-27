@@ -121,7 +121,9 @@ class _MapPageState extends State<MapPage> {
     }
 
     // Only set up location stream if using current location
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position pos) {
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((
+      Position pos,
+    ) {
       final newPos = LatLng(pos.latitude, pos.longitude);
       if (mounted) {
         setState(() {
