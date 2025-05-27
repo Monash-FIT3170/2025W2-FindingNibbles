@@ -169,7 +169,7 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                   // Placeholder for profile picture
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: AppTheme.textBody,
+                    backgroundColor: AppTheme.secondaryColor,
                     child: Icon(
                       Icons.person,
                       size: 80,
