@@ -449,15 +449,19 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
 
   Future<void> _handleFieldUpdate(String fieldName, String newValue) async {
     UpdateUserDto? data;
+    String displayFieldName = fieldName;
     switch (fieldName) {
       case 'firstName':
         data = UpdateUserDto(firstName: newValue);
+        displayFieldName = 'First Name';
         break;
       case 'lastName':
         data = UpdateUserDto(lastName: newValue);
+        displayFieldName = 'Last Name';
         break;
       case 'email':
         data = UpdateUserDto(email: newValue);
+        displayFieldName = 'Email';
         break;
       default:
         return;
@@ -468,11 +472,11 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
       await _loadUserInfo(); // Reload user info to reflect the changes
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$fieldName updated successfully!')),
+          SnackBar(content: Text('$displayFieldName updated successfully!')),
         );
       }
     } catch (error) {
-      _logger.d('Error updating $fieldName: $error');
+      _logger.d('Error updating $displayFieldName: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occurred while updating.')),
