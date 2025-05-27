@@ -274,7 +274,6 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -286,19 +285,9 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
           children: [
             Row(
               children: [
-                Text(
-                  'Dietary Requirements',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                    fontSize: 16,
-                  ),
-                ),
+                Text('Dietary Requirements', style: theme.textTheme.titleSmall),
                 const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.add, color: colorScheme.primary),
-                  onPressed: _openAddDialog,
-                ),
+                IconButton(icon: Icon(Icons.add), onPressed: _openAddDialog),
               ],
             ),
             const SizedBox(height: 8),
@@ -314,10 +303,7 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 ),
                 child:
                     widget.dietaryRequirements.isEmpty
-                        ? const Text(
-                          'No current dietary requirements',
-                          style: TextStyle(color: Colors.grey),
-                        )
+                        ? const Text('No dietaries added')
                         : Wrap(
                           spacing: 8,
                           runSpacing: 8,
