@@ -3,6 +3,8 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
+import 'package:nibbles/theme/app_theme.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -176,7 +178,7 @@ class _HomePageState extends State<HomePage> {
           });
           _fetchRestaurants();
         },
-        backgroundColor: Colors.blue.shade100,
+        backgroundColor: AppTheme.colorScheme.primary,
       ),
     );
   }
