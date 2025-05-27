@@ -83,7 +83,12 @@ class _HomePageState extends State<HomePage> {
                               .map(
                                 (rating) => DropdownMenuItem(
                                   value: rating,
-                                  child: Text('$rating ⭐'),
+                                  child: Row(
+                                    children: [
+                                      Text('$rating'),
+                                      const Icon(Icons.star),
+                                    ],
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -145,6 +150,37 @@ class _HomePageState extends State<HomePage> {
     return 'Price: ${'\$' * level}';
   }
 
+    Widget _buildActiveFiltersChip() {
+    List<String> activeFilters = [];
+
+    if (_selectedCuisine != null) {
+      activeFilters.add(_selectedCuisine!.name);
+    }
+
+    if (_minimumRating > 1) {
+      activeFilters.add('$_minimumRating+ ⭐');
+    }
+
+    if (activeFilters.isEmpty) return const SizedBox.shrink();
+
+    return Positioned(
+      top: 0,
+      right: 0,
+      child: Chip(
+        label: Text(activeFilters.join(' • ')),
+        deleteIcon: const Icon(Icons.close, size: 18),
+        onDeleted: () {
+          setState(() {
+            _selectedCuisine = null;
+            _minimumRating = 1;
+          });
+          _fetchRestaurants();
+        },
+        backgroundColor: Colors.blue.shade100,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -161,61 +197,66 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-          child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _restaurants.isEmpty
-              ? const Center(child: Text('No restaurants found.'))
-              : GridView.builder(
-              itemCount: _restaurants.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 4,
-                crossAxisSpacing: 4,
-                childAspectRatio: 3 / 2,
-              ),
-              itemBuilder: (context, index) {
-                final restaurant = _restaurants[index];
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          restaurant.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+              child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _restaurants.isEmpty
+                  ? const Center(child: Text('No restaurants found.'))
+                  : GridView.builder(
+                  itemCount: _restaurants.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 4,
+                    crossAxisSpacing: 4,
+                    childAspectRatio: 3 / 2,
+                  ),
+                  itemBuilder: (context, index) {
+                    final restaurant = _restaurants[index];
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.star,
-                              color: colorScheme.secondary,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
-                              restaurant.rating?.toStringAsFixed(1) ?? '',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
+                              restaurant.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: colorScheme.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  color: colorScheme.secondary,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  restaurant.rating?.toStringAsFixed(1) ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(formatPriceLevel(restaurant.priceLevel)),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(formatPriceLevel(restaurant.priceLevel)),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+          ),
+          _buildActiveFiltersChip(),
+        ],
       ),
     );
   }
