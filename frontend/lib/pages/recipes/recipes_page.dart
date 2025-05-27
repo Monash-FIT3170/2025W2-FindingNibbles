@@ -272,7 +272,10 @@ class _RecipesPageState extends State<RecipesPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Recipes')),
+      appBar: AppBar(
+        title: const Text('Recipes'),
+        automaticallyImplyLeading: false, // Hide back button
+      ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Padding(
