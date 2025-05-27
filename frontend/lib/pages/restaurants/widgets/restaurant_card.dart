@@ -44,7 +44,7 @@ class RestaurantCard extends StatelessWidget {
                             restaurant.icon!,
                             width: height,
                             height: height,
-                            fit: BoxFit.cover,
+                            scale: 1.6,
                             errorBuilder: (context, error, stackTrace) {
                               return placeholder ??
                                   Icon(
