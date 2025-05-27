@@ -62,6 +62,7 @@ class AppTheme {
     ),
     bodyLarge: const TextStyle(fontSize: 16, color: textPrimary),
     bodyMedium: const TextStyle(fontSize: 16, color: textBody),
+    bodySmall: const TextStyle(fontSize: 14, color: textPrimary),
     labelLarge: const TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w600,
