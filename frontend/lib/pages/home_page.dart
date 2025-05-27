@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
+import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 
@@ -12,12 +14,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
+  List<CuisineDto> _availableCuisines = [];
+  CuisineDto? _selectedCuisine;
 
   @override
   void initState() {
     super.initState();
     _fetchRestaurants();
   }
+
+    Future<void> _fetchCuisines() async {
+    try {
+      final cuisines = await CuisineService().getAllCuisines();
+      setState(() {
+        _availableCuisines = cuisines;
+      });
+    } catch (e) {
+      debugPrint('Error fetching cuisines: $e');
+    }
+  }
+
 
   Future<void> _fetchRestaurants() async {
     setState(() => _isLoading = true);
