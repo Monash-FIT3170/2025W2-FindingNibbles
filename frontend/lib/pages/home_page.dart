@@ -10,12 +10,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<List<RestaurantDto>> _restaurantsFuture;
+  List<RestaurantDto> _restaurants = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _restaurantsFuture = RestaurantService().getRestaurants();
+    _fetchRestaurants();
+  }
+
+  Future<void> _fetchRestaurants() async {
+    setState(() => _isLoading = true);
+    try {
+      final allRestaurants = await RestaurantService().getAllRestaurants();
+      setState(() {
+        _restaurants = allRestaurants;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching restaurants: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   // assuming RestaurantDto has priceLevel or similar, otherwise adapt
@@ -38,20 +53,12 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: FutureBuilder<List<RestaurantDto>>(
-          future: _restaurantsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Text('No restaurants found.'));
-            }
-
-            final restaurants = snapshot.data!;
-            return GridView.builder(
-              itemCount: restaurants.length,
+          child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _restaurants.isEmpty
+              ? const Center(child: Text('No restaurants found.'))
+              : GridView.builder(
+              itemCount: _restaurants.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 mainAxisSpacing: 4,
@@ -59,7 +66,7 @@ class _HomePageState extends State<HomePage> {
                 childAspectRatio: 3 / 2,
               ),
               itemBuilder: (context, index) {
-                final restaurant = restaurants[index];
+                final restaurant = _restaurants[index];
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
@@ -93,14 +100,12 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 4),
                         Text(formatPriceLevel(restaurant.priceLevel)),
-                      ],
-                    ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            );
-          },
-        ),
       ),
     );
   }
