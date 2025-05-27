@@ -16,7 +16,7 @@ class AppTheme {
   static const Color textPrimary = Colors.black;
   static const Color textSecondary = Colors.black87;
   static const Color textDisabled = Colors.black38;
-  static const Color textBody = Color.fromARGB(255, 228, 224, 224);
+  static const Color textBody = Colors.black;
   static const Color textOnPrimary = Colors.white;
   static const Color textPrimaryColour = Color(0xFFB4435C);
 
@@ -60,6 +60,11 @@ class AppTheme {
       fontWeight: FontWeight.w600,
       color: textPrimary,
     ),
+    titleSmall: const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+      color: textPrimary,
+    ),
     bodyLarge: const TextStyle(fontSize: 16, color: textPrimary),
     bodyMedium: const TextStyle(fontSize: 16, color: textBody),
     bodySmall: const TextStyle(fontSize: 14, color: textPrimary),
@@ -76,7 +81,6 @@ class AppTheme {
 
   // Get the complete theme data
   static ThemeData get themeData => ThemeData(
-    useMaterial3: true,
     colorScheme: colorScheme,
     textTheme: textTheme,
     scaffoldBackgroundColor: backgroundColor,
