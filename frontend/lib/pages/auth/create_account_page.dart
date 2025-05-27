@@ -89,6 +89,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         lastName.isEmpty ||
         email.isEmpty ||
         password.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields')),
       );
@@ -97,6 +98,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
     // Validate password strength before submitting
     if (!_validatePassword(password)) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(_passwordErrorMessage)));
@@ -110,17 +112,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       password,
     );
 
-    if (context.mounted) {
-      if (success) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
-        ); // Navigate to verification page
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Registration failed')));
-      }
+    if (!mounted) return; // Proper check if widget is still mounted
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Registration failed')));
     }
   }
 
