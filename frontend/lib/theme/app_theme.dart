@@ -140,9 +140,14 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: Colors.grey.shade100,
-      selectedColor: primaryColor,
-      labelStyle: const TextStyle(color: textPrimary),
+      labelStyle: TextStyle(color: colorScheme.onSurface),
+      secondaryLabelStyle: TextStyle(color: colorScheme.onPrimary),
+      selectedColor: colorScheme.primary,
+      checkmarkColor: colorScheme.onPrimary,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: colorScheme.primary, width: 1.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
     ),
     cardTheme: CardTheme(
       elevation: 2,

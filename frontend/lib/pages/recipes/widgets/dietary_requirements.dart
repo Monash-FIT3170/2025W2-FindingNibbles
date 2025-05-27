@@ -44,9 +44,8 @@ class DietaryRequirements extends StatelessWidget {
           SizedBox(
             child: Wrap(
               spacing: 8,
-              runSpacing: 8,
               children: [
-                FilterChip(
+                ChoiceChip(
                   label: Text('All'),
                   selected: areAllDietariesSelected(),
                   onSelected: (selected) => onToggleAll(),
@@ -56,7 +55,6 @@ class DietaryRequirements extends StatelessWidget {
                     label: Text(dietary.name),
                     selected: isDietarySelected(dietary),
                     onSelected: (selected) => onToggleDietary(dietary),
-                    showCheckmark: false,
                   ),
                 ),
               ],
