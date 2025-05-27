@@ -419,7 +419,10 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit $fieldName'),
+          title: Text(
+            'Edit $fieldName',
+            style: const TextStyle(fontSize: 18, color: AppTheme.primaryColor),
+          ),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(hintText: 'Enter new $fieldName'),
