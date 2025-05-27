@@ -272,9 +272,9 @@ class _RecipesPageState extends State<RecipesPage> {
     }
 
     return Scaffold(
+      appBar: AppBar(title: const Text('Recipes')),
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
-        // Add horizontal padding to the entire content
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child:
@@ -291,57 +291,60 @@ class _RecipesPageState extends State<RecipesPage> {
                   )
                   : Column(
                     children: [
-                      // Scrollable content
                       Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                // Adjust to vertical padding only since we have horizontal padding from parent
-                                padding: EdgeInsets.symmetric(vertical: 16.0),
-                                child: IngredientsInput(
-                                  ingredients: ingredients,
-                                  controller: _ingredientInputController,
-                                  onAddIngredient: _addIngredient,
-                                  onRemoveIngredient: _removeIngredient,
-                                ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Text(
+                                'Ingredients',
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
-                              DietaryRequirements(
-                                useDietaryRequirements: useDietaryRequirements,
-                                availableDietaries: availableDietaries,
-                                selectedDietaries: selectedDietaries,
-                                onToggleDietaryRequirements:
-                                    _toggleDietaryRequirements,
-                                onToggleDietary: _toggleDietary,
-                                onToggleAll: _toggleAllDietaries,
-                                isDietarySelected: _isDietarySelected,
-                                areAllDietariesSelected:
-                                    _areAllDietariesSelected,
+                            ),
+                            Expanded(
+                              child: IngredientsInput(
+                                ingredients: ingredients,
+                                controller: _ingredientInputController,
+                                onAddIngredient: _addIngredient,
+                                onRemoveIngredient: _removeIngredient,
                               ),
-                              SizedBox(height: 8),
-                              RecipeDifficultySelector(
-                                selectedDifficulty: selectedDifficulty,
-                                onDifficultySelected: _setDifficulty,
-                              ),
-                              SizedBox(height: 8),
-                              AppliancesSelection(
-                                availableAppliances: availableAppliances,
-                                selectedAppliances: selectedAppliances,
-                                onToggleAppliance: _toggleAppliance,
-                                isApplianceSelected: _isApplianceSelected,
-                                areAllAppliancesSelected:
-                                    _areAllAppliancesSelected,
-                                onToggleAll: _toggleAllAppliances,
-                              ),
-                              SizedBox(height: 32),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      // Fixed button at bottom
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DietaryRequirements(
+                            useDietaryRequirements: useDietaryRequirements,
+                            availableDietaries: availableDietaries,
+                            selectedDietaries: selectedDietaries,
+                            onToggleDietaryRequirements:
+                                _toggleDietaryRequirements,
+                            onToggleDietary: _toggleDietary,
+                            onToggleAll: _toggleAllDietaries,
+                            isDietarySelected: _isDietarySelected,
+                            areAllDietariesSelected: _areAllDietariesSelected,
+                          ),
+                          SizedBox(height: 8),
+                          RecipeDifficultySelector(
+                            selectedDifficulty: selectedDifficulty,
+                            onDifficultySelected: _setDifficulty,
+                          ),
+                          SizedBox(height: 8),
+                          AppliancesSelection(
+                            availableAppliances: availableAppliances,
+                            selectedAppliances: selectedAppliances,
+                            onToggleAppliance: _toggleAppliance,
+                            isApplianceSelected: _isApplianceSelected,
+                            areAllAppliancesSelected: _areAllAppliancesSelected,
+                            onToggleAll: _toggleAllAppliances,
+                          ),
+                          SizedBox(height: 16),
+                        ],
+                      ),
                       Padding(
-                        // Adjust to vertical padding only since we have horizontal padding from parent
                         padding: EdgeInsets.symmetric(vertical: 16.0),
                         child: SizedBox(
                           width: double.infinity,
