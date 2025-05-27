@@ -65,6 +65,8 @@ class _HomeAddressWidgetState extends State<HomeAddressWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -76,12 +78,9 @@ class _HomeAddressWidgetState extends State<HomeAddressWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Home Address',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                Text('Home Address', style: theme.textTheme.titleSmall),
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Color(0xFFAD2C50)),
+                  icon: const Icon(Icons.edit),
                   onPressed: widget.onEditLocation,
                 ),
               ],
