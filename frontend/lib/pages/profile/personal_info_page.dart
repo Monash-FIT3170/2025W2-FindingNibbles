@@ -19,12 +19,12 @@ class PersonalInfoPage extends StatefulWidget {
 class PersonalInfoPageState extends State<PersonalInfoPage> {
   final AuthService _authService = AuthService();
   final ProfileService _profileService = ProfileService();
-  late Future<Map<String, dynamic>> _personalInfo;
+  Map<String, dynamic>? _personalInfo;
   UserLocationDto? _homeLocation;
   final _logger = getLogger();
 
   // Feature flag for profile picture editing
-  final bool _canEditProfilePicture = false; 
+  final bool _canEditProfilePicture = false;
 
   @override
   void initState() {
@@ -34,8 +34,9 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
   }
 
   Future<void> _loadUserInfo() async {
+    final user = await _authService.getUserProfile();
     setState(() {
-      _personalInfo = _authService.getUserProfile();
+      _personalInfo = user; // Set user info when available
     });
   }
 
@@ -135,6 +136,11 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Provide default values if _userInfo is still null
+    final String firstName = _personalInfo?['firstName'] ?? 'Loading...';
+    final String lastName = _personalInfo?['lastName'] ?? 'Loading...';
+    final String email = _personalInfo?['email'] ?? 'Loading...';
+
     return Scaffold(
       backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
@@ -152,152 +158,136 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
           ),
         ),
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _personalInfo,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppTheme.errorColor),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: const TextStyle(color: AppTheme.errorColor),
-              ),
-            );
-          } else if (!snapshot.hasData) {
-            return const Center(
-              child: Text(
-                'No user details found.',
-                style: TextStyle(color: AppTheme.errorColor),
-              ),
-            );
-          }
+      body: Column(
+        children: [
+          // Profile picture section
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Stack(
+                children: [
+                  // Placeholder for profile picture
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundColor: AppTheme.textBody,
+                    child: Icon(
+                      Icons.person,
+                      size: 80,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
 
-          final user = snapshot.data!;
-
-          return Column(
-            children: [
-              // Profile picture section
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Stack(
-                    children: [
-                      // Placeholder for profile picture
-                      CircleAvatar(
-                        radius: 60, 
-                        backgroundColor: AppTheme.secondaryColor,
-                        child: Icon(
-                          Icons.person,
-                          size: 80,
-                          color: AppTheme.primaryColor,
+                  // Conditional edit button not implemented yet
+                  if (_canEditProfilePicture) // Conditional rendering based on flag
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade800,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 24,
                         ),
                       ),
-                      // Conditional edit button not implemented yet
-                      if (_canEditProfilePicture)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade800,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // Form fields in white container with rounded top corners
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
                 ),
               ),
-
-              // Form fields in white container with rounded top corners
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(32),
-                      topRight: Radius.circular(32),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildFormField(
+                      context,
+                      'First Name',
+                      firstName,
+                      Icons.badge_outlined,
+                      onEdit:
+                          _personalInfo !=
+                                  null // Disable editing if data not loaded
+                              ? (value) =>
+                                  _handleFieldUpdate('firstName', value)
+                              : (value) {},
+                      enabled: _personalInfo != null,
                     ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormField(
-                          context,
-                          'First Name',
-                          user['firstName'] ?? 'Example First Name',
-                          Icons.badge_outlined,
-                          onEdit:
-                              (value) => _handleFieldUpdate('firstName', value),
-                        ),
-                        _buildFormField(
-                          context,
-                          'Last Name',
-                          user['lastName'] ?? 'Example Last Name',
-                          Icons.badge_outlined,
-                          onEdit:
-                              (value) => _handleFieldUpdate('lastName', value),
-                        ),
-                        _buildFormField(
-                          context,
-                          'Email',
-                          user['email'] ?? 'example@mail.com',
-                          Icons.email_outlined,
-                          onEdit: (value) => _handleFieldUpdate('email', value),
-                        ),
-                        _buildLocationField(context),
+                    _buildFormField(
+                      context,
+                      'Last Name',
+                      lastName,
+                      Icons.badge_outlined,
+                      onEdit:
+                          _personalInfo != null
+                              ? (value) => _handleFieldUpdate('lastName', value)
+                              : (value) {},
+                      enabled: _personalInfo != null,
+                    ),
+                    _buildFormField(
+                      context,
+                      'Email',
+                      email,
+                      Icons.email_outlined,
+                      onEdit:
+                          _personalInfo != null
+                              ? (value) => _handleFieldUpdate('email', value)
+                              : (value) {},
+                      enabled: _personalInfo != null,
+                    ),
+                    _buildLocationField(context),
 
-                        const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                        // Change Password button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => const ChangePasswordPage(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Colors.grey[600], // Gray background
-                              foregroundColor: Colors.white,
-                              elevation: 0, // Flat button style
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                    // Change Password button (remains unchanged)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChangePasswordPage(),
                             ),
-                            icon: const Icon(Icons.lock_outline),
-                            label: const Text(
-                              'Change Password',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[600], // Gray background
+                          foregroundColor: Colors.white,
+                          elevation: 0, // Flat button style
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                      ],
+                        icon: const Icon(Icons.lock_outline),
+                        label: const Text(
+                          'Change Password',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }
