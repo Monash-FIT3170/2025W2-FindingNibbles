@@ -33,3 +33,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/FindingNibbles.svg
+    - assets/images/default_restaurant.jpg
+    - assets/images/default_recipe.jpg
