@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -60,13 +61,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
+        backgroundColor: AppTheme.colorScheme.primary,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -83,7 +81,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           const SizedBox(height: 24),
 
           // Lock icon
-          Icon(Icons.lock, size: 64, color: Colors.white.withOpacity(0.8)),
+          Icon(Icons.lock, size: 64, color: AppTheme.textBody),
 
           const SizedBox(height: 24),
 
@@ -108,27 +106,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       obscureText: _obscureOldPassword,
                       decoration: InputDecoration(
                         labelText: 'Current Password',
-                        labelStyle: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureOldPassword
@@ -152,27 +129,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       obscureText: _obscureNewPassword,
                       decoration: InputDecoration(
                         labelText: 'New Password',
-                        labelStyle: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureNewPassword
@@ -196,27 +152,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       obscureText: _obscureConfirmPassword,
                       decoration: InputDecoration(
                         labelText: 'Confirm New Password',
-                        labelStyle: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureConfirmPassword
@@ -240,13 +175,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: handleChangePassword,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          elevation: 0,
-                        ),
                         child: const Text(
                           'UPDATE PASSWORD',
                           style: TextStyle(
