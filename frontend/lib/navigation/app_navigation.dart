@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile_page.dart';
 import '../pages/home_page.dart';
-import '../pages/restaurants/restaurants_page.dart';
 import '../pages/recipes/recipes_page.dart';
 import '../pages/map_page.dart';
 
@@ -32,11 +31,6 @@ class _AppNavigationState extends State<AppNavigation> {
             label: 'Home',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.restaurant),
-            icon: Icon(Icons.restaurant_outlined),
-            label: 'Restaurants',
-          ),
-          NavigationDestination(
             selectedIcon: Icon(Icons.map),
             icon: Icon(Icons.map_outlined),
             label: 'Map',
@@ -56,7 +50,6 @@ class _AppNavigationState extends State<AppNavigation> {
       body:
           <Widget>[
             const HomePage(),
-            const RestaurantsPage(),
             const MapPage(),
             const RecipesPage(),
             ProfilePage(),
