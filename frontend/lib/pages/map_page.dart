@@ -417,7 +417,10 @@ class _MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map')),
+      appBar: AppBar(
+        title: const Text('Home'),
+        automaticallyImplyLeading: false, // Hide back button
+      ),
       body:
           _isLoading
               ? Center(

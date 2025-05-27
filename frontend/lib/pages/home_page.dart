@@ -32,7 +32,10 @@ class _HomePageState extends State<HomePage> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Nearby Restaurants')),
+      appBar: AppBar(
+        title: const Text('Nearby Restaurants'),
+        automaticallyImplyLeading: false, // Hide back button
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: FutureBuilder<List<RestaurantDto>>(
