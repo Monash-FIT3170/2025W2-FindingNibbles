@@ -114,13 +114,15 @@ class _RecipesPageState extends State<RecipesPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => RecipeRecommendationsPage(
-            recipes: recipeResults,
-            dietaryRequirements: useDietaryRequirements
-                ? selectedDietaries.map((d) => d.id).toList()
-                : [],
-            kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
-          ),
+          builder:
+              (context) => RecipeRecommendationsPage(
+                recipes: recipeResults,
+                dietaryRequirements:
+                    useDietaryRequirements
+                        ? selectedDietaries.map((d) => d.id).toList()
+                        : [],
+                kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
+              ),
         ),
       );
     } catch (e) {
@@ -248,7 +250,8 @@ class _RecipesPageState extends State<RecipesPage> {
   @override
   Widget build(BuildContext context) {
     // Get the route arguments if they exist (safe to use context here)
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null && ingredients.isEmpty) {
       final prevIngredients = args['previousIngredients'] as List<String>?;
       final prevDifficulty = args['previousDifficulty'] as RecipeDifficulty?;
@@ -266,80 +269,84 @@ class _RecipesPageState extends State<RecipesPage> {
         // Add horizontal padding to the entire content
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: isLoading
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          child:
+              isLoading
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading recipe components...'),
+                      ],
+                    ),
+                  )
+                  : Column(
                     children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading recipe components...'),
+                      // Scrollable content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                // Adjust to vertical padding only since we have horizontal padding from parent
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                child: IngredientsInput(
+                                  ingredients: ingredients,
+                                  controller: _ingredientInputController,
+                                  onAddIngredient: _addIngredient,
+                                  onRemoveIngredient: _removeIngredient,
+                                ),
+                              ),
+                              DietaryRequirements(
+                                useDietaryRequirements: useDietaryRequirements,
+                                availableDietaries: availableDietaries,
+                                selectedDietaries: selectedDietaries,
+                                onToggleDietaryRequirements:
+                                    _toggleDietaryRequirements,
+                                onToggleDietary: _toggleDietary,
+                                onToggleAll: _toggleAllDietaries,
+                                isDietarySelected: _isDietarySelected,
+                                areAllDietariesSelected:
+                                    _areAllDietariesSelected,
+                              ),
+                              SizedBox(height: 24),
+                              RecipeDifficultySelector(
+                                selectedDifficulty: selectedDifficulty,
+                                onDifficultySelected: _setDifficulty,
+                              ),
+                              SizedBox(height: 24),
+                              AppliancesSelection(
+                                availableAppliances: availableAppliances,
+                                selectedAppliances: selectedAppliances,
+                                onToggleAppliance: _toggleAppliance,
+                                isApplianceSelected: _isApplianceSelected,
+                                areAllAppliancesSelected:
+                                    _areAllAppliancesSelected,
+                                onToggleAll: _toggleAllAppliances,
+                              ),
+                              // Add bottom padding for scrollable content
+                              SizedBox(height: 32),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Fixed button at bottom
+                      Padding(
+                        // Adjust to vertical padding only since we have horizontal padding from parent
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _generateRecipes,
+                            icon: Icon(Icons.restaurant_menu),
+                            label: Text('Generate Recipes'),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                )
-              : Column(
-                  children: [
-                    // Scrollable content
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              // Adjust to vertical padding only since we have horizontal padding from parent
-                              padding: EdgeInsets.symmetric(vertical: 16.0),
-                              child: IngredientsInput(
-                                ingredients: ingredients,
-                                controller: _ingredientInputController,
-                                onAddIngredient: _addIngredient,
-                                onRemoveIngredient: _removeIngredient,
-                              ),
-                            ),
-                            DietaryRequirements(
-                              useDietaryRequirements: useDietaryRequirements,
-                              availableDietaries: availableDietaries,
-                              selectedDietaries: selectedDietaries,
-                              onToggleDietaryRequirements: _toggleDietaryRequirements,
-                              onToggleDietary: _toggleDietary,
-                              onToggleAll: _toggleAllDietaries,
-                              isDietarySelected: _isDietarySelected,
-                              areAllDietariesSelected: _areAllDietariesSelected,
-                            ),
-                            SizedBox(height: 24),
-                            RecipeDifficultySelector(
-                              selectedDifficulty: selectedDifficulty,
-                              onDifficultySelected: _setDifficulty,
-                            ),
-                            SizedBox(height: 24),
-                            AppliancesSelection(
-                              availableAppliances: availableAppliances,
-                              selectedAppliances: selectedAppliances,
-                              onToggleAppliance: _toggleAppliance,
-                              isApplianceSelected: _isApplianceSelected,
-                              areAllAppliancesSelected: _areAllAppliancesSelected,
-                              onToggleAll: _toggleAllAppliances,
-                            ),
-                            // Add bottom padding for scrollable content
-                            SizedBox(height: 32),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Fixed button at bottom
-                    Padding(
-                      // Adjust to vertical padding only since we have horizontal padding from parent
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _generateRecipes,
-                          icon: Icon(Icons.restaurant_menu),
-                          label: Text('Generate Recipes'),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
         ),
       ),
     );
