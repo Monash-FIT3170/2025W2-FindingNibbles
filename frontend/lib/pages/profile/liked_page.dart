@@ -6,6 +6,7 @@ import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -46,28 +47,27 @@ class _LikedPageState extends State<LikedPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
+        backgroundColor: AppTheme.colorScheme.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.surfaceColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Favourites',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.surfaceColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body:
           _isLoading
               ? const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: CircularProgressIndicator(color: AppTheme.surfaceColor),
               )
               : Container(
                 margin: const EdgeInsets.only(top: 16),
@@ -114,7 +114,7 @@ class _LikedPageState extends State<LikedPage> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary,
+                                      color: AppTheme.colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -125,7 +125,10 @@ class _LikedPageState extends State<LikedPage> {
                                             ? Center(
                                               child: Text(
                                                 'No favourite restaurants yet.',
-                                                style: textTheme.bodyMedium,
+                                                style:
+                                                    AppTheme
+                                                        .textTheme
+                                                        .bodyLarge,
                                               ),
                                             )
                                             : ListView.builder(
@@ -196,7 +199,7 @@ class _LikedPageState extends State<LikedPage> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: colorScheme.primary,
+                                      color: AppTheme.colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -207,7 +210,10 @@ class _LikedPageState extends State<LikedPage> {
                                             ? Center(
                                               child: Text(
                                                 'No favourite recipes yet.',
-                                                style: textTheme.bodyMedium,
+                                                style:
+                                                    AppTheme
+                                                        .textTheme
+                                                        .bodyLarge,
                                               ),
                                             )
                                             : ListView.builder(

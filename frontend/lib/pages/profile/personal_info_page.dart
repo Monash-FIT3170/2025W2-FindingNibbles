@@ -4,6 +4,7 @@ import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/profile/change_password_page.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
@@ -31,21 +32,21 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
-        backgroundColor: colorScheme.primary,
+        backgroundColor: AppTheme.colorScheme.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.surfaceColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Personal Info',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.surfaceColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -53,20 +54,20 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+              child: CircularProgressIndicator(color: AppTheme.errorColor),
             );
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
                 'Error: ${snapshot.error}',
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppTheme.errorColor),
               ),
             );
           } else if (!snapshot.hasData) {
             return const Center(
               child: Text(
                 'No user details found.',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: AppTheme.errorColor),
               ),
             );
           }
@@ -85,14 +86,14 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.3),
+                          color: AppTheme.textBody,
                           shape: BoxShape.circle,
                         ),
                         child: ClipOval(
                           child: Icon(
                             Icons.person,
                             size: 80,
-                            color: Colors.white.withOpacity(0.8),
+                            color: AppTheme.textBody,
                           ),
                         ),
                       ),
@@ -121,7 +122,7 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.surfaceColor,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(32),
                       topRight: Radius.circular(32),
@@ -221,7 +222,7 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
           Text(
             label,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: AppTheme.colorScheme.primary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -237,7 +238,7 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
               IconButton(
                 icon: Icon(
                   Icons.edit,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppTheme.colorScheme.primary,
                   size: 20,
                 ),
                 onPressed: () => _showEditDialog(context, label, value, onEdit),

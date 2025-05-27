@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/login_page.dart';
 import 'package:nibbles/pages/auth/verification_code_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -126,7 +127,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       body: Column(
         children: [
           // Top section with title
@@ -136,10 +137,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             alignment: Alignment.center,
             child: Text(
               'Create your account',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTheme.textTheme.headlineLarge,
               textAlign: TextAlign.center,
             ),
           ),
@@ -164,28 +162,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       controller: firstNameController,
                       decoration: InputDecoration(
                         labelText: 'First Name',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
                         hintText: 'John',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -195,60 +172,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       controller: lastNameController,
                       decoration: InputDecoration(
                         labelText: 'Last Name',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
                         hintText: 'Smith',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     // Email field
                     TextField(
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
                         hintText: 'example@mail.com',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -268,32 +202,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           _isPasswordFocused = false;
                         });
                       },
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        hintText: '',
-                        errorText: null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                      ),
+                      decoration: InputDecoration(labelText: 'Password'),
                     ),
 
                     // Only show password requirements during typing and only if not valid
@@ -303,7 +212,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         child: Text(
                           _passwordErrorMessage,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                            color: AppTheme.colorScheme.error,
                             fontSize: 12,
                           ),
                         ),
@@ -316,14 +225,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          elevation: 0,
-                        ),
+
                         child: const Text(
                           'CREATE ACCOUNT',
                           style: TextStyle(
@@ -340,13 +242,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       child: Text.rich(
                         TextSpan(
                           text: "Already Have an Account? ",
-                          style: TextStyle(color: Colors.black87),
+                          style: TextStyle(color: AppTheme.textPrimary),
                           children: [
                             TextSpan(
                               text: 'Sign In',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppTheme.colorScheme.primary,
                               ),
                               mouseCursor: SystemMouseCursors.click,
                               recognizer:

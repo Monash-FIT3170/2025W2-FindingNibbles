@@ -6,6 +6,7 @@ import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
+import 'package:nibbles/theme/app_theme.dart'; // Add this import
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -71,7 +72,7 @@ class LoginPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: AppTheme.primaryColor,
       body: Column(
         children: [
           // Top section with just title
@@ -81,10 +82,7 @@ class LoginPage extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               'Sign into your account',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTheme.textTheme.headlineLarge,
               textAlign: TextAlign.center,
             ),
           ),
@@ -92,9 +90,9 @@ class LoginPage extends StatelessWidget {
           // Main white content with more pronounced rounded top corners
           Expanded(
             child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
+              decoration: const BoxDecoration(
+                color: AppTheme.backgroundColor,
+                borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
@@ -107,31 +105,10 @@ class LoginPage extends StatelessWidget {
                     // Email field with floating label
                     TextField(
                       controller: emailController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Email',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
                         hintText: 'example@mail.com',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                      ),
+                      ), // Use the theme's default InputDecoration
                     ),
                     const SizedBox(height: 24),
 
@@ -139,30 +116,9 @@ class LoginPage extends StatelessWidget {
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                      ),
+                      ), // Use the theme's default InputDecoration
                     ),
 
                     // Forgot password aligned right
@@ -184,14 +140,7 @@ class LoginPage extends StatelessWidget {
                       height: 56,
                       child: ElevatedButton(
                         onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
-                          ),
-                          elevation: 0,
-                        ),
+                        // The ElevatedButton style will be provided by the theme
                         child: const Text(
                           'SIGN IN',
                           style: TextStyle(
@@ -208,13 +157,14 @@ class LoginPage extends StatelessWidget {
                     Center(
                       child: Text.rich(
                         TextSpan(
+                          style: AppTheme.textTheme.bodyLarge,
                           text: "Don't Have an Account? ",
                           children: [
                             TextSpan(
                               text: 'Sign Up',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppTheme.colorScheme.primary,
                               ),
                               mouseCursor: SystemMouseCursors.click,
                               recognizer:
@@ -259,7 +209,7 @@ class LoginPage extends StatelessWidget {
                         label: const Text(
                           'Google',
                           style: TextStyle(
-                            color: Colors.black87,
+                            color: AppTheme.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

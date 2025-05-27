@@ -12,6 +12,7 @@ import 'package:nibbles/pages/profile/widgets/home_address_widget.dart';
 import 'package:nibbles/pages/profile/location_selection_page.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -212,16 +213,15 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       body: SafeArea(
         child:
             isLoading
                 ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+                  child: CircularProgressIndicator(
+                    color: AppTheme.surfaceColor,
+                  ),
                 )
                 : RefreshIndicator(
                   onRefresh: _fetchAppliances,
@@ -235,7 +235,7 @@ class ProfilePageState extends State<ProfilePage> {
                           child: Text(
                             'Profile',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppTheme.textOnPrimary,
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),

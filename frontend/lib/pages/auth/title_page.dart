@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nibbles/pages/auth/login_page.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class TitlePage extends StatelessWidget {
   final String title;
@@ -11,12 +12,8 @@ class TitlePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     return Scaffold(
-      backgroundColor: colorScheme.primary,
+      backgroundColor: AppTheme.colorScheme.primary,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -28,7 +25,7 @@ class TitlePage extends StatelessWidget {
                 'assets/images/FindingNibbles.svg',
                 height: 100,
                 colorFilter: ColorFilter.mode(
-                  colorScheme.onPrimary,
+                  AppTheme.colorScheme.onPrimary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -36,19 +33,14 @@ class TitlePage extends StatelessWidget {
               // headline
               Text(
                 'Join the foodie revolution!',
-                style: textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onPrimary,
-                ),
+                style: AppTheme.textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               // description
               Text(
                 'AI-powered dining decisions - so you never have to “nibble” on indecision again',
-                style: textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onPrimary.withOpacity(0.7),
-                ),
+                style: AppTheme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
               const Spacer(),
@@ -61,15 +53,6 @@ class TitlePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(builder: (_) => LoginPage()),
                       ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: colorScheme.surface, width: 2),
-                    backgroundColor: Color(0xFF8B4B57),
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                  ),
                   child: const Text('SIGN IN'),
                 ),
               ),
@@ -86,8 +69,8 @@ class TitlePage extends StatelessWidget {
                         ),
                       ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.surface,
-                    foregroundColor: colorScheme.onSurface,
+                    backgroundColor: AppTheme.colorScheme.surface,
+                    foregroundColor: AppTheme.colorScheme.onSurface,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(38),
