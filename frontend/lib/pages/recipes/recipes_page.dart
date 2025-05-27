@@ -105,6 +105,32 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Future<void> _generateRecipes() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                'Generating recipes...',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This may take a moment',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
     try {
       final recipeResults = await _recipeService.generateRecipes(
         ingredients: ingredients,
@@ -119,6 +145,9 @@ class _RecipesPageState extends State<RecipesPage> {
       _logger.d(recipeResults);
 
       if (!mounted) return;
+      // Close loading dialog
+      Navigator.pop(context);
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -135,6 +164,9 @@ class _RecipesPageState extends State<RecipesPage> {
       );
     } catch (e) {
       if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
 
       showDialog(
         context: context,
