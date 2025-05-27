@@ -34,6 +34,7 @@ class _MapPageState extends State<MapPage> {
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   Timer? _loadTimer; // Timer for repeated attempts
+  final bool useCurrentLocation = false; // Use current location if available
 
   // Add these variables near the top of the class
   int _minimumRating = 1; // 1 = $, 2 = $$, 3 = $$$
@@ -76,6 +77,16 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _getCurrentLocation() async {
+    if (!useCurrentLocation) {
+      // Use default location when useCurrentLocation is false
+      setState(() {
+        _currentPosition = const LatLng(-37.907803, 145.133957);
+      });
+      // Force fetch after setting default location
+      _forceFetchRestaurants();
+      return;
+    }
+
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -109,10 +120,8 @@ class _MapPageState extends State<MapPage> {
       _forceFetchRestaurants();
     }
 
-    // Listen for position updates
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((
-      Position pos,
-    ) {
+    // Only set up location stream if using current location
+    _positionStreamSubscription = Geolocator.getPositionStream().listen((Position pos) {
       final newPos = LatLng(pos.latitude, pos.longitude);
       if (mounted) {
         setState(() {
