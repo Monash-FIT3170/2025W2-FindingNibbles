@@ -16,6 +16,7 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = false;
   List<CuisineDto> _availableCuisines = [];
   CuisineDto? _selectedCuisine;
+  int _minimumRating = 1;
 
   @override
   void initState() {
@@ -45,8 +46,13 @@ class _HomePageState extends State<HomePage> {
             orderBy: 'rating',
           )
         : await RestaurantService().getAllRestaurants(orderBy: 'rating');
+
+      final filteredRestaurants = allRestaurants
+        .where((restaurant) => restaurant.rating != null && restaurant.rating! >= _minimumRating)
+        .toList();
+      
       setState(() {
-        _restaurants = allRestaurants;
+        _restaurants = filteredRestaurants;
         _isLoading = false;
       });
     } catch (e) {
@@ -66,6 +72,28 @@ class _HomePageState extends State<HomePage> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  ListTile(
+                    leading: const Icon(Icons.star),
+                    title: const Text('Min Rating'),
+                    subtitle: DropdownButton<int>(
+                      value: _minimumRating,
+                      isExpanded: true,
+                      items:
+                          List.generate(5, (index) => index + 1)
+                              .map(
+                                (rating) => DropdownMenuItem(
+                                  value: rating,
+                                  child: Text('$rating ⭐'),
+                                ),
+                              )
+                              .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _minimumRating = value!;
+                        });
+                      },
+                    ),
+                  ),
                   ListTile(
                     leading: const Icon(Icons.restaurant_menu),
                     title: const Text('Cuisine'),
