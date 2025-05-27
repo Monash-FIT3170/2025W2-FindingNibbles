@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class RestaurantCard extends StatelessWidget {
   final RestaurantDto restaurant;
@@ -21,10 +22,6 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -53,7 +50,7 @@ class RestaurantCard extends StatelessWidget {
                                   Icon(
                                     Icons.error,
                                     size: 50,
-                                    color: colorScheme.error,
+                                    color: AppTheme.colorScheme.error,
                                   );
                             },
                           ),
@@ -75,18 +72,13 @@ class RestaurantCard extends StatelessWidget {
                   children: [
                     Text(
                       restaurant.name,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
+                      style: AppTheme.textTheme.titleMedium,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       restaurant.formattedAddress ?? 'No address available',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.7),
-                      ),
+                      style: AppTheme.textTheme.bodySmall,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -97,7 +89,10 @@ class RestaurantCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: isLiked ? colorScheme.primary : Colors.grey.shade400,
+                  color:
+                      isLiked
+                          ? AppTheme.colorScheme.primary
+                          : Colors.grey.shade400,
                 ),
                 onPressed: onFavoriteTap,
               ),
