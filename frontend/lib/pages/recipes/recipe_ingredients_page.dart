@@ -22,7 +22,6 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       widget.recipe.ingredients.length,
       (_) => false,
     );
-    if (checkedIngredients.isNotEmpty) checkedIngredients[0] = true;
   }
 
   Widget _buildIngredientsList(TextTheme textTheme, ColorScheme colorScheme) {
