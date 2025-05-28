@@ -304,6 +304,7 @@ class _RecipesPageState extends State<RecipesPage> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Recipes'),
         automaticallyImplyLeading: false, // Hide back button
