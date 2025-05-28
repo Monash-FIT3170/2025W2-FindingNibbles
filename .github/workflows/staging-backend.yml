@@ -12,6 +12,7 @@ on:
 
 jobs:
   backend-test:
+    name: Backend Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -45,6 +46,7 @@ jobs:
         run: npm run lint
 
   backend-build-push:
+    name: Backend Image Build and Push
     needs: backend-test
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     runs-on: ubuntu-latest

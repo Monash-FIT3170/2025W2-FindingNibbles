@@ -12,6 +12,7 @@ on:
 
 jobs:
   frontend-test:
+    name: Frontend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
