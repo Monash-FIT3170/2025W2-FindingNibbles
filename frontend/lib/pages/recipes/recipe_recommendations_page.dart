@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'recipe_ingredients_page.dart';
-import 'package:nibbles/pages/recipes/recipes_page.dart';
 import 'recipe_model.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
 import 'package:nibbles/service/profile/profile_service.dart';
@@ -182,16 +181,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
             icon: Icon(Icons.refresh, color: colorScheme.onSurface),
             tooltip: 'Refresh',
             onPressed: _reloadRecipes,
-          ),
-          IconButton(
-            icon: Icon(Icons.filter_list, color: colorScheme.onSurface),
-            tooltip: 'Filter',
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const RecipesPage()),
-              );
-            },
           ),
         ],
       ),
