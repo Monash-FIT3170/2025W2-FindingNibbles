@@ -30,7 +30,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-express": "^11.1.2",
     "@nestjs/throttler": "^6.4.0",
     "@prisma/client": "^6.8.2",
     "argon2": "^0.41.1",
