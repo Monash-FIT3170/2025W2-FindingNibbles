@@ -1,0 +1,42 @@
+name: Staging Frontend
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "frontend/**"
+  pull_request:
+    branches: [dev]
+    paths:
+      - "frontend/**"
+
+jobs:
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.29.2"
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze project source
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test

@@ -1,0 +1,400 @@
+import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/recipes/widgets/appliances_selection.dart';
+import 'package:nibbles/pages/recipes/widgets/dietary_requirements.dart';
+import 'package:nibbles/pages/recipes/widgets/ingredients_input.dart';
+import 'package:nibbles/pages/recipes/widgets/recipe_difficulty.dart';
+import 'package:nibbles/service/appliance/appliance_service.dart';
+import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
+import 'package:nibbles/pages/recipes/recipe_recommendations_page.dart';
+
+class RecipesPage extends StatefulWidget {
+  const RecipesPage({super.key});
+
+  @override
+  State<RecipesPage> createState() => _RecipesPageState();
+}
+
+class _RecipesPageState extends State<RecipesPage> {
+  final _logger = getLogger();
+  final List<String> ingredients = [];
+  final TextEditingController _ingredientInputController =
+      TextEditingController();
+  RecipeDifficulty selectedDifficulty = RecipeDifficulty.any;
+  List<Appliance> availableAppliances = [];
+  List<Appliance> selectedAppliances = [];
+  List<DietaryRequirementDto> availableDietaries = [];
+  List<DietaryRequirementDto> selectedDietaries = [];
+  bool isLoading = false;
+  bool useDietaryRequirements = true;
+
+  // Services
+  final ProfileService _profileService = ProfileService();
+  final RecipeService _recipeService = RecipeService();
+
+  @override
+  void initState() {
+    super.initState();
+    isLoading = true;
+
+    // Use Future.wait to wait for both async operations to complete
+    Future.wait([_fetchDietaries(), _fetchAppliances()])
+        .then((_) {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
+        })
+        .catchError((error) {
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load data: ${error.toString()}'),
+              ),
+            );
+          }
+        });
+  }
+
+  Future<void> _fetchDietaries() async {
+    try {
+      final fetchedDietaries = await _profileService.getDietaryRequirements();
+      setState(() {
+        availableDietaries = fetchedDietaries;
+      });
+    } catch (e) {
+      _logger.e('Failed to fetch dietaries: ${e.toString()}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load dietaries: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _fetchAppliances() async {
+    try {
+      final fetchedAppliances = await _profileService.getUserAppliances();
+
+      if (!mounted) {
+        return;
+      } // Ensure widget is still mounted before updating state
+      setState(() {
+        availableAppliances =
+            fetchedAppliances
+                .map(
+                  (dto) =>
+                      Appliance(id: dto.id, name: dto.name, isSelected: false),
+                )
+                .toList();
+      });
+    } catch (e) {
+      _logger.e('Failed to fetch appliances: ${e.toString()}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load appliances: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _generateRecipes() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                'Generating recipes...',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This may take a moment',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final recipeResults = await _recipeService.generateRecipes(
+        ingredients: ingredients,
+        dietaryRequirements:
+            useDietaryRequirements
+                ? selectedDietaries.map((d) => d.id).toList()
+                : [],
+        kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
+        difficultyLevel: selectedDifficulty,
+      );
+
+      _logger.d(recipeResults);
+
+      if (!mounted) return;
+      // Close loading dialog
+      Navigator.pop(context);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => RecipeRecommendationsPage(
+                recipes: recipeResults,
+                dietaryRequirements:
+                    useDietaryRequirements
+                        ? selectedDietaries.map((d) => d.id).toList()
+                        : [],
+                kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
+              ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: Text('Failed to generate recipes: ${e.toString()}'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _ingredientInputController.dispose();
+    super.dispose();
+  }
+
+  void _addIngredient(String ingredient) {
+    if (ingredient.isNotEmpty) {
+      setState(() {
+        ingredients.add(ingredient);
+        _ingredientInputController.clear();
+      });
+    }
+  }
+
+  void _removeIngredient(String ingredient) {
+    setState(() {
+      ingredients.remove(ingredient);
+    });
+  }
+
+  void _toggleAppliance(Appliance appliance) {
+    setState(() {
+      if (_isApplianceSelected(appliance)) {
+        selectedAppliances.removeWhere((a) => a.id == appliance.id);
+        appliance.isSelected = false;
+      } else {
+        selectedAppliances.add(appliance);
+        appliance.isSelected = true;
+      }
+    });
+  }
+
+  bool _isApplianceSelected(Appliance appliance) {
+    return selectedAppliances.any((a) => a.id == appliance.id);
+  }
+
+  bool _areAllAppliancesSelected() {
+    return selectedAppliances.length == availableAppliances.length &&
+        availableAppliances.every(
+          (appliance) => selectedAppliances.any((a) => a.id == appliance.id),
+        );
+  }
+
+  void _toggleAllAppliances(bool selected) {
+    setState(() {
+      if (_areAllAppliancesSelected()) {
+        // Deselect all if all are already selected
+        selectedAppliances.clear();
+      } else {
+        // Select all if not all are selected
+        selectedAppliances = List.from(availableAppliances);
+      }
+    });
+  }
+
+  void _toggleDietary(DietaryRequirementDto dietary) {
+    setState(() {
+      if (_isDietarySelected(dietary)) {
+        selectedDietaries.removeWhere((d) => d.id == dietary.id);
+      } else {
+        selectedDietaries.add(dietary);
+      }
+    });
+  }
+
+  bool _isDietarySelected(DietaryRequirementDto dietary) {
+    return selectedDietaries.any((d) => d.id == dietary.id);
+  }
+
+  bool _areAllDietariesSelected() {
+    return selectedDietaries.length == availableDietaries.length &&
+        availableDietaries.every(
+          (dietary) => selectedDietaries.any((d) => d.id == dietary.id),
+        );
+  }
+
+  void _toggleAllDietaries() {
+    setState(() {
+      if (_areAllDietariesSelected()) {
+        // Deselect all if all are already selected
+        selectedDietaries.clear();
+      } else {
+        // Select all if not all are selected
+        selectedDietaries = List.from(availableDietaries);
+      }
+    });
+  }
+
+  void _toggleDietaryRequirements(bool value) {
+    setState(() {
+      useDietaryRequirements = value;
+    });
+  }
+
+  void _setDifficulty(RecipeDifficulty difficulty) {
+    setState(() {
+      selectedDifficulty = difficulty;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Get the route arguments if they exist (safe to use context here)
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && ingredients.isEmpty) {
+      final prevIngredients = args['previousIngredients'] as List<String>?;
+      final prevDifficulty = args['previousDifficulty'] as RecipeDifficulty?;
+      if (prevIngredients != null) {
+        ingredients.addAll(prevIngredients);
+      }
+      if (prevDifficulty != null) {
+        selectedDifficulty = prevDifficulty;
+      }
+    }
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: const Text('Recipes'),
+        automaticallyImplyLeading: false, // Hide back button
+      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child:
+              isLoading
+                  ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading recipe components...'),
+                      ],
+                    ),
+                  )
+                  : Column(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Text(
+                                'Ingredients',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Expanded(
+                              child: IngredientsInput(
+                                ingredients: ingredients,
+                                controller: _ingredientInputController,
+                                onAddIngredient: _addIngredient,
+                                onRemoveIngredient: _removeIngredient,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DietaryRequirements(
+                            useDietaryRequirements: useDietaryRequirements,
+                            availableDietaries: availableDietaries,
+                            selectedDietaries: selectedDietaries,
+                            onToggleDietaryRequirements:
+                                _toggleDietaryRequirements,
+                            onToggleDietary: _toggleDietary,
+                            onToggleAll: _toggleAllDietaries,
+                            isDietarySelected: _isDietarySelected,
+                            areAllDietariesSelected: _areAllDietariesSelected,
+                          ),
+                          SizedBox(height: 8),
+                          RecipeDifficultySelector(
+                            selectedDifficulty: selectedDifficulty,
+                            onDifficultySelected: _setDifficulty,
+                          ),
+                          SizedBox(height: 8),
+                          AppliancesSelection(
+                            availableAppliances: availableAppliances,
+                            selectedAppliances: selectedAppliances,
+                            onToggleAppliance: _toggleAppliance,
+                            isApplianceSelected: _isApplianceSelected,
+                            areAllAppliancesSelected: _areAllAppliancesSelected,
+                            onToggleAll: _toggleAllAppliances,
+                          ),
+                          SizedBox(height: 16),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _generateRecipes,
+                            icon: Icon(Icons.restaurant_menu),
+                            label: Text('Generate Recipes'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+        ),
+      ),
+    );
+  }
+}

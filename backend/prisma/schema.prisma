@@ -1,0 +1,320 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+model User {
+  id                     Int                        @id @default(autoincrement())
+  firstName              String
+  lastName               String
+  verifyCode             Int?
+  isVerified             Boolean                    @default(false)
+  email                  String                     @unique
+  passwordHash           String?
+  provider               String
+  providerId             String?
+  locations              UserLocation[]
+  userDietaries          UserDietary[]
+  mealPlans              UserMealPlan[]
+  calorieLogs            UserCalorieLog[]
+  restaurantReviews      RestaurantReview[]
+  favouriteRestaurants   UserFavouritedRestaurant[]
+  userCuisinePreferences UserCuisine[]
+  appliances             UserAppliance[]
+  favouritedRecipes      UserFavouritedRecipe[]
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+
+  @@unique([provider, providerId])
+}
+
+model UserLocation {
+  id            Int     @id @default(autoincrement())
+  userId        Int
+  name          String  @unique // Home, Work, etc.
+  streetAddress String?
+  latitude      Float
+  longitude     Float
+  isDefault     Boolean @default(false)
+  user          User    @relation(fields: [userId], references: [id])
+}
+
+model DietaryRequirement {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  description   String?
+  userDietaries UserDietary[]
+  dishDietaries DishDietary[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model UserDietary {
+  id        Int                 @id @default(autoincrement())
+  userId    Int
+  dietaryId Int
+  user      User                @relation(fields: [userId], references: [id])
+  dietary   DietaryRequirement  @relation(fields: [dietaryId], references: [id])
+  recipes   RecipeUserDietary[]
+
+  @@unique([userId, dietaryId])
+}
+
+model UserFavouritedRestaurant {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  restaurantId Int
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@unique([userId, restaurantId])
+}
+
+model UserFavouritedRecipe {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  recipeId Int
+  user     User   @relation(fields: [userId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+
+  @@unique([userId, recipeId])
+}
+
+model UserCuisine {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  cuisineId Int
+  user      User    @relation(fields: [userId], references: [id])
+  cuisine   Cuisine @relation(fields: [cuisineId], references: [id])
+
+  @@unique([userId, cuisineId])
+}
+
+model Restaurant {
+  id                 Int                        @id @default(autoincrement())
+  place_id           String                     @unique // Google Places ID
+  name               String
+  latitude           Float
+  longitude          Float
+  businessStatus     String?
+  icon               String?
+  rating             Float?
+  userRatingsTotal   Int?
+  priceLevel         Int?
+  restaurantCuisines RestaurantCuisine[]
+  favouritedBy       UserFavouritedRestaurant[]
+
+  // Detailed information (from Details API)
+  hasDetails        Boolean            @default(false) // Flag if we have detailed info
+  formattedAddress  String?
+  formattedPhoneNum String?
+  website           String?
+  openingHours      Json?
+  photos            Photo[]
+  restaurantReviews RestaurantReview[]
+
+  // Additional place details
+  dineIn                       Boolean?
+  takeout                      Boolean?
+  delivery                     Boolean?
+  servesBreakfast              Boolean?
+  servesLunch                  Boolean?
+  servesDinner                 Boolean?
+  wheelchairAccessibleEntrance Boolean?
+
+  // Metadata for our app
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  detailsUpdatedAt DateTime?
+  viewCount        Int       @default(0)
+  favoriteCount    Int       @default(0)
+}
+
+model Photo {
+  id               String     @id @default(uuid())
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId     Int
+  photoReference   String // Google Places photo reference
+  height           Int
+  width            Int
+  htmlAttributions String[]
+  createdAt        DateTime   @default(now())
+}
+
+model RestaurantReview {
+  id           Int        @id @default(autoincrement())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId Int
+
+  // Core review data
+  authorName String? // from Google or user's name
+  rating     Int
+  text       String?
+  time       DateTime? // original timestamp (Google) or set by user
+
+  // Distinguish Google-sourced vs. user-submitted
+  source            ReviewSource @default(LOCAL)
+  googleReviewId    String?      @unique
+  profile_photo_url String? // Google profile photo URL
+
+  // Optional relation to your application user for LOCAL reviews
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
+
+  createdAt DateTime @default(now())
+}
+
+// Review source indicator
+enum ReviewSource {
+  GOOGLE
+  LOCAL
+}
+
+model Cuisine {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  description        String?
+  dishes             Dish[]
+  restaurantCuisines RestaurantCuisine[]
+  userCuisines       UserCuisine[]
+  recipes            Recipe[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model RestaurantCuisine {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  cuisineId    Int
+  cuisine      Cuisine    @relation(fields: [cuisineId], references: [id])
+}
+
+model Dish {
+  id             Int            @id @default(autoincrement())
+  name           String
+  description    String?
+  calories       Int?
+  price          Float?
+  restaurantId   Int
+  cuisine        Cuisine?       @relation(fields: [cuisineId], references: [id])
+  cuisineId      Int?
+  dishDietaries  DishDietary[]
+  mealPlanDishes MealPlanDish[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model DishDietary {
+  dishId    Int
+  dietaryId Int
+  dish      Dish               @relation(fields: [dishId], references: [id])
+  dietary   DietaryRequirement @relation(fields: [dietaryId], references: [id])
+
+  @@id([dishId, dietaryId])
+  @@unique([dishId, dietaryId])
+}
+
+model UserMealPlan {
+  id             Int            @id @default(autoincrement())
+  user           User           @relation(fields: [userId], references: [id])
+  userId         Int
+  date           DateTime
+  mealPlanDishes MealPlanDish[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model MealPlanDish {
+  id         Int          @id @default(autoincrement())
+  mealPlanId Int
+  dishId     Int
+  mealPlan   UserMealPlan @relation(fields: [mealPlanId], references: [id])
+  dish       Dish         @relation(fields: [dishId], references: [id])
+}
+
+model UserCalorieLog {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  date      DateTime
+  calories  Int
+  createdAt DateTime @default(now())
+}
+
+model Appliance {
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  description          String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  userAppliances       UserAppliance[]
+  recipeUserAppliances RecipeUserAppliance[]
+}
+
+model UserAppliance {
+  id                  Int                   @id @default(autoincrement())
+  userId              Int
+  applianceId         Int
+  user                User                  @relation(fields: [userId], references: [id])
+  appliance           Appliance             @relation(fields: [applianceId], references: [id])
+  RecipeUserAppliance RecipeUserAppliance[]
+
+  @@unique([userId, applianceId])
+}
+
+model RecipeUserAppliance {
+  id              Int           @id @default(autoincrement())
+  recipeId        Int
+  userApplianceId Int
+  recipe          Recipe        @relation(fields: [recipeId], references: [id])
+  appliance       UserAppliance @relation(fields: [userApplianceId], references: [id])
+  Appliance       Appliance?    @relation(fields: [applianceId], references: [id])
+  applianceId     Int?
+
+  @@unique([recipeId, userApplianceId])
+}
+
+model RecipeUserDietary {
+  id            Int         @id @default(autoincrement())
+  recipeId      Int
+  userDietaryId Int
+  recipe        Recipe      @relation(fields: [recipeId], references: [id])
+  dietary       UserDietary @relation(fields: [userDietaryId], references: [id])
+
+  @@unique([recipeId, userDietaryId])
+}
+
+model Recipe {
+  id                   Int                    @id @default(autoincrement())
+  title                String
+  description          String
+  ingredients          String[]
+  dietaries            RecipeUserDietary[]
+  instructions         String[]
+  appliances           RecipeUserAppliance[]
+  favouriteBy          UserFavouritedRecipe[]
+  estimatedTimeMinutes Int
+  servings             Int
+  dietaryTags          String[]
+  nutritionalInfo      String[]
+  difficultyLevel      String
+  imageURL             String?
+  cuisineId            Int
+  cuisine              Cuisine                @relation(fields: [cuisineId], references: [id])
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+}

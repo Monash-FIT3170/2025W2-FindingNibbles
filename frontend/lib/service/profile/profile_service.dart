@@ -1,0 +1,387 @@
+import 'package:dio/dio.dart';
+import 'package:nibbles/core/dio_client.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/recipes/recipe_model.dart';
+import 'package:nibbles/service/profile/dietary_dto.dart';
+import 'package:nibbles/service/profile/recipe_dto.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/service/profile/user_dto.dart';
+import 'package:nibbles/service/profile/appliance_dto.dart';
+import 'package:nibbles/service/profile/user_location_dto.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
+
+class ProfileService {
+  final Dio _dio = DioClient().client;
+  final RecipeService _recipeService = RecipeService();
+  final _logger = getLogger();
+
+  /// Dietary Requirements
+
+  Future<List<DietaryRequirementDto>> getDietaryRequirements() async {
+    try {
+      final response = await _dio.get('user/dietary-requirement');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => DietaryRequirementDto.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Failed to load dietary requirements');
+      }
+    } catch (e) {
+      throw Exception('Failed to load dietary requirements: $e');
+    }
+  }
+
+  Future<void> addDietaryRequirement(int dietaryId) async {
+    try {
+      // Pass the dietaryId in the request body
+      _logger.d(
+        'Adding dietary requirement with ID: $dietaryId',
+      ); // Log the dietaryId
+
+      final response = await _dio.post(
+        'user/dietary-requirement',
+        data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add dietary requirement');
+      }
+    } catch (e) {
+      throw Exception('Failed to add dietary requirement: $e');
+    }
+  }
+
+  Future<void> removeDietaryRequirement(int dietaryId) async {
+    try {
+      final response = await _dio.delete(
+        '/user/dietary-requirement',
+        data: {'dietaryId': dietaryId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove dietary requirement');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove dietary requirement: $e');
+    }
+  }
+
+  Future<List<DietaryRequirementDto>> getDefaultDietaryRequirements() async {
+    try {
+      final response = await _dio.get('dietary-requirement');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => DietaryRequirementDto.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Failed to load dietary requirements');
+      }
+    } catch (e) {
+      throw Exception('Failed to load dietary requirements: $e');
+    }
+  }
+
+  Future<DietaryRequirementDto> createDietaryRequirement(
+    String name,
+    String description,
+  ) async {
+    try {
+      _logger.d(
+        'Creating dietary requirement with Name: $name, Description: $description',
+      ); // Log the name and description
+
+      final response = await _dio.post(
+        'user/create-dietary-requirement',
+        data: {'name': name, 'description': description},
+      );
+      if (response.statusCode == 201) {
+        return DietaryRequirementDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create dietary requirement');
+      }
+    } catch (e) {
+      throw Exception('Failed to create dietary requirement: $e');
+    }
+  }
+
+  /// Restaurants
+
+  Future<List<RestaurantDto>> getFavouriteRestaurants() async {
+    try {
+      final response = await _dio.get('user/favourite-restaurant');
+      if (response.statusCode == 200) {
+        _logger.d(response.data); // Log the response to inspect the data
+        List<dynamic> data = response.data;
+        return data.map((item) => RestaurantDto.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load restaurants');
+      }
+    } catch (e) {
+      throw Exception('Failed to load restaurants: $e');
+    }
+  }
+
+  Future<void> addFavouriteRestaurant(int restaurantId) async {
+    try {
+      final response = await _dio.post(
+        '/user/favourite-restaurant',
+        data: {'restaurantId': restaurantId}, // Send restaurantId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add restaurant');
+      }
+    } catch (e) {
+      throw Exception('Failed to add restaurant: $e');
+    }
+  }
+
+  Future<void> removeFavouriteRestaurant(int restaurantId) async {
+    try {
+      final response = await _dio.delete(
+        '/user/favourite-restaurant',
+        data: {'restaurantId': restaurantId}, // Send restaurantId as JSON
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove restaurant');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove restaurant: $e');
+    }
+  }
+
+  Future<List<RecipeDto>> getFavouriteRecipes() async {
+    try {
+      final response = await _dio.get('user/favourite-recipe');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data.map((item) => RecipeDto.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load recipes');
+      }
+    } catch (e) {
+      throw Exception('Failed to load recipes: $e');
+    }
+  }
+
+  Future<void> addFavouriteRecipe(RecipeModel recipe) async {
+    try {
+      _logger.d('Adding recipe with ID: $recipe'); // Log the recipe ID
+      final recipeId = await _recipeService.createRecipe(recipe);
+
+      _logger.d(
+        'Recipe created with ID: $recipeId',
+      ); // Log the created recipe ID
+      final response = await _dio.post(
+        '/user/favourite-recipe',
+        data: {'recipeId': recipeId}, // Send recipeId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add recipe');
+      }
+    } catch (e) {
+      throw Exception('Failed to add recipe: $e');
+    }
+  }
+
+  Future<void> removeFavouriteRecipe(int recipeId) async {
+    try {
+      // First, remove the recipe from favorites in the backend
+      final response = await _dio.delete(
+        '/user/favourite-recipe',
+        data: {'recipeId': recipeId},
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove recipe from favorites');
+      }
+      try {} catch (deleteError) {
+        // Log the error but don't rethrow - we've already unfavorited successfully
+        _logger.w(
+          'Could not delete recipe from database but unfavorited successfully: $deleteError',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to remove recipe from favorites: $e');
+    }
+  }
+
+  Future<UserDto> updateUserProfile(UpdateUserDto updateUserDto) async {
+    try {
+      final response = await _dio.patch(
+        '/user/update',
+        data: updateUserDto.toJson(), // Convert UpdateUserDto to JSON
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response into a UserDto
+        return UserDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to update user profile');
+      }
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
+    }
+  }
+
+  /// Updating Appliance for User
+
+  Future<List<ApplianceRequirementDto>> getUserAppliances() async {
+    try {
+      final response = await _dio.get('/user/appliance');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => ApplianceRequirementDto.fromJson(item['appliance']))
+            .toList();
+      } else {
+        throw Exception('Failed to load appliances');
+      }
+    } catch (e) {
+      throw Exception('Failed to load appliances: $e');
+    }
+  }
+
+  Future<void> addAppliance(int applianceId) async {
+    try {
+      // Pass the dietaryId in the request body
+      final response = await _dio.post(
+        '/user/appliance',
+        data: {'applianceId': applianceId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to add appliance: $e');
+    }
+  }
+
+  Future<void> removeAppliance(int applianceId) async {
+    try {
+      final response = await _dio.delete(
+        '/user/appliance',
+        data: {'applianceId': applianceId}, // Send dietaryId as JSON
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove appliance: $e');
+    }
+  }
+
+  Future<List<ApplianceRequirementDto>> getDefaultAppliances() async {
+    try {
+      final response = await _dio.get('appliance');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return data
+            .map((item) => ApplianceRequirementDto.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Failed to load default appliances');
+      }
+    } catch (e) {
+      throw Exception('Failed to load default appliances: $e');
+    }
+  }
+
+  Future<ApplianceRequirementDto> createAppliance(
+    String name,
+    String? description,
+  ) async {
+    try {
+      final response = await _dio.post(
+        'appliance',
+        data: {'name': name, 'description': description ?? ''},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ApplianceRequirementDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create appliance');
+      }
+    } catch (e) {
+      throw Exception('Failed to create appliance: $e');
+    }
+  }
+
+  /// User Location
+
+  Future<UserLocationDto?> getDefaultLocation() async {
+    try {
+      final response = await _dio.get('user/location/default');
+      if (response.statusCode == 200) {
+        if (response.data == null ||
+            response.data is String && (response.data as String).isEmpty) {
+          return null;
+        }
+        if (response.data is Map<String, dynamic>) {
+          return UserLocationDto.fromJson(response.data);
+        } else {
+          throw Exception(
+            'Received unexpected data format for default location.',
+          );
+        }
+      } else {
+        throw Exception(
+          'Failed to load default location with status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        'Network or server error while fetching default location: ${e.message}',
+      );
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<UserLocationDto> createLocation(
+    CreateUserLocationDto locationData,
+  ) async {
+    try {
+      final response = await _dio.post(
+        'user/location',
+        data: locationData.toJson(),
+      );
+      if (response.statusCode == 201) {
+        return UserLocationDto.fromJson(response.data);
+      } else {
+        _logger.d(
+          'Failed to create location: ${response.statusCode} ${response.data}',
+        );
+        throw Exception('Failed to create location');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to create location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  Future<UserLocationDto> updateLocation(
+    int locationId,
+    UpdateUserLocationDto locationData,
+  ) async {
+    try {
+      final response = await _dio.put(
+        'user/location',
+        data: locationData.toJson(),
+      );
+      if (response.statusCode == 200) {
+        return UserLocationDto.fromJson(response.data);
+      } else {
+        _logger.d(
+          'Failed to update location: ${response.statusCode} ${response.data}',
+        );
+        throw Exception('Failed to update location');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to update location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+}
