@@ -7,7 +7,7 @@ on:
 
 jobs:
   security:
-    name: Security Scan
+    name: Trivy Security Scan
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
