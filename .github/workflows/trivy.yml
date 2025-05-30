@@ -1,4 +1,4 @@
-name: Staging Frontend
+name: Trivy
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   security:
-    name: Trivy Security Scan
+    name: Repo Security Scan
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
