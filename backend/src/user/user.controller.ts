@@ -13,7 +13,7 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
 import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
-import { UpdateUserDto } from './dto/update-user_dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 
