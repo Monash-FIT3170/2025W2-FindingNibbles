@@ -13,6 +13,7 @@ import { DietaryRequirementModule } from './dietary-requirement/dietary-requirem
 import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
 import { ApplianceModule } from './appliance/appliance.module';
+import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ApplianceModule } from './appliance/appliance.module';
     RestaurantModule,
     CuisineModule,
     ApplianceModule,
+    RestaurantMenuModule,
   ],
 })
 export class AppModule {}
