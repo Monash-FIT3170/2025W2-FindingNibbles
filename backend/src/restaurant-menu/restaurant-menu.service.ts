@@ -43,6 +43,61 @@ export class RestaurantMenuService {
         throw new BadRequestException('Invalid menu file provided');
       }
 
+      // Detect the actual MIME type from the file buffer
+      let actualMimeType = menu.mimetype;
+
+      // If MIME type is generic octet-stream, try to detect from file signature
+      if (
+        menu.mimetype === 'application/octet-stream' ||
+        !menu.mimetype.startsWith('image/')
+      ) {
+        const buffer = menu.buffer;
+
+        // Check file signatures (magic numbers) to determine actual file type
+        if (buffer.length >= 4) {
+          // JPEG signatures
+          if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+            actualMimeType = 'image/jpeg';
+          }
+          // PNG signature
+          else if (
+            buffer[0] === 0x89 &&
+            buffer[1] === 0x50 &&
+            buffer[2] === 0x4e &&
+            buffer[3] === 0x47
+          ) {
+            actualMimeType = 'image/png';
+          }
+          // WebP signature
+          else if (buffer.subarray(8, 12).toString() === 'WEBP') {
+            actualMimeType = 'image/webp';
+          }
+          // GIF signatures
+          else if (buffer.subarray(0, 3).toString() === 'GIF') {
+            actualMimeType = 'image/gif';
+          }
+          // Default to JPEG if we can't detect but it looks like an image upload
+          else if (
+            menu.originalname &&
+            /\.(jpe?g|png|gif|webp)$/i.test(menu.originalname)
+          ) {
+            actualMimeType = 'image/jpeg'; // Default fallback
+          }
+        }
+      }
+
+      const supportedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+      ];
+      if (!supportedTypes.includes(actualMimeType)) {
+        throw new BadRequestException(
+          `Unsupported file type: ${actualMimeType}. Please upload a JPEG, PNG, WebP, or GIF image.`,
+        );
+      }
+
       const dietaryRequirements = await this.db.dietaryRequirement.findMany({
         select: {
           name: true,
@@ -51,25 +106,25 @@ export class RestaurantMenuService {
 
       const availableDietaries = dietaryRequirements.map((dr) => dr.name);
 
-      // Convert file to base64 for sending to Gemini
-      const base64Data = menu.buffer.toString('base64');
-      const mimeType = menu.mimetype;
+      console.log(
+        `Available dietary requirements: ${availableDietaries.join(', ')}`,
+      );
 
       const prompt = `
-        Analyze this restaurant menu image and extract all menu items with their dietary restrictions.
-        
-        Available dietary requirements to match against: ${availableDietaries.join(', ')}.
+        Analyse this restaurant menu image and extract all menu items with their dietary restrictions.
         
         For each menu item, provide:
         - name: The exact name of the dish
-        - description: Brief description if available
+        - description: Brief description of the menu item if available. Draw on your own knowledge where necessary.
         - price: Price if visible (as a number)
-        - dietaryTags: Array of applicable dietary restrictions from the available list (case-sensitive)
-        - category: Category like 'Appetizers', 'Mains', 'Desserts', etc. if identifiable
+        - dietaryTags: Array of dietary restrictions that the item from this menu meets. Ignore the common trends with the particular menu item. E.g. for a traditional hamburger, this would be an empty array. For a vegetarian pizza, the result would be ['Vegetarian'].
+        - category: Category like 'Appetisers', 'Mains', 'Desserts', etc. if identifiable
         
         Only include dietary tags that exactly match the available dietary requirements.
         Return the menu items in a JSON object with a 'menu_items' key containing an array of menu items.
       `;
+
+      const base64Data = menu.buffer.toString('base64');
 
       let responseJson: {
         candidates?: Array<{
@@ -85,36 +140,46 @@ export class RestaurantMenuService {
         const model = this.configService.get<string>('GOOGLE_GEMINI_API_MODEL');
         const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
 
+        const requestBody = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+                {
+                  inline_data: {
+                    mime_type: actualMimeType,
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: menuAnalysisSchema,
+          },
+        };
+
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
           {
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: prompt,
-                    },
-                    {
-                      inline_data: {
-                        mime_type: mimeType,
-                        data: base64Data,
-                      },
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                responseSchema: menuAnalysisSchema,
-              },
-            }),
+            body: JSON.stringify(requestBody),
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
           },
         );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `API request failed: ${response.status} ${errorText}`,
+          );
+        }
+
         responseJson = (await response.json()) as typeof responseJson;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
