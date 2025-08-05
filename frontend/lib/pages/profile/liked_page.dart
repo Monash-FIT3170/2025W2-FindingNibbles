@@ -1,6 +1,6 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
-import 'package:nibbles/pages/restaurants/widgets/restaurant_card.dart';
+import 'package:nibbles/pages/profile/widgets/restaurant_card.dart';
 import 'package:nibbles/pages/recipes/widgets/recipe_card.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
