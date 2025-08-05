@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
@@ -199,6 +200,18 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Nearby Restaurants'),
         automaticallyImplyLeading: false, // Hide back button
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MenuScannerPage(),
+                ),
+              );
+            },
+            tooltip: 'Scan Menu',
+          ),
           IconButton(
             icon: const Icon(Icons.filter_alt_rounded),
             onPressed: _showFilterDialog,
