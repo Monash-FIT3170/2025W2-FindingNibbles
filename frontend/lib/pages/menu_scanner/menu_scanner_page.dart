@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/theme/app_theme.dart';
 
 class MenuScannerPage extends StatefulWidget {
   const MenuScannerPage({super.key});
@@ -53,14 +54,13 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
 
   Future<void> _takePicture() async {
     try {
-      // Request camera permission first
       final hasPermission = await _requestCameraPermission();
       if (!hasPermission) return;
 
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 85, // Higher quality for better text recognition
-        maxWidth: 1920, // Limit size for API efficiency
+        imageQuality: 85,
+        maxWidth: 1920,
         maxHeight: 1920,
       );
 
@@ -80,7 +80,6 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
 
   Future<void> _pickFromGallery() async {
     try {
-      // Request photo library permission first
       final hasPermission = await _requestPhotoPermission();
       if (!hasPermission) return;
 
@@ -131,22 +130,25 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final colorScheme = AppTheme.colorScheme;
+        final textTheme = AppTheme.textTheme;
         return AlertDialog(
-          title: const Text('Select Image Source'),
+          backgroundColor: colorScheme.surface,
+          title: Text('Select Image Source', style: textTheme.titleLarge?.copyWith(color: colorScheme.primary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
+                leading: Icon(Icons.camera_alt, color: colorScheme.primary),
+                title: Text('Take Photo', style: textTheme.bodyLarge),
                 onTap: () {
                   Navigator.pop(context);
                   _takePicture();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
+                leading: Icon(Icons.photo_library, color: colorScheme.primary),
+                title: Text('Choose from Gallery', style: textTheme.bodyLarge),
                 onTap: () {
                   Navigator.pop(context);
                   _pickFromGallery();
@@ -164,9 +166,11 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Card(
       margin: const EdgeInsets.all(16),
+      color: colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -174,7 +178,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
           children: [
             Text(
               'Menu Items Found (${_analysisResult!.length})',
-              style: theme.textTheme.titleLarge?.copyWith(
+              style: textTheme.titleLarge?.copyWith(
                 color: colorScheme.primary,
               ),
             ),
@@ -184,7 +188,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
+                  color: colorScheme.secondary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: colorScheme.outline),
                 ),
@@ -204,7 +208,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest,
+                    color: colorScheme.secondary.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: colorScheme.outline),
                   ),
@@ -217,7 +221,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                           Expanded(
                             child: Text(
                               item['name'] ?? 'Unnamed Item',
-                              style: theme.textTheme.titleMedium?.copyWith(
+                              style: textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
                               ),
@@ -226,7 +230,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                           if (item['price'] != null)
                             Text(
                               '\$${item['price'].toStringAsFixed(2)}',
-                              style: theme.textTheme.titleMedium?.copyWith(
+                              style: textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: colorScheme.primary,
                               ),
@@ -237,8 +241,8 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         const SizedBox(height: 4),
                         Text(
                           item['category'],
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.secondary,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -247,7 +251,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         const SizedBox(height: 8),
                         Text(
                           item['description'],
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onSurface,
                           ),
                         ),
@@ -258,31 +262,27 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         Wrap(
                           spacing: 4,
                           runSpacing: 4,
-                          children:
-                              (item['dietaryTags'] as List<dynamic>)
-                                  .map(
-                                    (tag) => Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.secondaryContainer,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        tag.toString(),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color:
-                                                  colorScheme
-                                                      .onSecondaryContainer,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
+                          children: (item['dietaryTags'] as List<dynamic>)
+                              .map(
+                                (tag) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    tag.toString(),
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                  )
-                                  .toList(),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                         ),
                       ],
                     ],
@@ -299,12 +299,15 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Menu Scanner'),
         backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
       ),
+      backgroundColor: colorScheme.surface,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -314,13 +317,13 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.errorContainer,
+                  color: colorScheme.error.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: colorScheme.error),
                 ),
                 child: Text(
                   _errorMessage!,
-                  style: TextStyle(color: colorScheme.onErrorContainer),
+                  style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w600),
                 ),
               ),
 
@@ -332,7 +335,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withOpacity(0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -353,7 +356,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 margin: const EdgeInsets.all(16),
                 height: 200,
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
+                  color: colorScheme.secondary.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: colorScheme.outline),
                 ),
@@ -364,14 +367,13 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                       Icon(
                         Icons.camera_alt_outlined,
                         size: 48,
-                        color: colorScheme.onSurfaceVariant,
+                        color: colorScheme.primary,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'No image selected',
-                        style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 16,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary.withOpacity(0.7),
                         ),
                       ),
                     ],
@@ -390,7 +392,12 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                       icon: const Icon(Icons.add_a_photo),
                       label: const Text('Select Image'),
                       style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.secondary,
+                        foregroundColor: colorScheme.onSecondary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        elevation: 0,
+                        textStyle: textTheme.labelLarge,
                       ),
                     ),
                   ),
@@ -401,17 +408,16 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                           _imageFile != null && !_isUploading
                               ? _uploadAndAnalyze
                               : null,
-                      icon:
-                          _isUploading
-                              ? SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colorScheme.onPrimary,
-                                ),
-                              )
-                              : const Icon(Icons.upload),
+                      icon: _isUploading
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colorScheme.onPrimary,
+                              ),
+                            )
+                          : const Icon(Icons.upload),
                       label: Text(
                         _isUploading ? 'Analysing...' : 'Analyse Menu',
                       ),
@@ -419,6 +425,9 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        elevation: 0,
+                        textStyle: textTheme.labelLarge,
                       ),
                     ),
                   ),
