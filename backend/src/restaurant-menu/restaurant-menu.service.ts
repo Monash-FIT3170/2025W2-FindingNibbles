@@ -111,14 +111,17 @@ export class RestaurantMenuService {
       );
 
       const prompt = `
-        Analyse this restaurant menu image and extract all menu items with their dietary restrictions.
-        
-        For each menu item, provide:
-        - name: The exact name of the dish
-        - description: Brief description of the menu item if available. Draw on your own knowledge where necessary.
-        - price: Price if visible (as a number)
-        - dietaryTags: Array of dietary restrictions that the item from this menu meets. Ignore the common trends with the particular menu item. E.g. for a traditional hamburger, this would be an empty array. For a vegetarian pizza, the result would be ['Vegetarian'].
-        - category: Category like 'Appetisers', 'Mains', 'Desserts', etc. if identifiable
+    You are analyzing a restaurant menu image. For each menu item, extract the following fields:
+    - name: The exact name of the dish
+    - description: Brief description of the menu item if available (use only the menu text; do NOT supplement with general knowledge)
+    - price: Price if visible (as a number)
+    - dietaryTags: Array of dietary restrictions that the item from this menu is explicitly marked as meeting (e.g. "Vegetarian", "Gluten-Free", or icons, badges, or sections on the menu)
+    - category: Category like 'Appetisers', 'Mains', 'Desserts', etc. if identifiable
+
+    STRICT INSTRUCTIONS for dietaryTags:
+    - Only assign a dietary tag if it is explicitly stated or visually indicated for the menu item in the provided menu image (such as a badge, icon, section heading, or text like "Vegan" or "Gluten-Free" next to the item).
+    - DO NOT infer, guess, or use general world knowledge about what is typically vegan/vegetarian/etc.
+    - If there is no explicit dietary information for a menu item, set dietaryTags to an empty array.
         
         Only include dietary tags that exactly match the available dietary requirements.
         Return the menu items in a JSON object with a 'menu_items' key containing an array of menu items.
