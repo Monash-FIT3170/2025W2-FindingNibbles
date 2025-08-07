@@ -192,7 +192,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -205,10 +204,8 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
             Row(
               children: [
                 Text('Cooking Appliances', style: theme.textTheme.titleSmall),
-                IconButton(
-                  icon: Icon(Icons.add, color: colorScheme.primary),
-                  onPressed: _openAddDialog,
-                ),
+                const Spacer(),
+                IconButton(icon: Icon(Icons.add), onPressed: _openAddDialog,),
               ],
             ),
             const SizedBox(height: 8),
