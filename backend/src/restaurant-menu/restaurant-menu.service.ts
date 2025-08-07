@@ -9,6 +9,29 @@ import {
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
 
+// Schema for step 1
+const basicMenuSchema = {
+  type: 'OBJECT',
+  properties: {
+    menu_items: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING' },
+          description: { type: 'STRING' },
+          price: { type: 'NUMBER' },
+          category: { type: 'STRING' },
+          explicit_dietary_tags: { type: 'ARRAY', items: { type: 'STRING' } },
+          mentioned_ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
+        },
+        required: ['name', 'mentioned_ingredients'],
+      },
+    },
+  },
+  required: ['menu_items'],
+};
+
 const menuAnalysisSchema = {
   type: 'OBJECT',
   properties: {
@@ -110,24 +133,136 @@ export class RestaurantMenuService {
         `Available dietary requirements: ${availableDietaries.join(', ')}`,
       );
 
-      const prompt = `
-    You are analyzing a restaurant menu image. For each menu item, extract the following fields:
-    - name: The exact name of the dish
-    - description: Brief description of the menu item if available (use only the menu text; do NOT supplement with general knowledge)
-    - price: Price if visible (as a number)
-    - dietaryTags: Array of dietary restrictions that the item from this menu is explicitly marked as meeting (e.g. "Vegetarian", "Gluten-Free", or icons, badges, or sections on the menu)
-    - category: Category like 'Appetisers', 'Mains', 'Desserts', etc. if identifiable
+      // STEP 1 PROMPT
+      const step1Prompt = `
+Extract all menu items from this restaurant menu image. For each item provide:
 
-    STRICT INSTRUCTIONS for dietaryTags:
-    - Only assign a dietary tag if it is explicitly stated or visually indicated for the menu item in the provided menu image (such as a badge, icon, section heading, or text like "Vegan" or "Gluten-Free" next to the item).
-    - DO NOT infer, guess, or use general world knowledge about what is typically vegan/vegetarian/etc.
-    - If there is no explicit dietary information for a menu item, set dietaryTags to an empty array.
-        
-        Only include dietary tags that exactly match the available dietary requirements.
-        Return the menu items in a JSON object with a 'menu_items' key containing an array of menu items.
+- name: Exact dish name from menu
+- description: Menu description ONLY if available on the menu. If no description is provided, use empty string. If mentions "add chicken/beef" etc, append ". Vegetarian option available"  
+- price: Price as number if visible, otherwise null
+- category: Menu section like "Appetizers", "Mains", "Desserts" if identifiable, otherwise empty string
+- explicit_dietary_tags: Only dietary tags clearly marked with symbols (V, VG, GF), icons, text labels, or special menu sections
+- mentioned_ingredients: List any specific ingredients mentioned in the menu description. If no description exists or no ingredients are mentioned, use empty array.
+
+IMPORTANT RULES:
+- If a menu item has NO description, set description to empty string and mentioned_ingredients to empty array
+- For mentioned_ingredients, only include ingredients explicitly written in the menu description
+- Do not invent or assume any information not visible on the menu
+- Only include explicit dietary tags that are clearly marked on the menu (symbols, icons, text labels, special sections)
+
+Available dietary tags: [${availableDietaries.join(', ')}]
+Return JSON format only.
       `;
 
       const base64Data = menu.buffer.toString('base64');
+
+      let step1ResponseJson: {
+        candidates?: Array<{
+          content: {
+            parts: Array<{
+              text: string;
+            }>;
+          };
+        }>;
+      };
+
+      // STEP 1: Extract basic menu info
+      try {
+        const model = this.configService.get<string>('GOOGLE_GEMINI_API_MODEL');
+        const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
+
+        const requestBody = {
+          contents: [
+            {
+              parts: [
+                {
+                  text: step1Prompt,
+                },
+                {
+                  inline_data: {
+                    mime_type: actualMimeType,
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: basicMenuSchema,
+          },
+        };
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            body: JSON.stringify(requestBody),
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `API request failed: ${response.status} ${errorText}`,
+          );
+        }
+
+        step1ResponseJson = (await response.json()) as typeof step1ResponseJson;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        throw new Error('Failed to get response from LLM: ' + errorMessage);
+      }
+
+      let step1ResponseContent: string;
+      try {
+        const textContent =
+          step1ResponseJson.candidates?.[0]?.content?.parts[0]?.text;
+        if (!textContent) {
+          throw new Error('No text content found in LLM response');
+        }
+        step1ResponseContent = textContent;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error);
+        throw new Error('Failed to extract response from LLM: ' + errorMessage);
+      }
+
+      let step1Parsed: unknown;
+      try {
+        step1Parsed = JSON.parse(step1ResponseContent);
+      } catch (error: any) {
+        const errorMessage = getErrorMessage(error);
+        throw new Error(
+          'Failed to parse LLM menu analysis response: ' + errorMessage,
+        );
+      }
+
+      // STEP 2 PROMPT
+      const step2Prompt = `
+For each menu item below, determine dietary tags based ONLY on:
+1. The explicit_dietary_tags already identified from the menu
+2. The mentioned_ingredients that were explicitly listed in the menu description (if any)
+
+Rules for dietary tag assignment:
+- If explicit_dietary_tags exist, include them
+- If mentioned_ingredients has content, analyze them for:
+  * VEGETARIAN: No meat/poultry/fish/seafood mentioned
+  * VEGAN: No animal products mentioned (no meat, dairy, eggs, honey)
+  * GLUTEN-FREE: No wheat, bread, pasta, or gluten-containing items mentioned
+- If mentioned_ingredients is empty (no description or no ingredients listed), only use explicit_dietary_tags
+- If both explicit_dietary_tags and mentioned_ingredients are empty, set dietaryTags to empty array
+
+CONSERVATIVE APPROACH: Only assign dietary tags when you have clear evidence from the menu. When in doubt, use empty array.
+
+Menu items: ${JSON.stringify(step1Parsed, null, 2)}
+
+Available dietary tags: [${availableDietaries.join(', ')}]
+
+Return items with final "dietaryTags" array (remove explicit_dietary_tags and mentioned_ingredients from output).
+      `;
 
       let responseJson: {
         candidates?: Array<{
@@ -139,6 +274,7 @@ export class RestaurantMenuService {
         }>;
       };
 
+      // STEP 2: Determine dietary tags
       try {
         const model = this.configService.get<string>('GOOGLE_GEMINI_API_MODEL');
         const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
@@ -148,13 +284,7 @@ export class RestaurantMenuService {
             {
               parts: [
                 {
-                  text: prompt,
-                },
-                {
-                  inline_data: {
-                    mime_type: actualMimeType,
-                    data: base64Data,
-                  },
+                  text: step2Prompt,
                 },
               ],
             },
