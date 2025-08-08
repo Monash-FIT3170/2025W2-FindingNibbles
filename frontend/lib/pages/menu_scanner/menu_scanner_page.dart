@@ -134,7 +134,10 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
         final textTheme = AppTheme.textTheme;
         return AlertDialog(
           backgroundColor: colorScheme.surface,
-          title: Text('Select Image Source', style: textTheme.titleLarge?.copyWith(color: colorScheme.primary)),
+          title: Text(
+            'Select Image Source',
+            style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -178,9 +181,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
           children: [
             Text(
               'Menu Items Found (${_analysisResult!.length})',
-              style: textTheme.titleLarge?.copyWith(
-                color: colorScheme.primary,
-              ),
+              style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
             ),
             const SizedBox(height: 16),
             if (_analysisResult!.isEmpty)
@@ -188,7 +189,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.secondary.withOpacity(0.15),
+                  color: colorScheme.secondary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: colorScheme.outline),
                 ),
@@ -208,7 +209,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colorScheme.secondary.withOpacity(0.15),
+                    color: colorScheme.secondary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: colorScheme.outline),
                   ),
@@ -262,27 +263,30 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         Wrap(
                           spacing: 4,
                           runSpacing: 4,
-                          children: (item['dietaryTags'] as List<dynamic>)
-                              .map(
-                                (tag) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    tag.toString(),
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.w500,
+                          children:
+                              (item['dietaryTags'] as List<dynamic>)
+                                  .map(
+                                    (tag) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        tag.toString(),
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                                  )
+                                  .toList(),
                         ),
                       ],
                     ],
@@ -317,13 +321,16 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.error.withOpacity(0.15),
+                  color: colorScheme.error.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: colorScheme.error),
                 ),
                 child: Text(
                   _errorMessage!,
-                  style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
 
@@ -335,7 +342,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.05),
+                      color: colorScheme.primary.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -356,7 +363,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                 margin: const EdgeInsets.all(16),
                 height: 200,
                 decoration: BoxDecoration(
-                  color: colorScheme.secondary.withOpacity(0.15),
+                  color: colorScheme.secondary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: colorScheme.outline),
                 ),
@@ -373,7 +380,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                       Text(
                         'No image selected',
                         style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.primary.withOpacity(0.7),
+                          color: colorScheme.primary.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -395,7 +402,9 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         backgroundColor: colorScheme.secondary,
                         foregroundColor: colorScheme.onSecondary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
                         elevation: 0,
                         textStyle: textTheme.labelLarge,
                       ),
@@ -408,16 +417,17 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                           _imageFile != null && !_isUploading
                               ? _uploadAndAnalyze
                               : null,
-                      icon: _isUploading
-                          ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colorScheme.onPrimary,
-                              ),
-                            )
-                          : const Icon(Icons.upload),
+                      icon:
+                          _isUploading
+                              ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              )
+                              : const Icon(Icons.upload),
                       label: Text(
                         _isUploading ? 'Analysing...' : 'Analyse Menu',
                       ),
@@ -425,7 +435,9 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
                         elevation: 0,
                         textStyle: textTheme.labelLarge,
                       ),
