@@ -112,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                   _selectRandomAllCuisine();
                 },
               ),
+<<<<<<< d86d087695d3401c4b97f66b199c860bb733201e
               ListTile(
                 leading: const Icon(Icons.restaurant),
                 title: const Text('Random Restaurant'),
@@ -125,6 +126,8 @@ class _HomePageState extends State<HomePage> {
                   _selectRandomRestaurant();
                 },
               ),
+=======
+>>>>>>> feat: asks for user input on preferred cuisines
             ],
           ),
           actions: [
@@ -202,6 +205,7 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
   }
 
+<<<<<<< d86d087695d3401c4b97f66b199c860bb733201e
   void _selectRandomRestaurant() async {
     try {
       setState(() => _isLoading = true);
@@ -268,6 +272,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+=======
+>>>>>>> feat: asks for user input on preferred cuisines
   // Implementation using your ProfileService
   Future<List<int>> _getUserCuisinePreferences() async {
     try {
