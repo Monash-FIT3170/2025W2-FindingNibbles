@@ -4,6 +4,8 @@ import 'recipe_model.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'dart:math';
 
 class RecipeRecommendationsPage extends StatefulWidget {
   final List<RecipeModel> recipes;
@@ -25,6 +27,51 @@ class RecipeRecommendationsPage extends StatefulWidget {
 class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
   final ProfileService _profileService = ProfileService();
   final _logger = getLogger();
+  final Random _random = Random();
+
+  void _handleDiceRoll() {
+    if (widget.recipes.isEmpty) return;
+
+    // Randomly select a recipe
+    final randomRecipe = widget.recipes[_random.nextInt(widget.recipes.length)];
+
+    // Show result modal
+    _showDiceResultModal(
+      title: 'Random Recipe Selected!',
+      subtitle: randomRecipe.title,
+      icon: Icons.restaurant_menu,
+      recipe: randomRecipe,
+    );
+  }
+
+  void _showDiceResultModal({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required RecipeModel recipe,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return DiceResultModal(
+          title: title,
+          subtitle: subtitle,
+          icon: icon,
+          onClose: () {
+            Navigator.of(context).pop();
+            // Navigate to the selected recipe after closing the modal
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RecipeIngredientsPage(recipe: recipe),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Color _getDifficultyColor(
     recipe_service.RecipeDifficulty diff,
@@ -165,20 +212,21 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: BackButton(color: colorScheme.onSurface),
         centerTitle: false,
         title: Text(
           'Based on your ingredients:',
           style: textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+            color: Colors.white,
           ),
         ),
         actions: [
+          DiceRollWidget(
+            onPressed: _handleDiceRoll,
+            isEnabled: widget.recipes.isNotEmpty,
+          ),
           IconButton(
-            icon: Icon(Icons.refresh, color: colorScheme.onSurface),
+            icon: Icon(Icons.refresh),
             tooltip: 'Refresh',
             onPressed: _reloadRecipes,
           ),
