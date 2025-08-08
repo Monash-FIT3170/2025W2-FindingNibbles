@@ -239,18 +239,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: BackButton(color: colorScheme.onSurface),
-        title: Text(
-          widget
-              .recipe
-              .title, // Changed from 'Recipe List' to actual recipe title
-          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
-        ),
-      ),
+      appBar: AppBar(title: Text(widget.recipe.title)),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
