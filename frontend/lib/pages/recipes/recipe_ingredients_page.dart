@@ -136,16 +136,14 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           ),
 
           // Step navigation at the bottom - horizontally scrollable
-          Center(
-            child: Container(
-              width:
-                  MediaQuery.of(context).size.width *
-                  5 /
-                  6, // Limit width to 5/6 of screen
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(widget.recipe.instructions.length, (
                     index,

@@ -4,6 +4,7 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
+import 'package:nibbles/service/profile/profile_service.dart'; // Add this import
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'dart:math';
@@ -22,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
   final Random _random = Random();
+  final ProfileService _profileService = ProfileService(); // Add this
 
   @override
   void initState() {
@@ -74,7 +76,101 @@ class _HomePageState extends State<HomePage> {
   void _handleDiceRoll() {
     if (_availableCuisines.isEmpty) return;
 
-    // Randomly select a cuisine
+    _showDiceSelectionDialog();
+  }
+
+  void _showDiceSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.casino, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              const Text('Random Cuisine'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.favorite),
+                title: const Text('Preferred Cuisines'),
+                subtitle: const Text('Random from your favorites'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectRandomPreferredCuisine();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.restaurant_menu),
+                title: const Text('All Cuisines'),
+                subtitle: const Text('Random from all available'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectRandomAllCuisine();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _selectRandomPreferredCuisine() async {
+    try {
+      // Get user's preferred cuisines
+      final userPreferences = await _getUserCuisinePreferences();
+
+      if (userPreferences.isEmpty) {
+        _showNoPreferredCuisinesDialog();
+        return;
+      }
+
+      // Filter available cuisines to only preferred ones
+      final preferredCuisines =
+          _availableCuisines
+              .where((cuisine) => userPreferences.contains(cuisine.id))
+              .toList();
+
+      if (preferredCuisines.isEmpty) {
+        _showNoPreferredCuisinesDialog();
+        return;
+      }
+
+      // Randomly select from preferred cuisines
+      final randomCuisine =
+          preferredCuisines[_random.nextInt(preferredCuisines.length)];
+
+      setState(() {
+        _selectedCuisine = randomCuisine;
+      });
+
+      // Show result modal
+      _showDiceResultModal(
+        title: 'Random Preferred Cuisine!',
+        subtitle: randomCuisine.name,
+        icon: Icons.favorite,
+      );
+
+      // Fetch restaurants for the selected cuisine
+      _fetchRestaurants();
+    } catch (e) {
+      debugPrint('Error selecting random preferred cuisine: $e');
+      _showErrorDialog('Failed to load preferred cuisines');
+    }
+  }
+
+  void _selectRandomAllCuisine() {
+    // Randomly select a cuisine from all available
     final randomCuisine =
         _availableCuisines[_random.nextInt(_availableCuisines.length)];
 
@@ -91,6 +187,57 @@ class _HomePageState extends State<HomePage> {
 
     // Fetch restaurants for the selected cuisine
     _fetchRestaurants();
+  }
+
+  // Implementation using your ProfileService
+  Future<List<int>> _getUserCuisinePreferences() async {
+    try {
+      // TO BE IMPLEMENTED AFTER JACK HAS FINISHED CUISINES
+      throw UnimplementedError('User cuisine preferences not implemented yet');
+    } catch (e) {
+      debugPrint('Error fetching user cuisine preferences: $e');
+      return [];
+    }
+  }
+
+  void _showNoPreferredCuisinesDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('No Preferred Cuisines'),
+          content: const Text(
+            'You haven\'t selected any preferred cuisines yet. '
+            'Go to your profile to set your cuisine preferences, '
+            'or select "All Cuisines" for a random choice from all available options.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showDiceResultModal({
