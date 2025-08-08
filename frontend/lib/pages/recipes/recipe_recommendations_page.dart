@@ -210,16 +210,8 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        centerTitle: false,
-        title: Text(
-          'Based on your ingredients:',
-          style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('Recipe Recommendations'),
         actions: [
           DiceRollWidget(
             onPressed: _handleDiceRoll,
@@ -232,6 +224,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
           ),
         ],
       ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: widget.recipes.length,
