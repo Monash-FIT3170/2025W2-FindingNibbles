@@ -381,14 +381,43 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
             ),
           ],
         ),
-        trailing: IconButton(
-          icon: Icon(
-            _homeLocation != null ? Icons.edit_location : Icons.add_location,
-            color: AppTheme.primaryColor,
-          ),
-          onPressed:
-              () =>
-                  _navigateToLocationSelection(initialLocation: _homeLocation),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(
+                _homeLocation != null ? Icons.edit_location : Icons.add_location,
+                color: AppTheme.primaryColor,
+              ),
+              onPressed:
+                  () =>
+                      _navigateToLocationSelection(initialLocation: _homeLocation),
+            ),
+            if (_homeLocation != null)
+              IconButton(
+                icon: Icon(Icons.close),
+                color: AppTheme.primaryColor,
+                onPressed: () async {
+                  final locationId = _homeLocation?.id;
+                  final messenger = ScaffoldMessenger.of(context);
+                  if (locationId != null) {
+                    try {
+                      await _profileService.removeLocation(locationId);
+                      setState(() {
+                        _homeLocation = null;
+                      });
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Home location removed successfully.')),
+                      );
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('Failed to remove location: $e')),
+                      );
+                    }
+                  }
+                }
+              ),
+          ],
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),

@@ -384,4 +384,16 @@ class ProfileService {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+  Future<void> removeLocation(int locationId) async {
+    try {
+      final response = await _dio.delete('user/location', data: {'locationId': locationId});
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete location');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to delete location: ${e.message}');
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 }

@@ -187,4 +187,12 @@ export class UserController {
     );
     return updatedLocation;
   }
+  @Delete('location')
+  async removeLocation(
+    @Req() req: RequestUser,
+    @Body('locationId') locationId: number,
+  ) {
+    await this.userService.removeUserLocation(req.user.sub, locationId);
+    return { message: 'Location removed successfully' };
+  }
 }
