@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.0.1",
+    "@googlemaps/google-maps-services-js": "^3.4.2",
     "@nestjs/common": "^11.1.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
