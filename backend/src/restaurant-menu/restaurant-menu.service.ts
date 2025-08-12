@@ -1,63 +1,20 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { ConfigService } from '@nestjs/config';
-import { getErrorMessage } from 'src/utils';
+import { getErrorMessage, detectMimeType } from 'src/utils';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { GeminiService } from 'src/gemini/gemini.service';
 import {
   AnalyseRestaurantMenuResponseDto,
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
-
-// Schema for step 1
-const basicMenuSchema = {
-  type: 'OBJECT',
-  properties: {
-    menu_items: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          name: { type: 'STRING' },
-          description: { type: 'STRING' },
-          price: { type: 'NUMBER' },
-          category: { type: 'STRING' },
-          explicit_dietary_tags: { type: 'ARRAY', items: { type: 'STRING' } },
-          mentioned_ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
-        },
-        required: ['name', 'mentioned_ingredients'],
-      },
-    },
-  },
-  required: ['menu_items'],
-};
-
-const menuAnalysisSchema = {
-  type: 'OBJECT',
-  properties: {
-    menu_items: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          name: { type: 'STRING' },
-          description: { type: 'STRING' },
-          price: { type: 'NUMBER' },
-          dietaryTags: { type: 'ARRAY', items: { type: 'STRING' } },
-          category: { type: 'STRING' },
-        },
-        required: ['name', 'dietaryTags'],
-      },
-    },
-  },
-  required: ['menu_items'],
-};
+import { basicMenuSchema, menuAnalysisSchema } from './schemas';
 
 @Injectable()
 export class RestaurantMenuService {
   constructor(
     private db: DatabaseService,
-    private configService: ConfigService,
+    private geminiService: GeminiService,
   ) {}
 
   async analyseMenu(menu: Express.Multer.File): Promise<MenuItemDto[]> {
@@ -66,48 +23,7 @@ export class RestaurantMenuService {
         throw new BadRequestException('Invalid menu file provided');
       }
 
-      // Detect the actual MIME type from the file buffer
-      let actualMimeType = menu.mimetype;
-
-      // If MIME type is generic octet-stream, try to detect from file signature
-      if (
-        menu.mimetype === 'application/octet-stream' ||
-        !menu.mimetype.startsWith('image/')
-      ) {
-        const buffer = menu.buffer;
-
-        // Check file signatures (magic numbers) to determine actual file type
-        if (buffer.length >= 4) {
-          // JPEG signatures
-          if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-            actualMimeType = 'image/jpeg';
-          }
-          // PNG signature
-          else if (
-            buffer[0] === 0x89 &&
-            buffer[1] === 0x50 &&
-            buffer[2] === 0x4e &&
-            buffer[3] === 0x47
-          ) {
-            actualMimeType = 'image/png';
-          }
-          // WebP signature
-          else if (buffer.subarray(8, 12).toString() === 'WEBP') {
-            actualMimeType = 'image/webp';
-          }
-          // GIF signatures
-          else if (buffer.subarray(0, 3).toString() === 'GIF') {
-            actualMimeType = 'image/gif';
-          }
-          // Default to JPEG if we can't detect but it looks like an image upload
-          else if (
-            menu.originalname &&
-            /\.(jpe?g|png|gif|webp)$/i.test(menu.originalname)
-          ) {
-            actualMimeType = 'image/jpeg'; // Default fallback
-          }
-        }
-      }
+      const mimeType = detectMimeType(menu);
 
       const supportedTypes = [
         'image/jpeg',
@@ -115,22 +31,44 @@ export class RestaurantMenuService {
         'image/webp',
         'image/gif',
       ];
-      if (!supportedTypes.includes(actualMimeType)) {
+
+      if (!supportedTypes.includes(mimeType)) {
         throw new BadRequestException(
-          `Unsupported file type: ${actualMimeType}. Please upload a JPEG, PNG, WebP, or GIF image.`,
+          `Unsupported file type: ${mimeType}. Please upload a JPEG, PNG, WebP, or GIF image.`,
         );
       }
 
-      const dietaryRequirements = await this.db.dietaryRequirement.findMany({
-        select: {
-          name: true,
-        },
-      });
+      const availableDietaries = await this.db.dietaryRequirement
+        .findMany({
+          select: {
+            name: true,
+          },
+        })
+        .then((dietaryRequirements) =>
+          dietaryRequirements.map((dr) => dr.name),
+        );
 
-      const availableDietaries = dietaryRequirements.map((dr) => dr.name);
+      const basicMenuData = await this.extractBasicMenuInfo(menu, mimeType);
 
-      // STEP 1 PROMPT
-      const step1Prompt = `
+      const finalMenuData = await this.determineDietaryTags(
+        basicMenuData,
+        availableDietaries,
+      );
+
+      return this.validateAndReturnMenuItems(finalMenuData);
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      throw new Error(
+        'An error occurred while analyzing menu: ' + errorMessage,
+      );
+    }
+  }
+
+  private async extractBasicMenuInfo(
+    menu: Express.Multer.File,
+    mimeType: string,
+  ): Promise<unknown> {
+    const step1Prompt = `
 Extract all menu items from this restaurant menu image. For each item provide:
 
 - name: Exact dish name from menu
@@ -147,96 +85,45 @@ IMPORTANT RULES:
 - Only ever include explicit dietary tags that are clearly marked on the menu (symbols, icons, text labels, special sections)
 
 Return JSON format only.
-      `;
+    `;
 
-      const base64Data = menu.buffer.toString('base64');
+    const base64Data = menu.buffer.toString('base64');
 
-      let step1ResponseJson: {
-        candidates?: Array<{
-          content: {
-            parts: Array<{
-              text: string;
-            }>;
-          };
-        }>;
-      };
-
-      // STEP 1: Extract basic menu info
-      try {
-        const model = this.configService.get<string>('GOOGLE_GEMINI_API_MODEL');
-        const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
-
-        const requestBody = {
-          contents: [
+    const requestBody = {
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: step1Prompt,
-                },
-                {
-                  inline_data: {
-                    mime_type: actualMimeType,
-                    data: base64Data,
-                  },
-                },
-              ],
+              text: step1Prompt,
+            },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64Data,
+              },
             },
           ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: basicMenuSchema,
-          },
-        };
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: basicMenuSchema,
+      },
+    };
 
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            body: JSON.stringify(requestBody),
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-        );
+    try {
+      return await this.geminiService.generateAndParseJson(requestBody);
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      throw new Error('Failed to get response from LLM: ' + errorMessage);
+    }
+  }
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `API request failed: ${response.status} ${errorText}`,
-          );
-        }
-
-        step1ResponseJson = (await response.json()) as typeof step1ResponseJson;
-      } catch (error) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to get response from LLM: ' + errorMessage);
-      }
-
-      let step1ResponseContent: string;
-      try {
-        const textContent =
-          step1ResponseJson.candidates?.[0]?.content?.parts[0]?.text;
-        if (!textContent) {
-          throw new Error('No text content found in LLM response');
-        }
-        step1ResponseContent = textContent;
-      } catch (error) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to extract response from LLM: ' + errorMessage);
-      }
-
-      let step1Parsed: unknown;
-      try {
-        step1Parsed = JSON.parse(step1ResponseContent);
-      } catch (error: any) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error(
-          'Failed to parse LLM menu analysis response: ' + errorMessage,
-        );
-      }
-
-      // STEP 2 PROMPT
-      const step2Prompt = `
+  private async determineDietaryTags(
+    basicMenuData: unknown,
+    availableDietaries: string[],
+  ): Promise<unknown> {
+    const step2Prompt = `
 For each menu item below, determine dietary tags based ONLY on:
 1. The explicit_dietary_tags already identified from the menu
 2. The mentioned_ingredients that were explicitly listed in the menu description (if any)
@@ -252,115 +139,58 @@ Rules for dietary tag assignment:
 
 CONSERVATIVE APPROACH: Only assign dietary tags when you have clear evidence from the menu. When in doubt, use the empty array. If you ignore this instruction, our data will be inaccurate and people might eat food that is not suitable for them.
 
-Menu items: ${JSON.stringify(step1Parsed, null, 2)}
+Menu items: ${JSON.stringify(basicMenuData, null, 2)}
 
 Available dietary tags: [${availableDietaries.join(', ')}]
 
 Return items with final "dietaryTags" array (remove explicit_dietary_tags and mentioned_ingredients from output).
-      `;
+    `;
 
-      let responseJson: {
-        candidates?: Array<{
-          content: {
-            parts: Array<{
-              text: string;
-            }>;
-          };
-        }>;
-      };
-
-      // STEP 2: Determine dietary tags
-      try {
-        const model = this.configService.get<string>('GOOGLE_GEMINI_API_MODEL');
-        const apiKey = this.configService.get<string>('GOOGLE_GEMINI_API_KEY');
-
-        const requestBody = {
-          contents: [
+    const requestBody = {
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text: step2Prompt,
-                },
-              ],
+              text: step2Prompt,
             },
           ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: menuAnalysisSchema,
-          },
-        };
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: menuAnalysisSchema,
+      },
+    };
 
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            body: JSON.stringify(requestBody),
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `API request failed: ${response.status} ${errorText}`,
-          );
-        }
-
-        responseJson = (await response.json()) as typeof responseJson;
-      } catch (error) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to get response from LLM: ' + errorMessage);
-      }
-
-      let responseContent: string;
-      try {
-        const textContent =
-          responseJson.candidates?.[0]?.content?.parts[0]?.text;
-        if (!textContent) {
-          throw new Error('No text content found in LLM response');
-        }
-        responseContent = textContent;
-      } catch (error) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to extract response from LLM: ' + errorMessage);
-      }
-
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(responseContent);
-      } catch (error: any) {
-        const errorMessage = getErrorMessage(error);
-        throw new Error(
-          'Failed to parse LLM menu analysis response: ' + errorMessage,
-        );
-      }
-
-      const menuResponse = plainToInstance(
-        AnalyseRestaurantMenuResponseDto,
-        parsed,
-      );
-
-      const errors = await validate(menuResponse);
-
-      if (errors.length > 0) {
-        const errorDetails = errors
-          .map((err) => {
-            return `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`;
-          })
-          .join('; ');
-        throw new BadRequestException(
-          `LLM response validation failed: ${errorDetails}`,
-        );
-      }
-
-      return menuResponse.menu_items;
+    try {
+      return await this.geminiService.generateAndParseJson(requestBody);
     } catch (error) {
       const errorMessage = getErrorMessage(error);
-      throw new Error(
-        'An error occurred while analyzing menu: ' + errorMessage,
+      throw new Error('Failed to get response from LLM: ' + errorMessage);
+    }
+  }
+
+  private async validateAndReturnMenuItems(
+    menuData: unknown,
+  ): Promise<MenuItemDto[]> {
+    const menuResponse = plainToInstance(
+      AnalyseRestaurantMenuResponseDto,
+      menuData,
+    );
+
+    const errors = await validate(menuResponse);
+
+    if (errors.length > 0) {
+      const errorDetails = errors
+        .map((err) => {
+          return `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`;
+        })
+        .join('; ');
+      throw new BadRequestException(
+        `LLM response validation failed: ${errorDetails}`,
       );
     }
+
+    return menuResponse.menu_items;
   }
 }
