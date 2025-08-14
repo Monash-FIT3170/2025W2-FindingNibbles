@@ -5,6 +5,7 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart'; // Add this import
+import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'dart:math';
 
@@ -111,6 +112,19 @@ class _HomePageState extends State<HomePage> {
                   _selectRandomAllCuisine();
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.restaurant),
+                title: const Text('Random Restaurant'),
+                subtitle: Text(
+                  _selectedCuisine != null
+                      ? 'Random from ${_selectedCuisine!.name} restaurants'
+                      : 'Random from all restaurants',
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectRandomRestaurant();
+                },
+              ),
             ],
           ),
           actions: [
@@ -188,6 +202,72 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
   }
 
+  void _selectRandomRestaurant() async {
+    try {
+      setState(() => _isLoading = true);
+
+      // Get restaurants based on current cuisine filter
+      final allRestaurants =
+          _selectedCuisine != null
+              ? await RestaurantService().getRestaurantsByCuisine(
+                cuisineId: _selectedCuisine!.id,
+                orderBy: 'rating',
+              )
+              : await RestaurantService().getAllRestaurants(orderBy: 'rating');
+
+      // Apply rating filter
+      final filteredRestaurants =
+          allRestaurants
+              .where(
+                (restaurant) =>
+                    restaurant.rating != null &&
+                    restaurant.rating! >= _minimumRating,
+              )
+              .toList();
+
+      if (filteredRestaurants.isEmpty) {
+        setState(() => _isLoading = false);
+        final cuisineText =
+            _selectedCuisine != null
+                ? ' for ${_selectedCuisine!.name} cuisine'
+                : '';
+        _showErrorDialog(
+          'No restaurants found matching your criteria$cuisineText',
+        );
+        return;
+      }
+
+      // Randomly select a restaurant
+      final randomRestaurant =
+          filteredRestaurants[_random.nextInt(filteredRestaurants.length)];
+
+      // Update the restaurants list with the filtered results
+      setState(() {
+        _restaurants = filteredRestaurants;
+        _isLoading = false;
+      });
+
+      // Create subtitle with cuisine info if filtered
+      final cuisineInfo =
+          _selectedCuisine != null
+              ? '\nCuisine: ${_selectedCuisine!.name}'
+              : '';
+
+      // Show result modal with restaurant details
+      _showDiceResultModal(
+        title: 'Random Restaurant Selected!',
+        subtitle:
+            '${randomRestaurant.name}\n${randomRestaurant.rating?.toStringAsFixed(1) ?? "No rating"} ⭐$cuisineInfo',
+        icon: Icons.restaurant,
+        highlightedRestaurant: randomRestaurant,
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Error selecting random restaurant: $e');
+      _showErrorDialog('Failed to load restaurants');
+    }
+  }
+
   // Implementation using your ProfileService
   Future<List<int>> _getUserCuisinePreferences() async {
     try {
@@ -243,6 +323,7 @@ class _HomePageState extends State<HomePage> {
     required String title,
     required String subtitle,
     required IconData icon,
+    RestaurantDto? highlightedRestaurant,
   }) {
     showDialog(
       context: context,
@@ -252,10 +333,38 @@ class _HomePageState extends State<HomePage> {
           title: title,
           subtitle: subtitle,
           icon: icon,
-          onClose: () => Navigator.of(context).pop(),
+          onClose: () {
+            Navigator.of(context).pop();
+            // If we have a highlighted restaurant, scroll to it after modal closes
+            if (highlightedRestaurant != null) {
+              _highlightRestaurant(highlightedRestaurant);
+            }
+          },
         );
       },
     );
+  }
+
+  void _highlightRestaurant(RestaurantDto targetRestaurant) {
+    // Add a brief delay to let the modal close animation complete
+    Future.delayed(const Duration(milliseconds: 500), () {
+      // Find the index of the target restaurant in the current list
+      final index = _restaurants.indexWhere((r) => r.id == targetRestaurant.id);
+
+      if (index != -1) {
+        // Show a brief highlight effect using SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '🎯 Found your random pick: ${targetRestaurant.name}',
+            ),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
   }
 
   void _showFilterDialog() {
