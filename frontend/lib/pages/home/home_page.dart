@@ -5,7 +5,6 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart'; // Add this import
-import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'dart:math';
 
@@ -363,12 +362,18 @@ class _HomePageState extends State<HomePage> {
 
     if (activeFilters.isEmpty) return const SizedBox.shrink();
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Positioned(
-      top: 0,
-      right: 0,
+      top: 16,
+      right: 16,
       child: Chip(
-        label: Text(activeFilters.join(' • ')),
-        deleteIcon: const Icon(Icons.close, size: 18),
+        label: Text(
+          activeFilters.join(' • '),
+          style: textTheme.labelMedium?.copyWith(color: colorScheme.onPrimary),
+        ),
+        deleteIcon: Icon(Icons.close, size: 18, color: colorScheme.onPrimary),
         onDeleted: () {
           setState(() {
             _selectedCuisine = null;
@@ -376,7 +381,8 @@ class _HomePageState extends State<HomePage> {
           });
           _fetchRestaurants();
         },
-        backgroundColor: AppTheme.colorScheme.primary,
+        backgroundColor: colorScheme.primary,
+        elevation: 2,
       ),
     );
   }
