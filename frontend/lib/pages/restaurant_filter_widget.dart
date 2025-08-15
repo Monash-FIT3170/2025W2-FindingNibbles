@@ -88,7 +88,10 @@ class _RestaurantFilterDialogState extends State<RestaurantFilterDialog> {
     final colorScheme = theme.colorScheme;
 
     return AlertDialog(
-      title: const Text('Filter Restaurants'),
+      title: Text(
+        'Filter Restaurants',
+        style: theme.textTheme.titleMedium,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
