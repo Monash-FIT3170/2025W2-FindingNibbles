@@ -4,8 +4,6 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
-import 'package:nibbles/service/profile/profile_service.dart'; // Add this import
-import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'dart:math';
 
@@ -23,7 +21,6 @@ class _HomePageState extends State<HomePage> {
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
   final Random _random = Random();
-  final ProfileService _profileService = ProfileService(); // Add this
 
   @override
   void initState() {
@@ -143,6 +140,8 @@ class _HomePageState extends State<HomePage> {
       // Get user's preferred cuisines
       final userPreferences = await _getUserCuisinePreferences();
 
+      if (!mounted) return;
+
       if (userPreferences.isEmpty) {
         _showNoPreferredCuisinesDialog();
         return;
@@ -178,7 +177,9 @@ class _HomePageState extends State<HomePage> {
       _fetchRestaurants();
     } catch (e) {
       debugPrint('Error selecting random preferred cuisine: $e');
-      _showErrorDialog('Failed to load preferred cuisines');
+      if (mounted) {
+        _showErrorDialog('Failed to load preferred cuisines');
+      }
     }
   }
 
@@ -214,6 +215,8 @@ class _HomePageState extends State<HomePage> {
                 orderBy: 'rating',
               )
               : await RestaurantService().getAllRestaurants(orderBy: 'rating');
+
+      if (!mounted) return;
 
       // Apply rating filter
       final filteredRestaurants =
@@ -264,7 +267,9 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Error selecting random restaurant: $e');
-      _showErrorDialog('Failed to load restaurants');
+      if (mounted) {
+        _showErrorDialog('Failed to load restaurants');
+      }
     }
   }
 
@@ -348,6 +353,8 @@ class _HomePageState extends State<HomePage> {
   void _highlightRestaurant(RestaurantDto targetRestaurant) {
     // Add a brief delay to let the modal close animation complete
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+
       // Find the index of the target restaurant in the current list
       final index = _restaurants.indexWhere((r) => r.id == targetRestaurant.id);
 
