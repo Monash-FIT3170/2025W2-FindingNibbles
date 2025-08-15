@@ -71,7 +71,7 @@ class _DiceRollWidgetState extends State<DiceRollWidget>
                 color:
                     widget.isEnabled
                         ? Colors.white
-                        : colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                 size: 24,
               ),
               tooltip: 'Random selection',
@@ -170,7 +170,7 @@ class _DiceResultModalState extends State<DiceResultModal>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
