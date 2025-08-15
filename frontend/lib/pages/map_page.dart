@@ -5,20 +5,19 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
-import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
-import 'package:nibbles/theme/app_theme.dart';
+import './restaurant_filter_widget.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
 
   RestaurantMarker({required this.restaurant})
-    : super(
-        point: LatLng(restaurant.latitude, restaurant.longitude),
-        width: 40,
-        height: 40,
-        child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
-      );
+      : super(
+          point: LatLng(restaurant.latitude, restaurant.longitude),
+          width: 40,
+          height: 40,
+          child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
+        );
 }
 
 class MapPage extends StatefulWidget {
@@ -28,18 +27,13 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with RestaurantFilterMixin {
   late final MapController _mapController = MapController();
   LatLng? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   final bool useCurrentLocation = false; // Use current location if available
-
-  // Filter variables
-  int _minimumRating = 1;
-  List<CuisineDto> _availableCuisines = [];
-  CuisineDto? _selectedCuisine;
 
   @override
   void initState() {
@@ -132,26 +126,22 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     try {
-      final bounds =
-          _currentPosition != null
-              ? _getBoundsAroundPosition(
-                _currentPosition!,
-                0.01,
-              ) // Create bounds around current position
-              : LatLngBounds(
-                LatLng(37.9011, 145.1267), // Melbourne area fallback
-                LatLng(37.9211, 145.1467),
-              );
+      final bounds = _currentPosition != null
+          ? _getBoundsAroundPosition(_currentPosition!, 0.01)
+          : LatLngBounds(
+              LatLng(37.9011, 145.1267), // Melbourne area fallback
+              LatLng(37.9211, 145.1467),
+            );
 
       final allRestaurants = await MapService().getRestaurants(
         swLat: bounds.southWest.latitude,
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisineId: currentFilter.selectedCuisine?.id, // Use filter from mixin
       );
 
-      final filteredRestaurants = _applyRatingFilter(allRestaurants);
+      final filteredRestaurants = applyRatingFilter(allRestaurants); // Use mixin method
 
       if (mounted) {
         setState(() {
@@ -187,10 +177,10 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisineId: currentFilter.selectedCuisine?.id, // Use filter from mixin
       );
 
-      final filteredRestaurants = _applyRatingFilter(allRestaurants);
+      final filteredRestaurants = applyRatingFilter(allRestaurants); // Use mixin method
 
       if (mounted) {
         setState(() {
@@ -216,10 +206,10 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisineId: currentFilter.selectedCuisine?.id, // Use filter from mixin
       );
 
-      final filteredRestaurants = _applyRatingFilter(allRestaurants);
+      final filteredRestaurants = applyRatingFilter(allRestaurants); // Use mixin method
 
       if (mounted) {
         setState(() {
@@ -239,179 +229,22 @@ class _MapPageState extends State<MapPage> {
     await _fetchWithBounds(bounds);
   }
 
-  // Apply rating filter to the list of restaurants
-  List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
-    return restaurants.where((restaurant) {
-      // Filter by minimum rating
-      return restaurant.rating! >= _minimumRating;
-    }).toList();
-  }
-
   // Fetch all available cuisines
   Future<void> _fetchCuisines() async {
     try {
       final cuisines = await CuisineService().getAllCuisines();
-      if (mounted) {
-        setState(() {
-          _availableCuisines = cuisines;
-        });
-      }
+      setAvailableCuisines(cuisines); // Use mixin method
     } catch (e) {
       debugPrint('Error fetching cuisines: $e');
     }
   }
 
-  // Show filter dialog
-  void _showFilterDialog() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Filter Restaurants'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Min Rating'),
-                    subtitle: DropdownButton<int>(
-                      value: _minimumRating,
-                      isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('$rating'),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.star,
-                                        size: 16,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _minimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Cuisine'),
-                    subtitle: DropdownButton<CuisineDto?>(
-                      value: _selectedCuisine,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<CuisineDto?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                        ..._availableCuisines.map(
-                          (cuisine) => DropdownMenuItem(
-                            value: cuisine,
-                            child: Text(cuisine.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCuisine = value;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Re-apply filters to currently loaded restaurants
-                    if (_restaurants.isNotEmpty) {
-                      _refreshFilters();
-                    } else {
-                      // If no restaurants loaded, fetch fresh data
-                      _forceFetchRestaurants();
-                    }
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Refresh filters and re-fetch restaurants
-  void _refreshFilters() {
-    // Re-fetch from API (for cuisine filter) and apply rating filter
-    _forceFetchRestaurants();
-  }
-
-  // Build the active filters chip
-  Widget _buildActiveFiltersChip() {
-    List<Widget> filterWidgets = [];
-
-    if (_selectedCuisine != null) {
-      filterWidgets.add(Text(_selectedCuisine!.name));
+  @override
+  void onFilterChanged(RestaurantFilterData filter) {
+    // Called when filters are applied
+    if (_restaurants.isNotEmpty) {
+      _forceFetchRestaurants();
     }
-
-    if (_minimumRating > 1) {
-      if (filterWidgets.isNotEmpty) {
-        filterWidgets.add(const Text(' • '));
-      }
-      filterWidgets.addAll([
-        Text('$_minimumRating'),
-        Icon(Icons.star, size: 16, color: AppTheme.colorScheme.onPrimary),
-      ]);
-    }
-
-    if (filterWidgets.isEmpty) return const SizedBox.shrink();
-
-    return Positioned(
-      top: 80,
-      right: 16,
-      child: Chip(
-        label: Row(mainAxisSize: MainAxisSize.min, children: filterWidgets),
-        deleteIcon: Icon(
-          Icons.close,
-          size: 18,
-          color: AppTheme.colorScheme.onPrimary,
-        ),
-        onDeleted: () {
-          setState(() {
-            _selectedCuisine = null;
-            _minimumRating = 1;
-          });
-          _forceFetchRestaurants();
-        },
-        backgroundColor: AppTheme.colorScheme.primary,
-        side: BorderSide.none,
-        labelStyle: TextStyle(
-          color: AppTheme.colorScheme.onPrimary,
-          fontSize: 14,
-        ),
-      ),
-    );
   }
 
   @override
@@ -421,182 +254,170 @@ class _MapPageState extends State<MapPage> {
         title: const Text('Home'),
         automaticallyImplyLeading: false, // Hide back button
       ),
-      body:
-          _isLoading
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Loading map and restaurants...'),
-                  ],
-                ),
-              )
-              : Stack(
+      body: _isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter:
-                          _currentPosition ?? LatLng(37.9111, 145.1367),
-                      initialZoom: 13,
-                      onMapReady: () {
-                        // Map is ready - no action needed since we handle loading in initState
-                      },
-                      onPositionChanged: (MapCamera camera, bool hasGesture) {
-                        if (hasGesture && !_isLoading) {
-                          _fetchRestaurantsInBounds();
-                        }
-                      },
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.app',
-                      ),
-                      MarkerLayer(
-                        markers:
-                            _restaurants.map((restaurant) {
-                              return Marker(
-                                point: LatLng(
-                                  restaurant.latitude,
-                                  restaurant.longitude,
-                                ),
-                                width: 40,
-                                height: 40,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              restaurant.name,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.titleLarge,
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Rating: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.rating}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Total reviews: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.userRatingsTotal}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Address: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.formattedAddress}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                                child: const Text('Close'),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-                                  },
-                                  child: const Icon(
-                                    Icons.location_pin,
-                                    color: Colors.red,
-                                    size: 40,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: FloatingActionButton(
-                      heroTag: 'filterButton',
-                      onPressed: _showFilterDialog,
-                      child: const Icon(Icons.filter_alt_rounded),
-                    ),
-                  ),
-                  _buildActiveFiltersChip(),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading map and restaurants...'),
                 ],
               ),
+            )
+          : Stack(
+              children: [
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter:
+                        _currentPosition ?? LatLng(37.9111, 145.1367),
+                    initialZoom: 13,
+                    onMapReady: () {
+                      // Map is ready - no action needed since we handle loading in initState
+                    },
+                    onPositionChanged: (MapCamera camera, bool hasGesture) {
+                      if (hasGesture && !_isLoading) {
+                        _fetchRestaurantsInBounds();
+                      }
+                    },
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.app',
+                    ),
+                    MarkerLayer(
+                      markers: _restaurants.map((restaurant) {
+                        return Marker(
+                          point: LatLng(
+                            restaurant.latitude,
+                            restaurant.longitude,
+                          ),
+                          width: 40,
+                          height: 40,
+                          child: GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(
+                                    restaurant.name,
+                                    style: Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      RichText(
+                                        text: TextSpan(
+                                          style: DefaultTextStyle.of(context).style,
+                                          children: [
+                                            TextSpan(
+                                              text: 'Rating: ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.rating}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text.rich(
+                                        TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Total reviews: ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.userRatingsTotal}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text.rich(
+                                        TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'PH: ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: restaurant.formattedPhoneNum ??
+                                                  'Not available',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text.rich(
+                                        TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: 'Address: ',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.formattedAddress}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.location_pin,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    heroTag: 'filterButton',
+                    onPressed: () => showFilterDialog(context), // Use mixin method
+                    child: const Icon(Icons.filter_alt_rounded),
+                  ),
+                ),
+                // Use the new filter chip widget
+                Positioned(
+                  top: 80,
+                  right: 16,
+                  child: RestaurantFilterChip(
+                    filter: currentFilter,
+                    onClear: clearFilters, // Use mixin method
+                    showForMap: true, // Map view style
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
