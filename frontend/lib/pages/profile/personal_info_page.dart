@@ -386,12 +386,15 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
           children: [
             IconButton(
               icon: Icon(
-                _homeLocation != null ? Icons.edit_location : Icons.add_location,
+                _homeLocation != null
+                    ? Icons.edit_location
+                    : Icons.add_location,
                 color: AppTheme.primaryColor,
               ),
               onPressed:
-                  () =>
-                      _navigateToLocationSelection(initialLocation: _homeLocation),
+                  () => _navigateToLocationSelection(
+                    initialLocation: _homeLocation,
+                  ),
             ),
             if (_homeLocation != null)
               IconButton(
@@ -407,15 +410,19 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                         _homeLocation = null;
                       });
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('Home location removed successfully.')),
+                        const SnackBar(
+                          content: Text('Home location removed successfully.'),
+                        ),
                       );
                     } catch (e) {
                       messenger.showSnackBar(
-                        SnackBar(content: Text('Failed to remove location: $e')),
+                        SnackBar(
+                          content: Text('Failed to remove location: $e'),
+                        ),
                       );
                     }
                   }
-                }
+                },
               ),
           ],
         ),
