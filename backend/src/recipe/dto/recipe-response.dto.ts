@@ -49,6 +49,10 @@ export class RecipeDataDto {
   @IsString()
   @IsNotEmpty()
   cuisine: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  calories: number;
 }
 
 export class RecipeResponseDto {
@@ -89,6 +93,8 @@ export class RecipeFromFrontEnd {
   difficultyLevel: RecipeDifficulty;
 
   cuisine: string;
+
+  calories: number;
 }
 
 export class RecipeDto {
