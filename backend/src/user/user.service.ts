@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly db: DatabaseService,
     private readonly dietaryRequirementService: DietaryRequirementService,
-  ) {}
+  ) { }
 
   async create(createUserDto: Prisma.UserCreateInput) {
     return this.db.user.create({ data: createUserDto });
@@ -34,6 +34,52 @@ export class UserService {
   async update(id: number, updateUserDto: Prisma.UserUpdateInput) {
     return this.db.user.update({ where: { id }, data: updateUserDto });
   }
+
+  async logCalorie(userId: number, calories: number): Promise<any> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const calorieLog = await this.db.userCalorieLog.create({
+        data: {
+          userId: userId,
+          calories: calories,
+          date: today,
+        },
+      });
+
+      this.logger.log(
+        `Logged ${calories} calories for user ${userId} on ${today.toISOString()}`,
+      );
+      return calorieLog;
+    } catch (error) {
+      this.logger.error(
+        `Failed to log calories for user ${userId}: ${error.message}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async getDailyCalories(userId: number): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const calorieLogs = await this.db.userCalorieLog.findMany({
+      where: {
+        userId: userId,
+        date: today,
+      },
+    });
+
+    let totalCalories = 0;
+    calorieLogs.forEach((log) => {
+      totalCalories += log.calories;
+    });
+
+    return totalCalories;
+  }
+
   /**
    * Create a new user favourite restaurant
    * @param userId d
