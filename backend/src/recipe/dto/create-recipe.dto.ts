@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsEnum, ArrayNotEmpty, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  ArrayNotEmpty,
+  IsArray,
+  IsOptional,
+} from 'class-validator';
 
 export enum RecipeDifficulty {
   EASY = 'easy',
@@ -20,4 +26,7 @@ export class CreateRecipeDto {
   @IsEnum(RecipeDifficulty)
   @IsNotEmpty()
   difficultyLevel: RecipeDifficulty;
+
+  @IsOptional()
+  calorieCount?: number;
 }

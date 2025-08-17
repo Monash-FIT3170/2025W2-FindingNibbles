@@ -22,6 +22,7 @@ type RecipeGenerated = {
   nutritionalInfo: string[];
   difficultyLevel: RecipeDifficulty;
   cuisine: string;
+  calories: number;
 };
 
 const responseSchema = {
@@ -44,6 +45,7 @@ const responseSchema = {
           },
           difficulty: { type: 'STRING' },
           cuisine: { type: 'STRING' },
+          calories: { type: 'INTEGER' },
         },
         required: [
           'title',
@@ -55,6 +57,7 @@ const responseSchema = {
           'nutritional_info',
           'difficulty',
           'cuisine',
+          'calories',
         ],
       },
     },
@@ -67,7 +70,7 @@ export class RecipeService {
   constructor(
     private db: DatabaseService,
     private configService: ConfigService,
-  ) {}
+  ) { }
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated[]> {
     try {
       const dietaries = await this.db.userDietary.findMany({
@@ -100,6 +103,11 @@ export class RecipeService {
           ? ``
           : `- Recipes must be '${requestedDifficulty}' difficulty.`;
 
+      const calorieLine =
+        recipe.calorieCount != null
+          ? `- Each recipe should have approximately ${recipe.calorieCount} calories.`
+          : ``;
+
       const prompt = `
         Generate 3 recipes that meet the following criteria:
         - Use British English and the metric system.
@@ -107,6 +115,7 @@ export class RecipeService {
         - Use the following ingredients: ${recipe.ingredients.join(', ') || 'none'}.
         - Must be cookable using: ${kitchenAppliances.join(', ') || 'any tools'}.
         ${difficultyLine}
+        ${calorieLine}
         Return the recipes in a JSON object with a 'recipes' key containing a list of three recipes.
         Each recipe should include:
         - Difficulty as 'easy', 'medium', or 'hard'
@@ -204,6 +213,7 @@ export class RecipeService {
         nutritionalInfo: recipeData.nutritional_info,
         difficultyLevel: recipeData.difficulty,
         cuisine: recipeData.cuisine || 'unknown',
+        calories: recipeData.calories,
       }));
 
       return recipes as RecipeGenerated[];
@@ -442,6 +452,7 @@ export class RecipeService {
             id: recipeCuisine.id,
           },
         },
+        calories: recipeData.calories,
         // Add any other fields needed by the database schema
       };
 

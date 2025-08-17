@@ -11,6 +11,7 @@ class RecipeModel {
   final List<String> nutritionalInfo;
   final RecipeDifficulty difficultyLevel;
   final String cuisine;
+  final int calories;
   bool isFavorite;
 
   RecipeModel({
@@ -24,6 +25,7 @@ class RecipeModel {
     required this.nutritionalInfo,
     required this.difficultyLevel,
     required this.cuisine,
+    required this.calories,
     this.isFavorite = false,
   });
 
@@ -41,6 +43,7 @@ class RecipeModel {
         (e) => e.name == json['difficultyLevel'],
       ),
       cuisine: json['cuisine'] as String,
+      calories: json['calories'] as int,
     );
   }
 
@@ -55,5 +58,6 @@ class RecipeModel {
     'nutritionalInfo': nutritionalInfo,
     'difficultyLevel': difficultyLevel.name,
     'cuisine': cuisine,
+    'calories': calories,
   };
 }
