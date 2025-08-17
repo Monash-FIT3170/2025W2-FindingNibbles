@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
 import 'recipe_model.dart';
 
 class RecipeIngredientsPage extends StatefulWidget {
@@ -12,6 +14,8 @@ class RecipeIngredientsPage extends StatefulWidget {
 class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
   int currentTab = 0;
+  final RecipeService _recipeService = RecipeService();
+  final _logger = getLogger();
 
   late List<bool> checkedIngredients;
 
@@ -22,6 +26,23 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       widget.recipe.ingredients.length,
       (_) => false,
     );
+  }
+
+  Future<void> _logCalories() async {
+    try {
+      await _recipeService.logCalories(widget.recipe.calories);
+      if (!mounted) return;
+      _logger.i('Calories logged successfully!');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Calories logged successfully!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _logger.e('Failed to log calories: ${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
+      );
+    }
   }
 
   Widget _buildIngredientsList(TextTheme textTheme, ColorScheme colorScheme) {
@@ -272,6 +293,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   currentTab == 0
                       ? _buildIngredientsList(textTheme, colorScheme)
                       : _buildInstructionList(textTheme, colorScheme),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _logCalories,
+                child: const Text('Log Calories'),
+              ),
             ),
           ],
         ),
