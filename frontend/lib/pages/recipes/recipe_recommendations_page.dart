@@ -316,6 +316,24 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
                   ),
                 ],
               ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.water_drop_outlined,
+                    // Keep icon size the same
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${recipe.calories} calories',
+                    style: textTheme.labelMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+
               IconButton(
                 icon: Icon(
                   recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
