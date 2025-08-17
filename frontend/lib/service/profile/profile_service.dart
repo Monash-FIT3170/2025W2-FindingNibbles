@@ -15,6 +15,19 @@ class ProfileService {
   final RecipeService _recipeService = RecipeService();
   final _logger = getLogger();
 
+  Future<int> getDailyCalories() async {
+    try {
+      final response = await _dio.get('user/calorie-log');
+      if (response.statusCode == 200) {
+        return int.parse(response.data.toString());
+      } else {
+        throw Exception('Failed to load daily calories');
+      }
+    } catch (e) {
+      throw Exception('Failed to load daily calories; $e');
+    }
+  }
+
   /// Dietary Requirements
 
   Future<List<DietaryRequirementDto>> getDietaryRequirements() async {

@@ -15,6 +15,7 @@ class RecipeService {
     required List<int> dietaryRequirements,
     required List<int> kitchenAppliances,
     required RecipeDifficulty difficultyLevel,
+    int? calorieCount,
   }) async {
     try {
       final response = await _dio.post(
@@ -24,6 +25,7 @@ class RecipeService {
           'dietaryRequirements': dietaryRequirements,
           'kitchenAppliances': kitchenAppliances,
           'difficultyLevel': difficultyLevel.name,
+          'calorieCount': calorieCount,
         },
       );
 
@@ -36,6 +38,20 @@ class RecipeService {
     } catch (e) {
       _logger.e('Failed to generate recipes: ${e.toString()}');
       throw Exception('Failed to generate recipes: ${e.toString()}');
+    }
+  }
+
+  Future<void> logCalories(int calories) async {
+    try {
+      final response = await _dio.post(
+        'user/calorie-log',
+        data: {'calories': calories},
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to log calories');
+      }
+    } catch (e) {
+      throw Exception('Failed to log calories: $e');
     }
   }
 
