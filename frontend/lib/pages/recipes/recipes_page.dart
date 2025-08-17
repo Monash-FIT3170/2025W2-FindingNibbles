@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/widgets/appliances_selection.dart';
 import 'package:nibbles/pages/recipes/widgets/dietary_requirements.dart';
@@ -29,6 +30,7 @@ class _RecipesPageState extends State<RecipesPage> {
   List<DietaryRequirementDto> selectedDietaries = [];
   bool isLoading = false;
   bool useDietaryRequirements = true;
+  int? calorieCount;
 
   // Services
   final ProfileService _profileService = ProfileService();
@@ -140,6 +142,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 : [],
         kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
         difficultyLevel: selectedDifficulty,
+        calorieCount: calorieCount,
       );
 
       _logger.d(recipeResults);
@@ -345,6 +348,25 @@ class _RecipesPageState extends State<RecipesPage> {
                                 onAddIngredient: _addIngredient,
                                 onRemoveIngredient: _removeIngredient,
                               ),
+                            ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Calorie Count (Optional)',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  calorieCount = int.tryParse(value);
+                                });
+                              },
                             ),
                           ],
                         ),
