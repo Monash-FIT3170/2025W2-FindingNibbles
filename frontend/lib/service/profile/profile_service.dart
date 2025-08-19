@@ -15,9 +15,12 @@ class ProfileService {
   final RecipeService _recipeService = RecipeService();
   final _logger = getLogger();
 
-  Future<int> getDailyCalories() async {
+  Future<int> getDailyCalories(DateTime date) async {
     try {
-      final response = await _dio.get('user/calorie-log');
+      final response = await _dio.get(
+        'user/calorie-log',
+        queryParameters: {'date': date.toIso8601String()},
+      );
       if (response.statusCode == 200) {
         return int.parse(response.data.toString());
       } else {
