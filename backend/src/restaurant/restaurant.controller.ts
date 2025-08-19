@@ -11,6 +11,10 @@ import { RestaurantService } from './restaurant.service';
 import { GooglePlacesApiService } from '../google-places-api/google-places-api.service';
 import { Prisma } from '../../generated/prisma';
 import { Restaurant } from 'generated/prisma';
+import { NearbyQueryDto } from './dto/nearby-query.dto';
+import { AutocompleteQueryDto } from './dto/autocomplete-query.dto';
+import { TextSearchQueryDto } from './dto/text-search-query.dto';
+import { NearbyByCuisineQueryDto } from './dto/nearby-by-cuisine-query.dto';
 
 @Controller('restaurant')
 export class RestaurantController {
@@ -145,34 +149,18 @@ export class RestaurantController {
    * GET /restaurant/places/nearby?lat=<latitude>&lng=<longitude>&radius=<radius>&keyword=<keyword>&minprice=<minprice>&maxprice=<maxprice>&opennow=<boolean>
    */
   @Get('places/nearby')
-  async getNearbyRestaurants(
-    @Query('lat') lat: string,
-    @Query('lng') lng: string,
-    @Query('radius') radius?: string,
-    @Query('keyword') keyword?: string,
-    @Query('minprice') minprice?: string,
-    @Query('maxprice') maxprice?: string,
-    @Query('opennow') opennow?: string,
-  ) {
-    if (!lat || !lng) {
-      throw new BadRequestException('Latitude and longitude are required');
-    }
-
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lng);
-
-    if (isNaN(latitude) || isNaN(longitude)) {
-      throw new BadRequestException('Invalid latitude or longitude values');
-    }
+  async getNearbyRestaurants(@Query() query: NearbyQueryDto) {
+    const latitude = parseFloat(query.lat);
+    const longitude = parseFloat(query.lng);
 
     return this.googlePlacesService.getNearbyRestaurants(
       latitude,
       longitude,
-      radius ? parseInt(radius) : undefined,
-      keyword,
-      minprice ? parseInt(minprice) : undefined,
-      maxprice ? parseInt(maxprice) : undefined,
-      opennow === 'true',
+      query.radius ? parseInt(query.radius) : undefined,
+      query.keyword,
+      query.minprice ? parseInt(query.minprice) : undefined,
+      query.maxprice ? parseInt(query.maxprice) : undefined,
+      query.opennow === 'true',
     );
   }
 
@@ -203,33 +191,21 @@ export class RestaurantController {
    * GET /restaurant/places/autocomplete?input=<search_term>&lat=<latitude>&lng=<longitude>&radius=<radius>
    */
   @Get('places/autocomplete')
-  async autocompleteRestaurants(
-    @Query('input') input: string,
-    @Query('lat') lat?: string,
-    @Query('lng') lng?: string,
-    @Query('radius') radius?: string,
-  ) {
-    if (!input) {
-      throw new BadRequestException('Search input is required');
-    }
-
+  async autocompleteRestaurants(@Query() query: AutocompleteQueryDto) {
+    const input = query.input;
     let latitude: number | undefined;
     let longitude: number | undefined;
 
-    if (lat && lng) {
-      latitude = parseFloat(lat);
-      longitude = parseFloat(lng);
-
-      if (isNaN(latitude) || isNaN(longitude)) {
-        throw new BadRequestException('Invalid latitude or longitude values');
-      }
+    if (query.lat && query.lng) {
+      latitude = parseFloat(query.lat);
+      longitude = parseFloat(query.lng);
     }
 
     return this.googlePlacesService.autocompleteRestaurants(
       input,
       latitude,
       longitude,
-      radius ? parseInt(radius) : undefined,
+      query.radius ? parseInt(query.radius) : undefined,
     );
   }
 
@@ -238,33 +214,38 @@ export class RestaurantController {
    * GET /restaurant/places/search?query=<search_term>&lat=<latitude>&lng=<longitude>&radius=<radius>
    */
   @Get('places/search')
-  async searchRestaurants(
-    @Query('query') query: string,
-    @Query('lat') lat?: string,
-    @Query('lng') lng?: string,
-    @Query('radius') radius?: string,
-  ) {
-    if (!query) {
-      throw new BadRequestException('Search query is required');
-    }
-
+  async searchRestaurants(@Query() queryDto: TextSearchQueryDto) {
     let latitude: number | undefined;
     let longitude: number | undefined;
 
-    if (lat && lng) {
-      latitude = parseFloat(lat);
-      longitude = parseFloat(lng);
-
-      if (isNaN(latitude) || isNaN(longitude)) {
-        throw new BadRequestException('Invalid latitude or longitude values');
-      }
+    if (queryDto.lat && queryDto.lng) {
+      latitude = parseFloat(queryDto.lat);
+      longitude = parseFloat(queryDto.lng);
     }
 
     return this.googlePlacesService.searchRestaurants(
-      query,
+      queryDto.query,
       latitude,
       longitude,
-      radius ? parseInt(radius) : undefined,
+      queryDto.radius ? parseInt(queryDto.radius) : undefined,
+    );
+  }
+
+  /**
+   * Nearby search by cuisine keyword. Wraps Google Text Search with "<cuisine> restaurant".
+   * GET /restaurant/places/nearby-by-cuisine?cuisine=italian&lat=..&lng=..&radius=..
+   */
+  @Get('places/nearby-by-cuisine')
+  async nearbyByCuisine(@Query() query: NearbyByCuisineQueryDto) {
+    const latitude = parseFloat(query.lat);
+    const longitude = parseFloat(query.lng);
+    const keyword = `${query.cuisine} restaurant`;
+
+    return this.googlePlacesService.searchRestaurants(
+      keyword,
+      latitude,
+      longitude,
+      query.radius ? parseInt(query.radius) : undefined,
     );
   }
 
