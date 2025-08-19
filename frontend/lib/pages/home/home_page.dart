@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
-import './restaurant_filter_widget.dart';
+import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
+import 'package:nibbles/pages/home/restaurant_filter_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
