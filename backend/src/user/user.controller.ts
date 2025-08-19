@@ -20,7 +20,7 @@ import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 @Controller('user')
 export class UserController {
   private logger = new Logger(UserController.name);
-  constructor(readonly userService: UserService) { }
+  constructor(readonly userService: UserService) {}
 
   @Get('profile')
   async getProfile(@Req() req: RequestUser) {
@@ -33,8 +33,11 @@ export class UserController {
   }
 
   @Get('calorie-log')
-  getDailyCalories(@Req() req: RequestUser): Promise<number> {
-    return this.userService.getDailyCalories(req.user.sub);
+  getDailyCalories(
+    @Req() req: RequestUser,
+    @Body('date') date: Date,
+  ): Promise<number> {
+    return this.userService.getDailyCalories(req.user.sub, date);
   }
 
   @Post('favourite-restaurant')

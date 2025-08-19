@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadDailyCalories() async {
     try {
-      final calories = await _profileService.getDailyCalories();
+      final calories = await _profileService.getDailyCalories(DateTime.now());
       setState(() {
         _dailyCalories = calories;
       });
