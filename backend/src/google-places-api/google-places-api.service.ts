@@ -274,8 +274,15 @@ export class GooglePlacesApiService {
         utc_offset: place.utc_offset,
         vicinity: place.vicinity,
       };
-    } catch (error) {
-      console.error(`Error fetching restaurant details for ${placeId}:`, error);
+    } catch (error: unknown) {
+      // Keep format string constant and avoid logging raw objects
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      console.error('Error fetching restaurant details', {
+        placeId,
+        message,
+        stack,
+      });
       throw new BadRequestException('Failed to fetch restaurant details');
     }
   }
