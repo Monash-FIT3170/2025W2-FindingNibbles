@@ -8,8 +8,9 @@ import {
   Patch,
   Put,
   Logger,
+  Query,
 } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common/exceptions';
+import { BadRequestException, NotFoundException } from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
 import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
@@ -35,8 +36,13 @@ export class UserController {
   @Get('calorie-log')
   getDailyCalories(
     @Req() req: RequestUser,
-    @Body('date') date: Date,
+    @Query('date') dateStr: string,
   ): Promise<number> {
+    const date = new Date(dateStr);
+    this.logger.log(date);
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date');
+    }
     return this.userService.getDailyCalories(req.user.sub, date);
   }
 
