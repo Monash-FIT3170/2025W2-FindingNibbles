@@ -16,16 +16,26 @@ class ProfileService {
   final _logger = getLogger();
 
   Future<int> getDailyCalories(DateTime date) async {
+    final dateStr = date.toIso8601String().split('T').first; // "2025-08-19"
+    final ts = date.millisecondsSinceEpoch.toString();
+
     try {
       final response = await _dio.get(
         'user/calorie-log',
-        queryParameters: {'date': date.toIso8601String()},
+        queryParameters: {'date': dateStr, 'ts': ts},
       );
+
       if (response.statusCode == 200) {
         return int.parse(response.data.toString());
       } else {
-        throw Exception('Failed to load daily calories');
+        throw Exception(
+          'Failed to load daily calories (status ${response.statusCode})',
+        );
       }
+    } on DioException catch (e) {
+      throw Exception(
+        'Failed to load daily calories: ${e.response?.statusCode} ${e.response?.data ?? e.message}',
+      );
     } catch (e) {
       throw Exception('Failed to load daily calories; $e');
     }

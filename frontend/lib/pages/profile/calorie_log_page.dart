@@ -57,16 +57,23 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
   ];
 
   bool get _isTodaySelected => isSameDay(_selectedDay, DateTime.now());
+  int? _dailyCalories;
 
-  Future<int> _fetchDailyCalories() async {
-    return await _profileService.getDailyCalories(_selectedDay);
+  @override
+  void initState() {
+    super.initState();
+    _loadCaloriesForDay(_selectedDay);
+  }
+
+  Future<void> _loadCaloriesForDay(DateTime day) async {
+    final calories = await _profileService.getDailyCalories(day);
+    setState(() {
+      _dailyCalories = calories;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // TEMP: show entries only when selected day is today - will change to fetch by date
-    final bool hasEntries =
-        _entries.isNotEmpty && isSameDay(_selectedDay, DateTime.now());
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calorie Log'),
@@ -124,6 +131,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                                   _selectedDay = selectedDay;
                                   _focusedDay = focusedDay;
                                 });
+                                _loadCaloriesForDay(selectedDay);
                               },
                               onPageChanged: (focusedDay) {
                                 setState(() => _focusedDay = focusedDay);
@@ -192,7 +200,14 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child: hasEntries ? _buildEntriesList() : _buildEmptyState(),
+                  child:
+                      _dailyCalories == null
+                          ? const Center(
+                            child: CircularProgressIndicator(),
+                          ) // loading state
+                          : (_dailyCalories != 0)
+                          ? _buildEntriesList()
+                          : _buildEmptyState(),
                 ),
               ),
             ],
@@ -239,23 +254,15 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            FutureBuilder<int>(
-              future: _fetchDailyCalories(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  return Text(
-                    snapshot.data.toString(),
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  );
-                }
-              },
+            Text(
+              _dailyCalories?.toString() ?? '0',
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            SizedBox(width: 8),
-            Text('kcal', style: TextStyle(fontSize: 14, color: Colors.black54)),
+            const SizedBox(width: 8),
+            const Text(
+              'kcal',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
           ],
         ),
         const SizedBox(height: 12),

@@ -11,6 +11,7 @@ import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
 
+
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
@@ -62,10 +63,18 @@ export class UserService {
   }
 
   async getDailyCalories(userId: number, date: Date): Promise<number> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
     const calorieLogs = await this.db.userCalorieLog.findMany({
       where: {
         userId: userId,
-        date: date,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
     });
 
