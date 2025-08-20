@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
-import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
@@ -20,15 +19,12 @@ class _HomePageState extends State<HomePage> {
   List<CuisineDto> _availableCuisines = [];
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
-  int _dailyCalories = 0;
-  final ProfileService _profileService = ProfileService();
 
   @override
   void initState() {
     super.initState();
     _fetchRestaurants();
     _fetchCuisines();
-    _loadDailyCalories();
   }
 
   Future<void> _fetchCuisines() async {
@@ -69,17 +65,6 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       debugPrint('Error fetching restaurants: $e');
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadDailyCalories() async {
-    try {
-      final calories = await _profileService.getDailyCalories(DateTime.now());
-      setState(() {
-        _dailyCalories = calories;
-      });
-    } catch (e) {
-      debugPrint('Error loading daily calories $e');
     }
   }
 
@@ -212,10 +197,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [const Text('Nearby Restaurants'), Text('$_dailyCalories')],
-        ),
+        title: const Text('Nearby Restaurants'),
         automaticallyImplyLeading: false, // Hide back button
         actions: [
           IconButton(
@@ -226,11 +208,7 @@ class _HomePageState extends State<HomePage> {
                 MaterialPageRoute(
                   builder: (context) => const MenuScannerPage(),
                 ),
-              ).then((value) {
-                if (value == true) {
-                  _loadDailyCalories();
-                }
-              });
+              );
             },
             tooltip: 'Scan Menu',
           ),
@@ -249,73 +227,56 @@ class _HomePageState extends State<HomePage> {
                     ? const Center(child: CircularProgressIndicator())
                     : _restaurants.isEmpty
                     ? const Center(child: Text('No restaurants found.'))
-                    : Column(
-                      children: [
-                        Text(
-                          'Daily Calories: $_dailyCalories',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: GridView.builder(
-                            itemCount: _restaurants.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 4,
-                                  crossAxisSpacing: 4,
-                                  childAspectRatio: 3 / 2,
-                                ),
-                            itemBuilder: (context, index) {
-                              final restaurant = _restaurants[index];
-                              return Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        restaurant.name,
-                                        style: theme.textTheme.titleSmall
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.star,
-                                            color: colorScheme.secondary,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            restaurant.rating?.toStringAsFixed(
-                                                  1,
-                                                ) ??
-                                                '',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        formatPriceLevel(restaurant.priceLevel),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                    : GridView.builder(
+                      itemCount: _restaurants.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 4,
+                            crossAxisSpacing: 4,
+                            childAspectRatio: 3 / 2,
                           ),
-                        ),
-                      ],
+                      itemBuilder: (context, index) {
+                        final restaurant = _restaurants[index];
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  restaurant.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: colorScheme.primary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.star,
+                                      color: colorScheme.secondary,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      restaurant.rating?.toStringAsFixed(1) ??
+                                          '',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(formatPriceLevel(restaurant.priceLevel)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
           ),
           _buildActiveFiltersChip(),
