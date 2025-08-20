@@ -185,13 +185,38 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {
-                        // placeholder for calendar picker
+                      onPressed: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDay,
+                          firstDate: DateTime.utc(2020, 1, 1),
+                          lastDate: DateTime.utc(2030, 12, 31),
+                          initialEntryMode: DatePickerEntryMode.calendarOnly, // show calendar (month) view
+                          helpText: 'Select date',
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: AppTheme.primaryColor,
+                                  onPrimary: AppTheme.textOnPrimary,
+                                  surface: AppTheme.surfaceColor,
+                                  onSurface: AppTheme.textPrimary,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+
+                        if (picked != null) {
+                          setState(() {
+                            _selectedDay = picked;
+                            _focusedDay = picked;
+                          });
+                          await _loadCaloriesForDay(picked);
+                        }
                       },
-                      icon: Icon(
-                        Icons.calendar_today,
-                        color: AppTheme.textPrimary,
-                      ),
+                      icon: Icon(Icons.calendar_today, color: AppTheme.textPrimary),
                     ),
                   ],
                 ),
