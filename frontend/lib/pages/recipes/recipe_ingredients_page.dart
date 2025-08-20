@@ -29,19 +29,28 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Future<void> _logCalories() async {
-    try {
-      await _recipeService.logCalories(widget.recipe.calories);
-      if (!mounted) return;
-      _logger.i('Calories logged successfully!');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Calories logged successfully!')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      _logger.e('Failed to log calories: ${e.toString()}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
-      );
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (selectedDate != null) {
+      try {
+        await _recipeService.logCalories(widget.recipe.calories, selectedDate);
+        if (!mounted) return;
+        _logger.i('Calories logged successfully!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Calories logged successfully!')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        _logger.e('Failed to log calories: ${e.toString()}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
+        );
+      }
     }
   }
 
