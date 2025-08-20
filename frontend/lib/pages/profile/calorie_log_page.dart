@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/pages/recipes/recipes_page.dart'; // <-- add this (adjust path/name if needed)
 
 class CalorieLogPage extends StatefulWidget {
   const CalorieLogPage({super.key});
@@ -74,7 +75,12 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
 
   @override
   Widget build(BuildContext context) {
+    final double bottomSafe = MediaQuery.of(context).padding.bottom;
+    final double fabSpace = 80.0; // FAB height + desired gap (adjust if needed)
+    final double contentPaddingBottom = bottomSafe + fabSpace;
     return Scaffold(
+      extendBody: true,
+      backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
         title: const Text('Calorie Log'),
         backgroundColor: AppTheme.colorScheme.primary,
@@ -83,7 +89,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
       body: SafeArea(
         child: Container(
           color: AppTheme.colorScheme.primary,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(16,16,16,contentPaddingBottom),
           child: Column(
             children: [
               Container(
@@ -192,7 +198,8 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
               ),
               const SizedBox(height: 16),
               // Main Body
-              Expanded(
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.55,
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -200,14 +207,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child:
-                      _dailyCalories == null
-                          ? const Center(
-                            child: CircularProgressIndicator(),
-                          ) // loading state
-                          : (_dailyCalories != 0)
-                          ? _buildEntriesList()
-                          : _buildEmptyState(),
+                  child: _dailyCalories == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : (_dailyCalories != 0 ? _buildEntriesList() : _buildEmptyState()),
                 ),
               ),
             ],
@@ -215,11 +217,13 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.colorScheme.secondary, // light pink
+        backgroundColor: AppTheme.colorScheme.secondary,
         child: Icon(Icons.add, color: AppTheme.colorScheme.primary, size: 36),
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add calorie (placeholder)')),
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const RecipesPage(),
+            ),
           );
         },
       ),
@@ -312,7 +316,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                         Text(
                           entry['title']!,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.textOnPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -320,7 +324,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                         const Spacer(),
                         Text(
                           entry['subtitle']!,
-                          style: const TextStyle(color: Colors.white70),
+                          style: const TextStyle(color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -344,10 +348,10 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: AppTheme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.delete, color: Colors.red),
+              child: Icon(Icons.delete, color: AppTheme.colorScheme.error),
             ),
           ),
         ),
