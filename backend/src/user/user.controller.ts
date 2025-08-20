@@ -21,7 +21,7 @@ import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 @Controller('user')
 export class UserController {
   private logger = new Logger(UserController.name);
-  constructor(readonly userService: UserService) {}
+  constructor(readonly userService: UserService) { }
 
   @Get('profile')
   async getProfile(@Req() req: RequestUser) {
@@ -29,8 +29,22 @@ export class UserController {
   }
 
   @Post('calorie-log')
-  logCalorie(@Req() req: RequestUser, @Body('calories') calories: number) {
-    return this.userService.logCalorie(req.user.sub, calories);
+  logCalorie(
+    @Req() req: RequestUser,
+    @Body('calories') calories: number,
+    @Body('date') dateStr?: string,
+  ) {
+    let date: Date;
+    if (dateStr) {
+      const parsedDate = new Date(dateStr);
+      if (isNaN(parsedDate.getTime())) {
+        throw new BadRequestException('Invalid date');
+      }
+      date = parsedDate;
+    } else {
+      date = new Date();
+    }
+    return this.userService.logCalorie(req.user.sub, calories, date);
   }
 
   @Get('calorie-log')

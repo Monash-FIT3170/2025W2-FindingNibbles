@@ -18,7 +18,7 @@ export class UserService {
   constructor(
     private readonly db: DatabaseService,
     private readonly dietaryRequirementService: DietaryRequirementService,
-  ) {}
+  ) { }
 
   async create(createUserDto: Prisma.UserCreateInput) {
     return this.db.user.create({ data: createUserDto });
@@ -36,7 +36,7 @@ export class UserService {
     return this.db.user.update({ where: { id }, data: updateUserDto });
   }
 
-  async logCalorie(userId: number, calories: number): Promise<any> {
+  async logCalorie(userId: number, calories: number, date: Date): Promise<any> {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -45,12 +45,12 @@ export class UserService {
         data: {
           userId: userId,
           calories: calories,
-          date: today,
+          date: date,
         },
       });
 
       this.logger.log(
-        `Logged ${calories} calories for user ${userId} on ${today.toISOString()}`,
+        `Logged ${calories} calories for user ${userId} on ${date?.toISOString()}`,
       );
       return calorieLog;
     } catch (error) {
