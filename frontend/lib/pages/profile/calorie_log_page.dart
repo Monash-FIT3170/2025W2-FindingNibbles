@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/navigation/app_navigation.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
-import 'package:nibbles/pages/recipes/recipes_page.dart'; // <-- add this (adjust path/name if needed)
 
 class CalorieLogPage extends StatefulWidget {
   const CalorieLogPage({super.key});
@@ -11,7 +11,6 @@ class CalorieLogPage extends StatefulWidget {
   State<CalorieLogPage> createState() => _CalorieLogPageState();
 }
 
-// ...existing code...
 class _CalorieLogPageState extends State<CalorieLogPage> {
   final ProfileService _profileService = ProfileService();
   // Sample data for the skeleton UI
@@ -89,7 +88,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
       body: SafeArea(
         child: Container(
           color: AppTheme.colorScheme.primary,
-          padding: EdgeInsets.fromLTRB(16,16,16,contentPaddingBottom),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, contentPaddingBottom),
           child: Column(
             children: [
               Container(
@@ -191,7 +190,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                           initialDate: _selectedDay,
                           firstDate: DateTime.utc(2020, 1, 1),
                           lastDate: DateTime.utc(2030, 12, 31),
-                          initialEntryMode: DatePickerEntryMode.calendarOnly, // show calendar (month) view
+                          initialEntryMode:
+                              DatePickerEntryMode
+                                  .calendarOnly, // show calendar (month) view
                           helpText: 'Select date',
                           builder: (context, child) {
                             return Theme(
@@ -216,7 +217,10 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                           await _loadCaloriesForDay(picked);
                         }
                       },
-                      icon: Icon(Icons.calendar_today, color: AppTheme.textPrimary),
+                      icon: Icon(
+                        Icons.calendar_today,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -232,9 +236,12 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(16),
-                  child: _dailyCalories == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : (_dailyCalories != 0 ? _buildEntriesList() : _buildEmptyState()),
+                  child:
+                      _dailyCalories == null
+                          ? const Center(child: CircularProgressIndicator())
+                          : (_dailyCalories != 0
+                              ? _buildEntriesList()
+                              : _buildEmptyState()),
                 ),
               ),
             ],
@@ -245,9 +252,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         backgroundColor: AppTheme.colorScheme.secondary,
         child: Icon(Icons.add, color: AppTheme.colorScheme.primary, size: 36),
         onPressed: () {
-          Navigator.of(context).push(
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const RecipesPage(),
+              builder: (context) => const AppNavigation(initialPageIndex: 2),
             ),
           );
         },
