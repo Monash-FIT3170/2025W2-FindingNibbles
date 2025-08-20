@@ -41,11 +41,11 @@ class RecipeService {
     }
   }
 
-  Future<void> logCalories(int calories) async {
+  Future<void> logCalories(int calories, DateTime date) async {
     try {
       final response = await _dio.post(
         'user/calorie-log',
-        data: {'calories': calories},
+        data: {'calories': calories, 'date': date.toIso8601String()},
       );
       if (response.statusCode != 201) {
         throw Exception('Failed to log calories');
