@@ -291,7 +291,7 @@ class _LocationSelectionPageState extends State<LocationSelectionPage> {
                     TileLayer(
                       urlTemplate:
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.example.app',
+                      userAgentPackageName: 'com.nibbles.findingnibbles',
                     ),
                     if (selectedLocation != null)
                       MarkerLayer(
