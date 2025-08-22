@@ -7,6 +7,7 @@ import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -19,6 +20,7 @@ class _LikedPageState extends State<LikedPage> {
   final ProfileService _profileService = ProfileService();
   List<RestaurantDto> _favoriteRestaurants = [];
   List<RecipeDto> _favoriteRecipes = [];
+  List<CuisineDto> _favoriteCuisines = [];
   bool _isLoading = true;
   final _logger = getLogger();
 
@@ -32,9 +34,11 @@ class _LikedPageState extends State<LikedPage> {
     try {
       final restaurants = await _profileService.getFavouriteRestaurants();
       final recipes = await _profileService.getFavouriteRecipes();
+      final cuisines = await _profileService.getFavouriteCuisines();
       setState(() {
         _favoriteRestaurants = restaurants;
         _favoriteRecipes = recipes;
+        _favoriteCuisines = cuisines;
         _isLoading = false;
       });
     } catch (e) {
