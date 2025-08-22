@@ -1,4 +1,13 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  Post,
+  Delete,
+  Body,
+} from '@nestjs/common';
 import { CuisineService } from './cuisine.service';
 
 @Controller('cuisine')
@@ -26,5 +35,30 @@ export class CuisineController {
   @Get(':id/restaurants')
   findRestaurants(@Param('id', ParseIntPipe) id: number) {
     return this.cuisineService.findRestaurantsByCuisine(id);
+  }
+  // GET /cuisine/favourites?userId=1
+  @Get('favourites')
+  async getFavourites(@Query('userId', ParseIntPipe) userId: string) {
+    return this.cuisineService.getFavouriteCuisines(userId);
+  }
+
+  // POST /cuisine/favourites
+  @Post('favourites')
+  async addFavourite(
+    @Body('userId', ParseIntPipe) userId: string,
+    @Body('cuisineId', ParseIntPipe) cuisineId: string,
+  ) {
+    await this.cuisineService.addFavouriteCuisine(userId, cuisineId);
+    return { success: true };
+  }
+
+  // DELETE /cuisine/favourites
+  @Delete('favourites')
+  async removeFavourite(
+    @Body('userId', ParseIntPipe) userId: string,
+    @Body('cuisineId', ParseIntPipe) cuisineId: string,
+  ) {
+    await this.cuisineService.removeFavouriteCuisine(userId, cuisineId);
+    return { success: true };
   }
 }
