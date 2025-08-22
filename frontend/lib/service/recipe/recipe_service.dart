@@ -41,15 +41,25 @@ class RecipeService {
     }
   }
 
-  Future<void> logCalories(int calories, DateTime date) async {
+  Future<void> logCalories(int calories, DateTime date, RecipeModel recipe) async {
     try {
+      _logger.d('Logging calories: $calories for date: ${date.toIso8601String()}');
+      final recipeId = await createRecipe(recipe);
+      _logger.d('Created recipe with ID: $recipeId');
+
       final response = await _dio.post(
         'user/calorie-log',
-        data: {'calories': calories, 'date': date.toIso8601String()},
+        data: {'calories': calories, 'date': date.toIso8601String(), 'recipeId': recipeId},
       );
+
+      _logger.d('logCalories response: ${response.statusCode} ${response.data}');
+      
       if (response.statusCode != 201) {
         throw Exception('Failed to log calories');
       }
+    } on DioException catch (e) {
+      _logger.e('logCalories DioException: status=${e.response?.statusCode} data=${e.response?.data} message=${e.message}');
+      rethrow;
     } catch (e) {
       throw Exception('Failed to log calories: $e');
     }
