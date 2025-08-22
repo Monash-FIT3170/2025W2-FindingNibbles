@@ -248,8 +248,10 @@ model MealPlanDish {
 
 model UserCalorieLog {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
+  recipeId  Int
+  recipe    Recipe  @relation(fields: [recipeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   date      DateTime
   calories  Int
   createdAt DateTime @default(now())
@@ -307,6 +309,8 @@ model Recipe {
   instructions         String[]
   appliances           RecipeUserAppliance[]
   favouriteBy          UserFavouritedRecipe[]
+  loggedBy             UserCalorieLog[]
+  calories             Int?
   estimatedTimeMinutes Int
   servings             Int
   dietaryTags          String[]
