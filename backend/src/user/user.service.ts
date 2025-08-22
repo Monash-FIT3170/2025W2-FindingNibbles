@@ -59,10 +59,16 @@ export class UserService {
       );
       return calorieLog;
     } catch (error) {
-      this.logger.error(
-        `Failed to log calories for user ${userId}: ${error.message}`,
-        error.stack,
-      );
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to log calories for user ${userId}: ${error.message}`,
+          error.stack,
+        );
+      } else {
+        this.logger.error(
+          `Failed to log calories for user ${userId}: ${JSON.stringify(error)}`,
+        );
+      }
       throw error;
     }
   }

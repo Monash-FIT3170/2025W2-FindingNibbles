@@ -5,6 +5,7 @@ class AppTheme {
   // Primary brand colors
   static const Color primaryColor = Color(0xFFB4435C);
   static const Color secondaryColor = Color(0xFFF4CDD5);
+  static const Color tertiaryColor = Color(0xFF9E7B82);
   static const Color signInColor = Color(0xFF8B4B57);
 
   // Neutral colors
