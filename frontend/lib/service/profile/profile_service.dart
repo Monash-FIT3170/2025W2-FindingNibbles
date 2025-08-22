@@ -9,6 +9,7 @@ import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 
 class ProfileService {
   final Dio _dio = DioClient().client;
@@ -400,4 +401,54 @@ class ProfileService {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+  Future<void> addFavouriteCuisine(CuisineDto cuisine) async {
+    try {
+      _logger.d('Adding cuisine with ID: ${cuisine.id}');
+
+      final response = await _dio.post(
+        '/user/favourite-cuisine',
+        data: {'cuisineId': cuisine.id}, // Send cuisineId as JSON
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to add cuisine to favourites');
+      }
+    } catch (e) {
+      throw Exception('Failed to add cuisine to favourites: $e');
+    }
+  }
+
+  Future<void> removeFavouriteCuisine(String cuisineId) async {
+    try {
+      _logger.d('Removing cuisine with ID: $cuisineId');
+
+      final response = await _dio.delete(
+        '/user/favourite-cuisine',
+        data: {'cuisineId': cuisineId},
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove cuisine from favourites');
+      }
+    } catch (e) {
+      throw Exception('Failed to remove cuisine from favourites: $e');
+    }
+  }
+    Future<List<CuisineDto>> getFavouriteCuisines() async {
+    try {
+      _logger.d('Fetching favourite cuisines...');
+
+      final response = await _dio.get('/user/favourite-cuisine');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => CuisineDto.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch favourite cuisines');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch favourite cuisines: $e');
+    }
+  }
+
 }
