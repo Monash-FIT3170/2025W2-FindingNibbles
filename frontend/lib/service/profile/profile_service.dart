@@ -418,7 +418,7 @@ class ProfileService {
     }
   }
 
-  Future<void> removeFavouriteCuisine(String cuisineId) async {
+  Future<void> removeFavouriteCuisine(int cuisineId) async {
     try {
       _logger.d('Removing cuisine with ID: $cuisineId');
 
