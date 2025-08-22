@@ -272,9 +272,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         Text(
           'Total Calories',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 6),
         Row(
@@ -283,31 +283,32 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
             Text(
               _dailyCalories?.toString() ?? '-',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(width: 8),
             Text(
               'kcal',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: loggedRecipes.isEmpty
-              ? _buildEmptyState()
-              : ListView.separated(
-                  itemCount: loggedRecipes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final recipe = loggedRecipes[index];
-                    return _buildEntryCardFromRecipe(recipe);
-                  },
-                ),
+          child:
+              loggedRecipes.isEmpty
+                  ? _buildEmptyState()
+                  : ListView.separated(
+                    itemCount: loggedRecipes.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final recipe = loggedRecipes[index];
+                      return _buildEntryCardFromRecipe(recipe);
+                    },
+                  ),
         ),
       ],
     );
@@ -332,9 +333,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                 ),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 56, 8),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.18),
+                      color: AppTheme.tertiaryColor,
                       borderRadius: const BorderRadius.only(
                         topRight: Radius.circular(12),
                         bottomRight: Radius.circular(12),
@@ -345,19 +346,20 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: AppTheme.textOnPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.textOnPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis, 
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const Spacer(),
                         Text(
                           subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.textSecondary,
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -397,7 +399,13 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
               decoration: BoxDecoration(
                 color: AppTheme.surfaceColor,
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Icon(Icons.delete, color: AppTheme.errorColor),
             ),

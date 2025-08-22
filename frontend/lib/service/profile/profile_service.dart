@@ -44,7 +44,10 @@ class ProfileService {
   Future<List<RecipeDto>> getLoggedRecipes(DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
     try {
-      final response = await _dio.get('user/calorie-log-recipes', queryParameters: {'date': dateStr});
+      final response = await _dio.get(
+        'user/calorie-log-recipes',
+        queryParameters: {'date': dateStr},
+      );
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         return data.map((item) => RecipeDto.fromJson(item)).toList();
@@ -63,7 +66,9 @@ class ProfileService {
         data: {'logId': logId},
       );
       if (response.statusCode != 200) {
-        throw Exception('Failed to delete calorie log (status ${response.statusCode})');
+        throw Exception(
+          'Failed to delete calorie log (status ${response.statusCode})',
+        );
       }
     } catch (e) {
       throw Exception('Failed to delete calorie log: $e');

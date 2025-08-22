@@ -38,7 +38,11 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
 
     if (selectedDate != null) {
       try {
-        await _recipeService.logCalories(widget.recipe.calories, selectedDate, widget.recipe);
+        await _recipeService.logCalories(
+          widget.recipe.calories,
+          selectedDate,
+          widget.recipe,
+        );
         if (!mounted) return;
         _logger.i('Calories logged successfully!');
         ScaffoldMessenger.of(context).showSnackBar(
