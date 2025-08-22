@@ -3,6 +3,7 @@ import 'package:nibbles/navigation/app_navigation.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/profile/recipe_dto.dart';
 
 class CalorieLogPage extends StatefulWidget {
   const CalorieLogPage({super.key});
@@ -13,31 +14,7 @@ class CalorieLogPage extends StatefulWidget {
 
 class _CalorieLogPageState extends State<CalorieLogPage> {
   final ProfileService _profileService = ProfileService();
-  // Sample data for the skeleton UI
-  final List<Map<String, String>> _entries = [
-    {
-      'title': 'Congee',
-      'subtitle': '250-332 kcal',
-      'image': 'assets/images/default_recipe.jpg',
-    },
-    {
-      'title': 'Taco',
-      'subtitle': '354-412 kcal',
-      'image': 'assets/images/default_recipe.jpg',
-    },
-    {
-      'title': 'Char Siew Pork',
-      'subtitle': '512-642 kcal',
-      'image': 'assets/images/default_recipe.jpg',
-    },
-    {
-      'title': 'Lasagne',
-      'subtitle': '456-512 kcal',
-      'image': 'assets/images/default_recipe.jpg',
-    },
-  ];
-
-  // replaced the integer index with real DateTime state for TableCalendar
+  List<RecipeDto> loggedRecipes = [];
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
 
@@ -63,6 +40,14 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
   void initState() {
     super.initState();
     _loadCaloriesForDay(_selectedDay);
+    _loadLoggedRecipes(_selectedDay);
+  }
+
+  Future<void> _loadLoggedRecipes(DateTime day) async {
+    final recipes = await _profileService.getLoggedRecipes(day);
+    setState(() {
+      loggedRecipes = recipes;
+    });
   }
 
   Future<void> _loadCaloriesForDay(DateTime day) async {
@@ -75,7 +60,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
   @override
   Widget build(BuildContext context) {
     final double bottomSafe = MediaQuery.of(context).padding.bottom;
-    final double fabSpace = 80.0; // FAB height + desired gap (adjust if needed)
+    final double fabSpace = 80.0;
     final double contentPaddingBottom = bottomSafe + fabSpace;
     return Scaffold(
       extendBody: true,
@@ -137,6 +122,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                                   _focusedDay = focusedDay;
                                 });
                                 _loadCaloriesForDay(selectedDay);
+                                _loadLoggedRecipes(selectedDay);
                               },
                               onPageChanged: (focusedDay) {
                                 setState(() => _focusedDay = focusedDay);
@@ -146,15 +132,14 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                                   shape: BoxShape.circle,
                                   color: AppTheme.colorScheme.primary,
                                 ),
-                                todayDecoration:
-                                    _isTodaySelected
-                                        ? BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: AppTheme.colorScheme.primary,
-                                        )
-                                        : const BoxDecoration(
-                                          color: Colors.transparent,
-                                        ),
+                                todayDecoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppTheme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                  color: Colors.transparent,
+                                ),
                                 todayTextStyle: TextStyle(
                                   color:
                                       _isTodaySelected
@@ -215,6 +200,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                             _focusedDay = picked;
                           });
                           await _loadCaloriesForDay(picked);
+                          await _loadLoggedRecipes(picked);
                         }
                       },
                       icon: Icon(
@@ -278,65 +264,77 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
     );
   }
 
+  // ...existing code...
   Widget _buildEntriesList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Total Calories',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
         ),
         const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              _dailyCalories?.toString() ?? '0',
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              _dailyCalories?.toString() ?? '-',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'kcal',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: ListView.separated(
-            itemCount: _entries.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final item = _entries[index];
-              return _buildEntryCard(item);
-            },
-          ),
+          child: loggedRecipes.isEmpty
+              ? _buildEmptyState()
+              : ListView.separated(
+                  itemCount: loggedRecipes.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final recipe = loggedRecipes[index];
+                    return _buildEntryCardFromRecipe(recipe);
+                  },
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildEntryCard(Map<String, String> entry) {
+  Widget _buildEntryCardFromRecipe(RecipeDto recipe) {
+    final title = recipe.title;
+    final image = recipe.imageURL ?? 'assets/images/default_recipe.jpg';
+    String subtitle = recipe.nutritionalInfo.first;
+
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: SizedBox(
-            height: 88,
+            height: 95,
             child: Row(
               children: [
                 AspectRatio(
                   aspectRatio: 3 / 2,
-                  child: Image.asset(entry['image']!, fit: BoxFit.cover),
+                  child: Image.asset(image, fit: BoxFit.cover),
                 ),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.35),
+                      color: AppTheme.primaryColor.withOpacity(0.18),
                       borderRadius: const BorderRadius.only(
                         topRight: Radius.circular(12),
                         bottomRight: Radius.circular(12),
@@ -346,17 +344,22 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          entry['title']!,
-                          style: const TextStyle(
-                            color: AppTheme.textOnPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textOnPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis, 
                         ),
                         const Spacer(),
                         Text(
-                          entry['subtitle']!,
-                          style: const TextStyle(color: AppTheme.textSecondary),
+                          subtitle,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -366,24 +369,37 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
             ),
           ),
         ),
-        // delete icon
         Positioned(
           right: 8,
           top: 8,
           child: GestureDetector(
-            onTap: () {
-              // placeholder for delete
-              setState(() {
-                _entries.removeWhere((e) => e['title'] == entry['title']);
-              });
+            onTap: () async {
+              if (recipe.logId == null) {
+                return;
+              }
+              final int logId = recipe.logId!;
+              try {
+                // optimistically remove from UI
+                setState(() {
+                  loggedRecipes.removeWhere((r) => r.logId == logId);
+                });
+                // call backend
+                await _profileService.removeCalorieLog(logId);
+                // refresh totals
+                await _loadCaloriesForDay(_selectedDay);
+              } catch (e) {
+                // revert UI if failure
+                await _loadLoggedRecipes(_selectedDay);
+              }
             },
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppTheme.colorScheme.surface,
+                color: AppTheme.surfaceColor,
                 borderRadius: BorderRadius.circular(8),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2))],
               ),
-              child: Icon(Icons.delete, color: AppTheme.colorScheme.error),
+              child: Icon(Icons.delete, color: AppTheme.errorColor),
             ),
           ),
         ),
