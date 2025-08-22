@@ -12,6 +12,7 @@ class RecipeDto {
   final String? imageURL;
   final int cuisineId;
   final String cuisine;
+  final int? logId;
 
   RecipeDto({
     required this.id,
@@ -27,6 +28,7 @@ class RecipeDto {
     this.imageURL,
     required this.cuisineId,
     required this.cuisine,
+    this.logId,
   });
 
   /// Factory method to create a `RecipeDto` from a JSON object
@@ -45,6 +47,7 @@ class RecipeDto {
       imageURL: json['imageURL'] as String?,
       cuisineId: json['cuisineId'] as int,
       cuisine: json['cuisine'] as String,
+      logId: json['logId'] as int?,
     );
   }
 
@@ -64,6 +67,7 @@ class RecipeDto {
       'imageURL': imageURL,
       'cuisineId': cuisineId,
       'cuisine': cuisine,
+      'logId': logId,
     };
   }
 }
