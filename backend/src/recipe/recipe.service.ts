@@ -70,7 +70,7 @@ export class RecipeService {
   constructor(
     private db: DatabaseService,
     private configService: ConfigService,
-  ) { }
+  ) {}
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated[]> {
     try {
       const dietaries = await this.db.userDietary.findMany({
