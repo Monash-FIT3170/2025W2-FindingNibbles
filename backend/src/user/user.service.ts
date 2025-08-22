@@ -11,14 +11,13 @@ import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
 
-
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
   constructor(
     private readonly db: DatabaseService,
     private readonly dietaryRequirementService: DietaryRequirementService,
-  ) { }
+  ) {}
 
   async create(createUserDto: Prisma.UserCreateInput) {
     return this.db.user.create({ data: createUserDto });
@@ -36,7 +35,12 @@ export class UserService {
     return this.db.user.update({ where: { id }, data: updateUserDto });
   }
 
-  async logCalorie(userId: number, calories: number, date: Date): Promise<any> {
+  async logCalorie(
+    userId: number,
+    calories: number,
+    date: Date,
+    recipeId: number,
+  ): Promise<any> {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -46,6 +50,7 @@ export class UserService {
           userId: userId,
           calories: calories,
           date: date,
+          recipeId: recipeId,
         },
       });
 
@@ -84,6 +89,55 @@ export class UserService {
     });
 
     return totalCalories;
+  }
+
+  async getDailyCalorieLogs(userId: number, date: Date): Promise<RecipeDto[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const calorieLogs = await this.db.userCalorieLog.findMany({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      include: {
+        recipe: {
+          include: {
+            cuisine: true,
+          },
+        },
+      },
+    });
+
+    return calorieLogs.map((log) => ({
+      id: log.recipe.id,
+      title: log.recipe.title,
+      description: log.recipe.description,
+      ingredients: log.recipe.ingredients,
+      instructions: log.recipe.instructions,
+      estimatedTimeMinutes: log.recipe.estimatedTimeMinutes,
+      servings: log.recipe.servings,
+      nutritionalInfo: log.recipe.nutritionalInfo,
+      difficultyLevel: log.recipe.difficultyLevel,
+      cuisine: log.recipe.cuisine?.name || 'Other',
+      cuisineId: log.recipe.cuisine?.id ?? 0,
+      dietaryTags: log.recipe.dietaryTags || [],
+      logId: log.id,
+    }));
+  }
+
+  async removeCalorieLog(userId: number, logId: number) {
+    await this.db.userCalorieLog.delete({
+      where: {
+        id: logId,
+        userId: userId,
+      },
+    });
   }
 
   /**
