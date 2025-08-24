@@ -4,13 +4,13 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:nibbles/service/map/map_service.dart';
-import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/service/restaurant/google_places_restaurant_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class RestaurantMarker extends Marker {
-  final RestaurantDto restaurant;
+  final GooglePlacesRestaurantDto restaurant;
 
   RestaurantMarker({required this.restaurant})
     : super(
@@ -32,7 +32,7 @@ class _MapPageState extends State<MapPage> {
   late final MapController _mapController = MapController();
   LatLng? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
-  List<RestaurantDto> _restaurants = [];
+  List<GooglePlacesRestaurantDto> _restaurants = [];
   bool _isLoading = false;
   final bool useCurrentLocation = false; // Use current location if available
 
@@ -148,7 +148,7 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisine: _selectedCuisine?.name,
       );
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
@@ -187,7 +187,7 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisine: _selectedCuisine?.name,
       );
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
@@ -216,7 +216,7 @@ class _MapPageState extends State<MapPage> {
         swLng: bounds.southWest.longitude,
         neLat: bounds.northEast.latitude,
         neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
+        cuisine: _selectedCuisine?.name,
       );
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
@@ -240,10 +240,10 @@ class _MapPageState extends State<MapPage> {
   }
 
   // Apply rating filter to the list of restaurants
-  List<RestaurantDto> _applyRatingFilter(List<RestaurantDto> restaurants) {
+  List<GooglePlacesRestaurantDto> _applyRatingFilter(List<GooglePlacesRestaurantDto> restaurants) {
     return restaurants.where((restaurant) {
       // Filter by minimum rating
-      return restaurant.rating! >= _minimumRating;
+      return restaurant.rating != null && restaurant.rating! >= _minimumRating;
     }).toList();
   }
 
@@ -500,7 +500,7 @@ class _MapPageState extends State<MapPage> {
                                                       ),
                                                       TextSpan(
                                                         text:
-                                                            '${restaurant.rating}',
+                                                            '${restaurant.rating ?? 'N/A'}',
                                                       ),
                                                     ],
                                                   ),
@@ -518,27 +518,7 @@ class _MapPageState extends State<MapPage> {
                                                       ),
                                                       TextSpan(
                                                         text:
-                                                            '${restaurant.userRatingsTotal}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
+                                                            '${restaurant.userRatingsTotal ?? 'N/A'}',
                                                       ),
                                                     ],
                                                   ),
@@ -556,7 +536,7 @@ class _MapPageState extends State<MapPage> {
                                                       ),
                                                       TextSpan(
                                                         text:
-                                                            '${restaurant.formattedAddress}',
+                                                            restaurant.vicinity ?? 'Not available',
                                                       ),
                                                     ],
                                                   ),

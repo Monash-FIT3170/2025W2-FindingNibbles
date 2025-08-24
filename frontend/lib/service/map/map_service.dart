@@ -1,41 +1,46 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/dio_client.dart';
-import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/service/restaurant/google_places_restaurant_dto.dart';
+import 'dart:math' as math;
 
 class MapService {
   final Dio _dio = DioClient().client;
 
-  // Method to get restaurants within a bounding box
-  Future<List<RestaurantDto>> getRestaurants({
+  // Method to get restaurants within a bounding box using Google Places API
+  Future<List<GooglePlacesRestaurantDto>> getRestaurants({
     required double swLat,
     required double swLng,
     required double neLat,
     required double neLng,
-    int? cuisineId, // Optional cuisine filter
+    String? cuisine, // Cuisine name for Google Places
   }) async {
     try {
-      // Build query parameters
-      Map<String, dynamic> queryParams = {
-        'swLat': swLat,
-        'swLng': swLng,
-        'neLat': neLat,
-        'neLng': neLng,
+      // Calculate center point from bounds
+      final centerLat = (swLat + neLat) / 2;
+      final centerLng = (swLng + neLng) / 2;
+      
+      // Calculate radius to cover entire bounds
+      final radius = _calculateBoundsRadius(swLat, swLng, neLat, neLng);
+      
+      // Build query parameters for Google Places API
+      final queryParams = <String, dynamic>{
+        'lat': centerLat.toString(),
+        'lng': centerLng.toString(),
+        'radius': radius.toString(),
+        if (cuisine != null) 'keyword': cuisine,
       };
 
-      // Add cuisine filter if provided
-      if (cuisineId != null) {
-        queryParams['cuisineId'] = cuisineId;
-      }
-
       final response = await _dio.get(
-        'restaurant',
+        'restaurant/places/nearby',
         queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-        return data.map((json) => RestaurantDto.fromJson(json)).toList();
+        final data = response.data as List;
+        return data
+            .map((json) => GooglePlacesRestaurantDto.fromJson(json))
+            .toList();
       } else {
         throw Exception('Failed to load restaurants');
       }
@@ -45,64 +50,28 @@ class MapService {
     }
   }
 
-  // Additional method for getting restaurants by cuisine only (no bounds)
-  Future<List<RestaurantDto>> getRestaurantsByCuisine({
-    required int cuisineId,
-    int? skip,
-    int? take,
-    String? orderBy, // 'rating' or 'popular'
-  }) async {
-    try {
-      Map<String, dynamic> queryParams = {'cuisineId': cuisineId};
-
-      if (skip != null) queryParams['skip'] = skip;
-      if (take != null) queryParams['take'] = take;
-      if (orderBy != null) queryParams['orderBy'] = orderBy;
-
-      final response = await _dio.get(
-        'restaurant',
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-        return data.map((json) => RestaurantDto.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load restaurants by cuisine');
-      }
-    } catch (e) {
-      debugPrint('Error fetching restaurants by cuisine: $e');
-      return [];
-    }
+  /// Calculate radius from map bounds using Haversine formula
+  int _calculateBoundsRadius(double swLat, double swLng, double neLat, double neLng) {
+    final centerLat = (swLat + neLat) / 2;
+    final centerLng = (swLng + neLng) / 2;
+    
+    // Calculate distance from center to corner
+    const earthRadius = 6371000; // Earth radius in meters
+    final dLat = (neLat - centerLat) * (math.pi / 180);
+    final dLng = (neLng - centerLng) * (math.pi / 180);
+    
+    final a = math.pow(math.sin(dLat / 2), 2) +
+        math.cos(centerLat * (math.pi / 180)) *
+        math.cos(neLat * (math.pi / 180)) *
+        math.pow(math.sin(dLng / 2), 2);
+    
+    final c = 2 * math.asin(math.sqrt(a));
+    final distance = earthRadius * c;
+    
+    // Add 20% padding to ensure coverage and respect Google Places max radius (50km)
+    final radiusWithPadding = (distance * 1.2).round();
+    return math.min(radiusWithPadding, 50000); // Google Places max radius is 50km
   }
 
-  // Method for getting all restaurants with pagination and sorting
-  Future<List<RestaurantDto>> getAllRestaurants({
-    int? skip,
-    int? take,
-    String? orderBy, // 'rating' or 'popular'
-  }) async {
-    try {
-      Map<String, dynamic> queryParams = {};
 
-      if (skip != null) queryParams['skip'] = skip;
-      if (take != null) queryParams['take'] = take;
-      if (orderBy != null) queryParams['orderBy'] = orderBy;
-
-      final response = await _dio.get(
-        'restaurant',
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-        return data.map((json) => RestaurantDto.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load all restaurants');
-      }
-    } catch (e) {
-      debugPrint('Error fetching all restaurants: $e');
-      return [];
-    }
-  }
 }

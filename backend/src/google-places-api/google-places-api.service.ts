@@ -238,15 +238,15 @@ export class GooglePlacesApiService {
         business_status: place.business_status,
         opening_hours: place.opening_hours
           ? {
-              open_now: place.opening_hours.open_now,
-              periods: place.opening_hours.periods?.map((p) => ({
-                open: { day: p.open.day, time: p.open.time },
-                ...(p.close
-                  ? { close: { day: p.close.day, time: p.close.time } }
-                  : {}),
-              })),
-              weekday_text: place.opening_hours.weekday_text,
-            }
+            open_now: place.opening_hours.open_now,
+            periods: place.opening_hours.periods?.map((p) => ({
+              open: { day: p.open.day, time: p.open.time },
+              ...(p.close
+                ? { close: { day: p.close.day, time: p.close.time } }
+                : {}),
+            })),
+            weekday_text: place.opening_hours.weekday_text,
+          }
           : undefined,
         photos:
           place.photos?.map((photo) => ({
@@ -317,16 +317,80 @@ export class GooglePlacesApiService {
       }
 
       const filteredPredictions = response.data.predictions.filter(
-        (prediction) =>
-          prediction.types?.some((type) =>
-            [
-              'restaurant',
-              'food',
-              'meal_takeaway',
-              'meal_delivery',
-              'cafe',
-            ].includes(type),
-          ),
+        (prediction) => {
+          // Filter for restaurant-related establishments only
+          const restaurantTypes = [
+            'restaurant',
+            'food',
+            'meal_takeaway',
+            'meal_delivery',
+            'cafe',
+            'bar',
+            'bakery',
+            'fast_food_restaurant',
+            'pizza_place',
+            'coffee_shop',
+            'sandwich_shop',
+            'seafood_restaurant',
+            'steakhouse',
+            'sushi_restaurant',
+            'chinese_restaurant',
+            'italian_restaurant',
+            'mexican_restaurant',
+            'indian_restaurant',
+            'thai_restaurant',
+            'japanese_restaurant',
+            'french_restaurant',
+            'american_restaurant',
+            'vegetarian_restaurant',
+            'vegan_restaurant',
+          ];
+
+          // Check if the place has at least one restaurant-related type
+          const hasRestaurantType =
+            prediction.types?.some((type) => restaurantTypes.includes(type)) ??
+            false;
+
+          // Exclude common non-restaurant types
+          const excludedTypes = [
+            'library',
+            'university',
+            'school',
+            'hospital',
+            'pharmacy',
+            'bank',
+            'atm',
+            'gas_station',
+            'car_repair',
+            'lawyer',
+            'doctor',
+            'dentist',
+            'veterinary_care',
+            'real_estate_agency',
+            'insurance_agency',
+            'accounting',
+            'travel_agency',
+            'clothing_store',
+            'electronics_store',
+            'furniture_store',
+            'book_store',
+            'grocery_or_supermarket',
+            'convenience_store',
+            'department_store',
+            'shopping_mall',
+            'local_government_office',
+            'courthouse',
+            'police',
+            'fire_station',
+            'post_office',
+          ];
+
+          const hasExcludedType =
+            prediction.types?.some((type) => excludedTypes.includes(type)) ??
+            false;
+
+          return hasRestaurantType && !hasExcludedType;
+        },
       );
 
       return filteredPredictions.map((prediction) => ({
@@ -380,9 +444,119 @@ export class GooglePlacesApiService {
       }
 
       return response.data.results
-        .filter((place) =>
-          Boolean(place.place_id && place.name && place.geometry?.location),
-        )
+        .filter((place) => {
+          // Basic required fields check
+          if (!place.place_id || !place.name || !place.geometry?.location) {
+            return false;
+          }
+
+          // Filter for restaurant-related establishments only
+          const restaurantTypes = [
+            'restaurant',
+            'food',
+            'meal_takeaway',
+            'meal_delivery',
+            'cafe',
+            'bar',
+            'bakery',
+            'fast_food_restaurant',
+            'pizza_place',
+            'coffee_shop',
+            'sandwich_shop',
+            'seafood_restaurant',
+            'steakhouse',
+            'sushi_restaurant',
+            'chinese_restaurant',
+            'italian_restaurant',
+            'mexican_restaurant',
+            'indian_restaurant',
+            'thai_restaurant',
+            'japanese_restaurant',
+            'french_restaurant',
+            'american_restaurant',
+            'vegetarian_restaurant',
+            'vegan_restaurant',
+          ];
+
+          // Check if the place has at least one restaurant-related type
+          const hasRestaurantType =
+            place.types?.some((type) => restaurantTypes.includes(type)) ??
+            false;
+
+          // Exclude common non-restaurant types
+          const excludedTypes = [
+            'library',
+            'university',
+            'school',
+            'hospital',
+            'pharmacy',
+            'bank',
+            'atm',
+            'gas_station',
+            'car_repair',
+            'lawyer',
+            'doctor',
+            'dentist',
+            'veterinary_care',
+            'real_estate_agency',
+            'insurance_agency',
+            'accounting',
+            'travel_agency',
+            'clothing_store',
+            'electronics_store',
+            'furniture_store',
+            'book_store',
+            'grocery_or_supermarket',
+            'convenience_store',
+            'department_store',
+            'shopping_mall',
+            'home_goods_store',
+            'hardware_store',
+            'car_dealer',
+            'bicycle_store',
+            'jewelry_store',
+            'shoe_store',
+            'beauty_salon',
+            'hair_care',
+            'spa',
+            'gym',
+            'movie_theater',
+            'museum',
+            'art_gallery',
+            'church',
+            'mosque',
+            'synagogue',
+            'hindu_temple',
+            'cemetery',
+            'funeral_home',
+            'local_government_office',
+            'courthouse',
+            'police',
+            'fire_station',
+            'post_office',
+            'storage',
+            'moving_company',
+            'taxi_stand',
+            'subway_station',
+            'train_station',
+            'bus_station',
+            'airport',
+            'parking',
+            'rv_park',
+            'campground',
+            'lodging',
+            'tourist_attraction',
+            'amusement_park',
+            'zoo',
+            'aquarium',
+            'park',
+          ];
+
+          const hasExcludedType =
+            place.types?.some((type) => excludedTypes.includes(type)) ?? false;
+
+          return hasRestaurantType && !hasExcludedType;
+        })
         .map((place) => ({
           place_id: place.place_id as string,
           name: place.name as string,
