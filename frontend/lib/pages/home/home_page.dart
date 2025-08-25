@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
+import 'package:nibbles/service/profile/profile_service.dart'; // ✅ added
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/service/cuisine/widget/cuisine_selector.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final ProfileService _profileService = ProfileService(); // ✅ added
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   List<CuisineDto> _availableCuisines = [];
@@ -42,22 +43,20 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchRestaurants() async {
     setState(() => _isLoading = true);
     try {
-      final allRestaurants =
-          _selectedCuisine != null
-              ? await RestaurantService().getRestaurantsByCuisine(
-                cuisineId: _selectedCuisine!.id,
-                orderBy: 'rating',
-              )
-              : await RestaurantService().getAllRestaurants(orderBy: 'rating');
+      final allRestaurants = _selectedCuisine != null
+          ? await RestaurantService().getRestaurantsByCuisine(
+              cuisineId: _selectedCuisine!.id,
+              orderBy: 'rating',
+            )
+          : await RestaurantService().getAllRestaurants(orderBy: 'rating');
 
-      final filteredRestaurants =
-          allRestaurants
-              .where(
-                (restaurant) =>
-                    restaurant.rating != null &&
-                    restaurant.rating! >= _minimumRating,
-              )
-              .toList();
+      final filteredRestaurants = allRestaurants
+          .where(
+            (restaurant) =>
+                restaurant.rating != null &&
+                restaurant.rating! >= _minimumRating,
+          )
+          .toList();
 
       setState(() {
         _restaurants = filteredRestaurants;
@@ -86,20 +85,19 @@ class _HomePageState extends State<HomePage> {
                     subtitle: DropdownButton<int>(
                       value: _minimumRating,
                       isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    children: [
-                                      Text('$rating'),
-                                      const Icon(Icons.star),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      items: List.generate(5, (index) => index + 1)
+                          .map(
+                            (rating) => DropdownMenuItem(
+                              value: rating,
+                              child: Row(
+                                children: [
+                                  Text('$rating'),
+                                  const Icon(Icons.star),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) {
                         setState(() {
                           _minimumRating = value!;
@@ -107,20 +105,73 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
-                  // Cuisine selector (replaces the old Dropdown)
                   ListTile(
                     leading: const Icon(Icons.restaurant_menu),
                     title: const Text('Cuisine'),
-                    subtitle: SizedBox(
-                      height: 300, // scrollable height for cuisines
-                      child: CuisineSelector(
-                        cuisines: _availableCuisines, // ✅ Add this line
-                        onSelected: (cuisine) {
-                          setState(() {
-                            _selectedCuisine = cuisine; // store selected CuisineDto
-                          });
-                        },
-                      ),
+                    subtitle: DropdownButton<CuisineDto?>(
+                      value: _selectedCuisine,
+                      isExpanded: true,
+                      items: [
+                        const DropdownMenuItem<CuisineDto?>(
+                          value: null,
+                          child: Text('All'),
+                        ),
+                        ..._availableCuisines.map(
+                          (cuisine) => DropdownMenuItem(
+                            value: cuisine,
+                            child: Text(cuisine.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) async {
+                        setState(() => _selectedCuisine = value);
+
+                        // ✅ ask if they want to add to favourites
+                        if (value != null) {
+                          final shouldAdd = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text("Add to favourites?"),
+                              content: Text(
+                                  "Do you want to add ${value.name} to your liked cuisines?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(ctx, false),
+                                  child: const Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(ctx, true),
+                                  child: const Text("Yes"),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (shouldAdd == true) {
+                            try {
+                              await _profileService
+                                  .addFavouriteCuisine(value.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      "${value.name} added to favourites"),
+                                ),
+                              );
+                            } catch (e) {
+                              debugPrint(
+                                  "Failed to add ${value.name}: $e");
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      "Could not add ${value.name}"),
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -143,9 +194,8 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-}
+  }
 
-  // assuming RestaurantDto has priceLevel or similar, otherwise adapt
   String formatPriceLevel(int? level) {
     if (level == null) {
       return 'Price: ?';
@@ -192,7 +242,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nearby Restaurants'),
-        automaticallyImplyLeading: false, // Hide back button
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -216,62 +266,65 @@ class _HomePageState extends State<HomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _restaurants.isEmpty
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _restaurants.isEmpty
                     ? const Center(child: Text('No restaurants found.'))
                     : GridView.builder(
-                      itemCount: _restaurants.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 4,
-                            crossAxisSpacing: 4,
-                            childAspectRatio: 3 / 2,
-                          ),
-                      itemBuilder: (context, index) {
-                        final restaurant = _restaurants[index];
-                        return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  restaurant.name,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: colorScheme.primary,
+                        itemCount: _restaurants.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 4,
+                          crossAxisSpacing: 4,
+                          childAspectRatio: 3 / 2,
+                        ),
+                        itemBuilder: (context, index) {
+                          final restaurant = _restaurants[index];
+                          return Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    restaurant.name,
+                                    style: theme.textTheme.titleSmall
+                                        ?.copyWith(
+                                      color: colorScheme.primary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      color: colorScheme.secondary,
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      restaurant.rating?.toStringAsFixed(1) ??
-                                          '',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.star,
+                                        color: colorScheme.secondary,
+                                        size: 18,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(formatPriceLevel(restaurant.priceLevel)),
-                              ],
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        restaurant.rating
+                                                ?.toStringAsFixed(1) ??
+                                            '',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(formatPriceLevel(
+                                      restaurant.priceLevel)),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
           ),
           _buildActiveFiltersChip(),
         ],
