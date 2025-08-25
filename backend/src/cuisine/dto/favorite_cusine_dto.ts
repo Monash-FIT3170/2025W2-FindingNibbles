@@ -1,6 +1,5 @@
 // cuisine.dto.ts
 export class CuisineDto {
-  id: string;
+  id: number;
   name: string;
-  imageUrl?: string;
 }
