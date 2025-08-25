@@ -5,7 +5,7 @@ import 'cuisine_dto.dart';
 class CuisineService {
   final Dio _dio = DioClient().client;
 
-  // Fetches all cuisines from the API.
+
   Future<List<CuisineDto>> getAllCuisines() async {
     try {
       final response = await _dio.get('cuisine');

@@ -198,20 +198,20 @@ export class UserController {
   @Post('favourite-cuisine')
   favoriteCuisine(
     @Req() req: RequestUser,
-    @Body('restaurantId') restaurantId: number,
+    @Body('cuisineId') cuisineId: number,
   ) {
-    return this.userService.favouriteCuisine(req.user.sub, restaurantId);
+    return this.userService.favouriteCuisine(req.user.sub, cuisineId);
   }
 
   @Delete('favourite-cuisine')
   unfavouriteCuisine(
     @Req() req: RequestUser,
-    @Body('restaurantId') restaurantId: number,
+    @Body('cuisineId') cuisineId: number,
   ) {
     this.logger.log(
-      `Unfavouriting restaurant with ID: ${restaurantId} for user: ${req.user.sub}`,
+      `Unfavouriting restaurant with ID: ${cuisineId} for user: ${req.user.sub}`,
     );
-    return this.userService.unfavouriteCuisine(req.user.sub, restaurantId);
+    return this.userService.unfavouriteCuisine(req.user.sub, cuisineId);
   }
 
   @Get('favourite-cuisine')
