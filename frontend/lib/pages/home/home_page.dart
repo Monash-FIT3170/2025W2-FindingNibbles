@@ -5,6 +5,7 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/service/cuisine/widget/cuisine_selector.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,27 +107,19 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
+                  // Cuisine selector (replaces the old Dropdown)
                   ListTile(
                     leading: const Icon(Icons.restaurant_menu),
                     title: const Text('Cuisine'),
-                    subtitle: DropdownButton<CuisineDto?>(
-                      value: _selectedCuisine,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<CuisineDto?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                        ..._availableCuisines.map(
-                          (cuisine) => DropdownMenuItem(
-                            value: cuisine,
-                            child: Text(cuisine.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _selectedCuisine = value);
-                      },
+                    subtitle: SizedBox(
+                      height: 300, // scrollable height for cuisines
+                      child: CuisineSelector(
+                        onSelected: (cuisine) {
+                          setState(() {
+                            _selectedCuisine = cuisine; // store selected CuisineDto
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -149,7 +142,7 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-  }
+}
 
   // assuming RestaurantDto has priceLevel or similar, otherwise adapt
   String formatPriceLevel(int? level) {

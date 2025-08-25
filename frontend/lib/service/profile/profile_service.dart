@@ -401,13 +401,13 @@ class ProfileService {
       throw Exception('An unexpected error occurred: $e');
     }
   }
-  Future<void> addFavouriteCuisine(CuisineDto cuisine) async {
+  Future<void> addFavouriteCuisine(int cuisineId) async {
     try {
-      _logger.d('Adding cuisine with ID: ${cuisine.id}');
+      _logger.d('Adding cuisine with ID: $cuisineId');
 
       final response = await _dio.post(
         '/user/favourite-cuisine',
-        data: {'cuisineId': cuisine.id}, // Send cuisineId as JSON
+        data: {'cuisineId': cuisineId}, // Send cuisineId as JSON
       );
 
       if (response.statusCode != 201) {
@@ -417,6 +417,7 @@ class ProfileService {
       throw Exception('Failed to add cuisine to favourites: $e');
     }
   }
+
 
   Future<void> removeFavouriteCuisine(int cuisineId) async {
     try {
