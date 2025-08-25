@@ -10,6 +10,7 @@ import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
+import { CuisineDto } from 'src/cuisine/dto/favorite_cusine_dto';
 
 @Injectable()
 export class UserService {
@@ -375,5 +376,44 @@ export class UserService {
     return this.db.userLocation.delete({
       where: { id: locationId },
     });
+  }
+
+  /**
+   * Add a cuisine to user's favourites
+   * @param userId User ID
+   * @param cuisineId Cuisine ID
+   */
+  async favouriteCuisine(userId: number, cuisineId: number) {
+    return this.db.userCuisine.create({
+      data: {
+        userId,
+        cuisineId,
+      },
+    });
+  }
+
+  /**
+   * Remove a cuisine from user's favourites
+   * @param userId User ID
+   * @param cuisineId Cuisine ID
+   */
+  async unfavouriteCuisine(userId: number, cuisineId: number) {
+    await this.db.userCuisine.delete({
+      where: {
+        userId_cuisineId: { userId, cuisineId },
+      },
+    });
+  }
+
+  async getFavouritedCuisines(userId: number): Promise<CuisineDto[]> {
+    const userCuisines = await this.db.userCuisine.findMany({
+      where: { userId }, // now userId exists
+      include: { cuisine: true },
+    });
+
+    return userCuisines.map((uc) => ({
+      id: uc.cuisine.id,
+      name: uc.cuisine.name,
+    }));
   }
 }

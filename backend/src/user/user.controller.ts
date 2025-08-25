@@ -195,4 +195,27 @@ export class UserController {
     await this.userService.removeUserLocation(req.user.sub, locationId);
     return { message: 'Location removed successfully' };
   }
+  @Post('favourite-cuisine')
+  favoriteCuisine(
+    @Req() req: RequestUser,
+    @Body('restaurantId') restaurantId: number,
+  ) {
+    return this.userService.favouriteCuisine(req.user.sub, restaurantId);
+  }
+
+  @Delete('favourite-cuisine')
+  unfavouriteCuisine(
+    @Req() req: RequestUser,
+    @Body('restaurantId') restaurantId: number,
+  ) {
+    this.logger.log(
+      `Unfavouriting restaurant with ID: ${restaurantId} for user: ${req.user.sub}`,
+    );
+    return this.userService.unfavouriteCuisine(req.user.sub, restaurantId);
+  }
+
+  @Get('favourite-cuisine')
+  getFavouritedCuisine(@Req() req: RequestUser) {
+    return this.userService.getFavouritedCuisines(req.user.sub);
+  }
 }
