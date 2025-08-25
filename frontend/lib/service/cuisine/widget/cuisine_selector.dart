@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 
 class CuisineSelector extends StatefulWidget {
-  const CuisineSelector({super.key, required Null Function(dynamic cuisine) onSelected});
+  final List<CuisineDto> cuisines; // ✅ Now passed in instead of fetching
+  final Function(CuisineDto?) onSelected;
+
+  const CuisineSelector({
+    super.key,
+    required this.cuisines,
+    required this.onSelected,
+  });
 
   @override
   State<CuisineSelector> createState() => _CuisineSelectorState();
 }
 
 class _CuisineSelectorState extends State<CuisineSelector> {
-  final CuisineService _cuisineService = CuisineService();
   final ProfileService _profileService = ProfileService();
 
-  List<CuisineDto> _allCuisines = [];
   List<CuisineDto> _favouriteCuisines = [];
+  CuisineDto? _selectedCuisine;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCuisines();
+    _loadFavourites();
   }
 
-  Future<void> _loadCuisines() async {
+  Future<void> _loadFavourites() async {
     try {
-      final all = await _cuisineService.getAllCuisines();
       final favs = await _profileService.getFavouriteCuisines();
-
       setState(() {
-        _allCuisines = all;
         _favouriteCuisines = favs;
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading cuisines: $e");
+      debugPrint("Error loading favourite cuisines: $e");
       setState(() => _isLoading = false);
     }
   }
@@ -43,6 +45,7 @@ class _CuisineSelectorState extends State<CuisineSelector> {
   bool _isFavourite(CuisineDto cuisine) {
     return _favouriteCuisines.any((c) => c.id == cuisine.id);
   }
+
   Future<void> _toggleFavourite(CuisineDto cuisine) async {
     try {
       if (_isFavourite(cuisine)) {
@@ -51,7 +54,7 @@ class _CuisineSelectorState extends State<CuisineSelector> {
           _favouriteCuisines.removeWhere((c) => c.id == cuisine.id);
         });
       } else {
-        await _profileService.addFavouriteCuisine(cuisine.id); // <- cuisine is CuisineDto
+        await _profileService.addFavouriteCuisine(cuisine.id);
         setState(() {
           _favouriteCuisines.add(cuisine);
         });
@@ -59,6 +62,14 @@ class _CuisineSelectorState extends State<CuisineSelector> {
     } catch (e) {
       debugPrint("Error toggling favourite cuisine: $e");
     }
+  }
+
+  void _handleCuisineSelect(CuisineDto cuisine) {
+    setState(() {
+      _selectedCuisine =
+          _selectedCuisine?.id == cuisine.id ? null : cuisine;
+    });
+    widget.onSelected(_selectedCuisine);
   }
 
   @override
@@ -69,19 +80,32 @@ class _CuisineSelectorState extends State<CuisineSelector> {
 
     return ListView.builder(
       shrinkWrap: true,
-      itemCount: _allCuisines.length,
+      itemCount: widget.cuisines.length, // ✅ use passed-in list
       itemBuilder: (context, index) {
-        final cuisine = _allCuisines[index];
+        final cuisine = widget.cuisines[index];
         final isFav = _isFavourite(cuisine);
+        final isSelected = _selectedCuisine?.id == cuisine.id;
 
-        return ListTile(
-          title: Text(cuisine.name),
-          trailing: IconButton(
-            icon: Icon(
-              isFav ? Icons.star : Icons.star_border,
-              color: isFav ? Colors.amber : Colors.grey,
+        return Card(
+          elevation: isSelected ? 4 : 1,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+              : null,
+          child: ListTile(
+            title: Text(
+              cuisine.name,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
-            onPressed: () => _toggleFavourite(cuisine),
+            trailing: IconButton(
+              icon: Icon(
+                isFav ? Icons.favorite : Icons.favorite_border,
+                color: isFav ? Colors.red : Colors.grey,
+              ),
+              onPressed: () => _toggleFavourite(cuisine),
+            ),
+            onTap: () => _handleCuisineSelect(cuisine),
           ),
         );
       },

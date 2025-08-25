@@ -114,6 +114,7 @@ class _HomePageState extends State<HomePage> {
                     subtitle: SizedBox(
                       height: 300, // scrollable height for cuisines
                       child: CuisineSelector(
+                        cuisines: _availableCuisines, // ✅ Add this line
                         onSelected: (cuisine) {
                           setState(() {
                             _selectedCuisine = cuisine; // store selected CuisineDto
