@@ -14,6 +14,7 @@ import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
 import { ApplianceModule } from './appliance/appliance.module';
 import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
+import { DirectionsModule } from './directions/directions.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
         MAIL_PASS: Joi.string().required(),
         MAIL_HOST: Joi.string().required(),
         MAIL_PORT: Joi.number().port().default(587),
+        LOCATIONIQ_API_KEY: Joi.string().required(),
       }),
       validationOptions: {
         allowUnknown: true,
@@ -59,6 +61,7 @@ import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
     CuisineModule,
     ApplianceModule,
     RestaurantMenuModule,
+    DirectionsModule,
   ],
 })
 export class AppModule {}
