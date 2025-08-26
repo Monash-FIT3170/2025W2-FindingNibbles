@@ -3,10 +3,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
+import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class RestaurantMarker extends Marker {
@@ -40,6 +42,11 @@ class _MapPageState extends State<MapPage> {
   int _minimumRating = 1;
   List<CuisineDto> _availableCuisines = [];
   CuisineDto? _selectedCuisine;
+
+  // Directions variables
+  List<LatLng> _routePoints = [];
+  bool _isLoadingDirections = false;
+  final DirectionsService _directionsService = DirectionsService();
 
   @override
   void initState() {
@@ -89,7 +96,12 @@ class _MapPageState extends State<MapPage> {
     // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
+      // Set default location if location services are disabled
+      setState(() {
+        _currentPosition = const LatLng(-37.907803, 145.133957);
+      });
+      _forceFetchRestaurants();
+      return;
     }
 
     // Check for permissions
@@ -97,20 +109,39 @@ class _MapPageState extends State<MapPage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied.');
+        // Set default location if permissions are denied
+        setState(() {
+          _currentPosition = const LatLng(-37.907803, 145.133957);
+        });
+        _forceFetchRestaurants();
+        return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied.');
+      // Set default location if permissions are permanently denied
+      setState(() {
+        _currentPosition = const LatLng(-37.907803, 145.133957);
+      });
+      _forceFetchRestaurants();
+      return;
     }
 
-    // Get current position
-    final position = await Geolocator.getCurrentPosition();
-    if (mounted) {
+    try {
+      // Get current position
+      final position = await Geolocator.getCurrentPosition();
+      if (mounted) {
+        setState(() {
+          _currentPosition = LatLng(position.latitude, position.longitude);
+        });
+      }
+    } catch (e) {
+      // Set default location if getting position fails
       setState(() {
-        _currentPosition = LatLng(position.latitude, position.longitude);
+        _currentPosition = const LatLng(-37.907803, 145.133957);
       });
+      _forceFetchRestaurants();
+      return;
     }
 
     // Listen for position updates (but don't fetch restaurants on each update)
@@ -259,6 +290,135 @@ class _MapPageState extends State<MapPage> {
     } catch (e) {
       debugPrint('Error fetching cuisines: $e');
     }
+  }
+
+  // Simple polyline decoder (basic implementation)
+  List<LatLng> _decodePolyline(String polyline) {
+    List<LatLng> points = [];
+    int index = 0;
+    int len = polyline.length;
+    int lat = 0;
+    int lng = 0;
+
+    while (index < len) {
+      int b;
+      int shift = 0;
+      int result = 0;
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
+  }
+
+  // Get directions to restaurant
+  Future<void> _getDirectionsToRestaurant(RestaurantDto restaurant) async {
+    if (_currentPosition == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Current location not available')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingDirections = true;
+    });
+
+    try {
+      debugPrint('Getting directions from ${_currentPosition!.latitude}, ${_currentPosition!.longitude} to ${restaurant.latitude}, ${restaurant.longitude}');
+      
+      final directionsData = await _directionsService.getDirections(
+        startLat: _currentPosition!.latitude,
+        startLon: _currentPosition!.longitude,
+        endLat: restaurant.latitude,
+        endLon: restaurant.longitude,
+      );
+
+      debugPrint('Received directions data: $directionsData');
+
+      if (directionsData != null) {
+        // Check if we have routes
+        if (directionsData['routes'] != null && directionsData['routes'] is List) {
+          final routes = directionsData['routes'] as List;
+          if (routes.isNotEmpty) {
+            final route = routes[0] as Map<String, dynamic>;
+            final geometry = route['geometry'];
+            
+            if (geometry != null && geometry is String) {
+              debugPrint('Decoding polyline geometry: ${geometry.substring(0, math.min(50, geometry.length))}...');
+              
+              final points = _decodePolyline(geometry);
+              debugPrint('Decoded ${points.length} points');
+              
+              if (points.isNotEmpty) {
+                setState(() {
+                  _routePoints = points;
+                });
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Directions to ${restaurant.name} loaded!')),
+                );
+                return;
+              } else {
+                throw Exception('No route points could be decoded');
+              }
+            } else {
+              throw Exception('No geometry data in route');
+            }
+          } else {
+            throw Exception('No routes returned from API');
+          }
+        } else {
+          throw Exception('Invalid routes data format');
+        }
+      } else {
+        throw Exception('No directions data received');
+      }
+    } on Exception catch (e) {
+      debugPrint('Exception getting directions: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting directions: ${e.toString().replaceFirst('Exception: ', '')}'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Unexpected error getting directions: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unexpected error: ${e.toString()}'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoadingDirections = false;
+      });
+    }
+  }
+
+  // Clear directions
+  void _clearDirections() {
+    setState(() {
+      _routePoints = [];
+    });
   }
 
   // Show filter dialog
@@ -456,6 +616,16 @@ class _MapPageState extends State<MapPage> {
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.nibbles.findingnibbles',
                       ),
+                      if (_routePoints.isNotEmpty)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: _routePoints,
+                              strokeWidth: 4.0,
+                              color: Colors.blue,
+                            ),
+                          ],
+                        ),
                       MarkerLayer(
                         markers:
                             _restaurants.map((restaurant) {
@@ -564,6 +734,29 @@ class _MapPageState extends State<MapPage> {
                                               ],
                                             ),
                                             actions: [
+                                              if (_routePoints.isNotEmpty)
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    _clearDirections();
+                                                  },
+                                                  child: const Text('Clear Route'),
+                                                ),
+                                              TextButton(
+                                                onPressed: _isLoadingDirections
+                                                    ? null
+                                                    : () {
+                                                        Navigator.pop(context);
+                                                        _getDirectionsToRestaurant(restaurant);
+                                                      },
+                                                child: _isLoadingDirections
+                                                    ? const SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                                      )
+                                                    : const Text('Get Directions'),
+                                              ),
                                               TextButton(
                                                 onPressed:
                                                     () =>
@@ -588,10 +781,23 @@ class _MapPageState extends State<MapPage> {
                   Positioned(
                     top: 16,
                     right: 16,
-                    child: FloatingActionButton(
-                      heroTag: 'filterButton',
-                      onPressed: _showFilterDialog,
-                      child: const Icon(Icons.filter_alt_rounded),
+                    child: Column(
+                      children: [
+                        FloatingActionButton(
+                          heroTag: 'filterButton',
+                          onPressed: _showFilterDialog,
+                          child: const Icon(Icons.filter_alt_rounded),
+                        ),
+                        if (_routePoints.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          FloatingActionButton(
+                            heroTag: 'clearDirectionsButton',
+                            onPressed: _clearDirections,
+                            backgroundColor: Colors.red,
+                            child: const Icon(Icons.clear, color: Colors.white),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   _buildActiveFiltersChip(),
