@@ -384,11 +384,10 @@ export class UserService {
    * @param cuisineId Cuisine ID
    */
   async favouriteCuisine(userId: number, cuisineId: number) {
-    return this.db.userCuisine.create({
-      data: {
-        userId,
-        cuisineId,
-      },
+    return this.db.userCuisine.upsert({
+      where: { userId_cuisineId: { userId, cuisineId } },
+      create: { userId, cuisineId },
+      update: {}, // do nothing if already exists
     });
   }
 
