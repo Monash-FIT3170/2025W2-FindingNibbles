@@ -4,7 +4,6 @@ import {
   Param,
   ParseIntPipe,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CuisineService } from './cuisine.service';
@@ -19,21 +18,12 @@ export class CuisineController {
   async findAll(
     @Query('popular') popular?: string,
     @Query('limit') limit?: string,
-    @Req() req?: any,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const userId = (req.user as { id: number })?.id;
-
     if (popular === 'true') {
       return this.cuisineService.findPopularCuisines(
         limit ? Number(limit) : 10,
       );
     }
-
-    if (userId) {
-      return this.cuisineService.findAllForUser(userId);
-    }
-
     return this.cuisineService.findAll();
   }
 

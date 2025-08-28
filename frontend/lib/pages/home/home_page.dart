@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
-import 'package:nibbles/service/profile/profile_service.dart'; // ✅ added
+import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
@@ -15,10 +15,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final ProfileService _profileService = ProfileService(); // ✅ added
+  final ProfileService _profileService = ProfileService();
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   List<CuisineDto> _availableCuisines = [];
+  List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
 
@@ -27,6 +28,18 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _fetchRestaurants();
     _fetchCuisines();
+    _loadFavouriteCuisines(); // load favourite cuisines
+  }
+
+  Future<void> _loadFavouriteCuisines() async {
+    try {
+      final favourites = await _profileService.getFavouriteCuisines();
+      setState(() {
+        _favoriteCuisines = favourites;
+      });
+    } catch (e) {
+      debugPrint("Failed to load favourite cuisines: $e");
+    }
   }
 
   Future<void> _fetchCuisines() async {
@@ -125,49 +138,57 @@ class _HomePageState extends State<HomePage> {
                       ],
                       onChanged: (value) async {
                         setState(() => _selectedCuisine = value);
-
-                        // ✅ ask if they want to add to favourites
                         if (value != null) {
-                          final shouldAdd = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text("Add to favourites?"),
-                              content: Text(
-                                  "Do you want to add ${value.name} to your liked cuisines?"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(ctx, false),
-                                  child: const Text("No"),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(ctx, true),
-                                  child: const Text("Yes"),
-                                ),
-                              ],
-                            ),
-                          );
+                          // ✅ check if already liked dynamically
+                          await _loadFavouriteCuisines();
+                          final alreadyLiked = _favoriteCuisines
+                              .any((c) => c.id == value.id);
 
-                          if (shouldAdd == true) {
-                            try {
-                              await _profileService
-                                  .addFavouriteCuisine(value.id);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      "${value.name} added to favourites"),
-                                ),
-                              );
-                            } catch (e) {
-                              debugPrint(
-                                  "Failed to add ${value.name}: $e");
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      "Could not add ${value.name}"),
-                                ),
-                              );
+                          if (!alreadyLiked) {
+                            final shouldAdd = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text("Add to favourites?"),
+                                content: Text(
+                                    "Do you want to add ${value.name} to your liked cuisines?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, false),
+                                    child: const Text("No"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(ctx, true),
+                                    child: const Text("Yes"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (shouldAdd == true) {
+                              try {
+                                await _profileService
+                                    .addFavouriteCuisine(value.id);
+                                setState(() {
+                                  _favoriteCuisines.add(value);
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        "${value.name} added to favourites"),
+                                  ),
+                                );
+                              } catch (e) {
+                                debugPrint(
+                                    "Failed to add ${value.name}: $e");
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        "Could not add ${value.name}"),
+                                  ),
+                                );
+                              }
                             }
                           }
                         }
@@ -182,9 +203,10 @@ class _HomePageState extends State<HomePage> {
                   child: const Text('Cancel'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    _fetchRestaurants();
+                    await _fetchRestaurants();
+                    await _loadFavouriteCuisines(); // ✅ refresh favourites after search
                   },
                   child: const Text('Apply'),
                 ),
