@@ -9,8 +9,7 @@ import {
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
 import { GooglePlacesApiService } from '../google-places-api/google-places-api.service';
-import { Prisma } from '../../generated/prisma';
-import { Restaurant } from 'generated/prisma';
+import { Prisma, Restaurant } from 'prisma/generated';
 import { NearbyQueryDto } from './dto/nearby-query.dto';
 import { AutocompleteQueryDto } from './dto/autocomplete-query.dto';
 import { TextSearchQueryDto } from './dto/text-search-query.dto';

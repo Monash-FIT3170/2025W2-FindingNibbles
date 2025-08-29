@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from 'prisma/generated';
 import { restaurants, dietaryRequirements, appliances } from './seedConstants';
 import * as argon2 from 'argon2';
 
