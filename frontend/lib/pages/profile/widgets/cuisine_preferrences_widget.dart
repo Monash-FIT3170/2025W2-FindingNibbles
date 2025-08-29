@@ -56,6 +56,7 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
   }
 
   Future<void> _addCuisinePreference(int item) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       _logger.d('Attempting to add cuisine preference with ID: $item');
       await _profileService.addCuisinePreference(item);
@@ -69,7 +70,7 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
       _logger.e('Error adding cuisine preference: $e');
       // Show user-friendly error message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('Failed to add cuisine preference: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -123,6 +124,7 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
             ),
             ElevatedButton(
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 final name = nameController.text.trim();
                 final description = descriptionController.text.trim();
 
@@ -132,7 +134,7 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
                   Navigator.of(dialogContext).pop();
                 } else {
                   // Optionally, show an error message if fields are empty
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('Please enter a name')),
                   );
                 }
@@ -348,6 +350,8 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
                                 return InputChip(
                                   label: Text(c.name),
                                   onDeleted: () async {
+                                    final scaffoldMessenger =
+                                        ScaffoldMessenger.of(context);
                                     try {
                                       _logger.d(
                                         'Attempting to remove cuisine preference with ID: ${c.id}',
@@ -364,9 +368,7 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
                                       );
                                       // Show user-friendly error message
                                       if (mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        scaffoldMessenger.showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               'Failed to remove cuisine preference: ${e.toString()}',
