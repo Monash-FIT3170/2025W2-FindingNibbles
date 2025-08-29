@@ -2,7 +2,7 @@ name: nibbles
 services:
   db:
     image: postgres:latest
-    restart: always
+    restart: unless-stopped
     container_name: postgres
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -13,5 +13,35 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  obj:
+    image: minio/minio
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  obj_buckets:
+    image: minio/mc
+    depends_on:
+      - obj
+    restart: unless-stopped
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://obj:9000 minio minio123;
+      /usr/bin/mc mb myminio/menus;
+      /usr/bin/mc anonymous set public myminio/menus;
+      exit 0;
+      "
+
 volumes:
   postgres_data:
+  minio_data:
