@@ -8,6 +8,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/profile/user_dto.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/user_location_dto.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
 
 class ProfileService {
@@ -364,6 +365,152 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to create appliance: $e');
+    }
+  }
+
+  /// Cuisine Methods
+  Future<void> addCuisinePreference(int cuisineId) async {
+    try {
+      _logger.d('Attempting to add cuisine preference with ID: $cuisineId');
+      _logger.d('Making POST request to: user/cuisine/$cuisineId');
+
+      final response = await _dio.post('user/cuisine/$cuisineId');
+
+      _logger.d('Response status code: ${response.statusCode}');
+      _logger.d('Response data: ${response.data}');
+
+      if (response.statusCode != 201 && response.statusCode != 200) {
+        throw Exception(
+          'Failed to add cuisine preference - Status: ${response.statusCode}',
+        );
+      }
+
+      _logger.i('Successfully added cuisine preference with ID: $cuisineId');
+    } on DioException catch (e) {
+      _logger.e('DioException when adding cuisine preference:');
+      _logger.e('Status code: ${e.response?.statusCode}');
+      _logger.e('Response data: ${e.response?.data}');
+      _logger.e('Request path: ${e.requestOptions.path}');
+      _logger.e('Request method: ${e.requestOptions.method}');
+      _logger.e('Base URL: ${e.requestOptions.baseUrl}');
+      _logger.e('Full URL: ${e.requestOptions.uri}');
+      throw Exception('Failed to add cuisine preference: $e');
+    } catch (e) {
+      _logger.e('General exception when adding cuisine preference: $e');
+      throw Exception('Failed to add cuisine preference: $e');
+    }
+  }
+
+  Future<void> removeCuisinePreference(int cuisineId) async {
+    try {
+      _logger.d('Attempting to remove cuisine preference with ID: $cuisineId');
+      _logger.d('Making DELETE request to: user/cuisine/$cuisineId');
+
+      final response = await _dio.delete('user/cuisine/$cuisineId');
+
+      _logger.d('Response status code: ${response.statusCode}');
+      _logger.d('Response data: ${response.data}');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception(
+          'Failed to remove cuisine preference - Status: ${response.statusCode}',
+        );
+      }
+
+      _logger.i('Successfully removed cuisine preference with ID: $cuisineId');
+    } on DioException catch (e) {
+      _logger.e('DioException when removing cuisine preference:');
+      _logger.e('Status code: ${e.response?.statusCode}');
+      _logger.e('Response data: ${e.response?.data}');
+      _logger.e('Request path: ${e.requestOptions.path}');
+      _logger.e('Request method: ${e.requestOptions.method}');
+      _logger.e('Base URL: ${e.requestOptions.baseUrl}');
+      _logger.e('Full URL: ${e.requestOptions.uri}');
+      throw Exception('Failed to remove cuisine preference: $e');
+    } catch (e) {
+      _logger.e('General exception when removing cuisine preference: $e');
+      throw Exception('Failed to remove cuisine preference: $e');
+    }
+  }
+
+  Future<List<CuisineDto>> getDefaultCuisines() async {
+    try {
+      _logger.d('Fetching default cuisines from: cuisine');
+
+      final response = await _dio.get('cuisine');
+
+      _logger.d('Response status code: ${response.statusCode}');
+      _logger.d('Response data type: ${response.data.runtimeType}');
+      _logger.d('Response data length: ${response.data?.length ?? 'null'}');
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        final cuisines = data.map((item) => CuisineDto.fromJson(item)).toList();
+        _logger.i('Successfully fetched ${cuisines.length} default cuisines');
+        return cuisines;
+      } else {
+        throw Exception(
+          'Failed to load default cuisines - Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      _logger.e('DioException when fetching default cuisines:');
+      _logger.e('Status code: ${e.response?.statusCode}');
+      _logger.e('Response data: ${e.response?.data}');
+      _logger.e('Request path: ${e.requestOptions.path}');
+      throw Exception('Failed to load default cuisines: $e');
+    } catch (e) {
+      _logger.e('General exception when fetching default cuisines: $e');
+      throw Exception('Failed to load default cuisines: $e');
+    }
+  }
+
+  Future<List<CuisineDto>> getUserCuisines() async {
+    try {
+      _logger.d('Fetching user cuisines from: user/cuisine');
+
+      final response = await _dio.get('user/cuisine');
+
+      _logger.d('Response status code: ${response.statusCode}');
+      _logger.d('Response data type: ${response.data.runtimeType}');
+      _logger.d('Response data length: ${response.data?.length ?? 'null'}');
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        final cuisines = data.map((item) => CuisineDto.fromJson(item)).toList();
+        _logger.i('Successfully fetched ${cuisines.length} user cuisines');
+        return cuisines;
+      } else {
+        throw Exception(
+          'Failed to load user cuisines - Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      _logger.e('DioException when fetching user cuisines:');
+      _logger.e('Status code: ${e.response?.statusCode}');
+      _logger.e('Response data: ${e.response?.data}');
+      _logger.e('Request path: ${e.requestOptions.path}');
+      throw Exception('Failed to load user cuisines: $e');
+    } catch (e) {
+      _logger.e('General exception when fetching user cuisines: $e');
+      throw Exception('Failed to load user cuisines: $e');
+    }
+  }
+
+  Future<CuisineDto> createCuisine(String name, String? description) async {
+    try {
+      final response = await _dio.post(
+        'cuisine',
+        data: {'name': name, 'description': description ?? ''},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return CuisineDto.fromJson(response.data);
+      } else {
+        throw Exception('Failed to create cuisine');
+      }
+    } catch (e) {
+      throw Exception('Failed to create cuisine: $e');
     }
   }
 

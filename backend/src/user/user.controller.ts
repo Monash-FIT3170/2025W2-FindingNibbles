@@ -9,6 +9,8 @@ import {
   Put,
   Logger,
   Query,
+  Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   BadRequestException,
@@ -254,5 +256,34 @@ export class UserController {
   ) {
     await this.userService.removeUserLocation(req.user.sub, locationId);
     return { message: 'Location removed successfully' };
+  }
+
+  // Cuisine preference endpoints
+  @Post('cuisine/:id')
+  async addCuisinePreference(
+    @Req() req: RequestUser,
+    @Param('id', ParseIntPipe) cuisineId: number,
+  ) {
+    this.logger.log(
+      `User ${req.user.sub} is adding cuisine preference with ID: ${cuisineId}`,
+    );
+    return this.userService.addCuisinePreference(req.user.sub, cuisineId);
+  }
+
+  @Delete('cuisine/:id')
+  async removeCuisinePreference(
+    @Req() req: RequestUser,
+    @Param('id', ParseIntPipe) cuisineId: number,
+  ) {
+    this.logger.log(
+      `User ${req.user.sub} is removing cuisine preference with ID: ${cuisineId}`,
+    );
+    await this.userService.removeCuisinePreference(req.user.sub, cuisineId);
+    return { message: 'Cuisine preference removed successfully' };
+  }
+
+  @Get('cuisine')
+  async getUserCuisinePreferences(@Req() req: RequestUser) {
+    return this.userService.getUserCuisinePreferences(req.user.sub);
   }
 }

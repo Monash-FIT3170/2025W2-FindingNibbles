@@ -488,4 +488,64 @@ export class UserService {
       where: { id: locationId },
     });
   }
+
+  // Cuisine preference methods
+  async addCuisinePreference(userId: number, cuisineId: number) {
+    try {
+      return await this.db.userCuisine.create({
+        data: {
+          userId,
+          cuisineId,
+        },
+        include: {
+          cuisine: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          // Unique constraint violation - user already has this cuisine preference
+          throw new BadRequestException(
+            'User already has this cuisine preference',
+          );
+        }
+      }
+      throw error;
+    }
+  }
+
+  async removeCuisinePreference(userId: number, cuisineId: number) {
+    const userCuisine = await this.db.userCuisine.findUnique({
+      where: {
+        userId_cuisineId: {
+          userId,
+          cuisineId,
+        },
+      },
+    });
+
+    if (!userCuisine) {
+      throw new NotFoundException('Cuisine preference not found');
+    }
+
+    return this.db.userCuisine.delete({
+      where: {
+        userId_cuisineId: {
+          userId,
+          cuisineId,
+        },
+      },
+    });
+  }
+
+  async getUserCuisinePreferences(userId: number) {
+    const userCuisines = await this.db.userCuisine.findMany({
+      where: { userId },
+      include: {
+        cuisine: true,
+      },
+    });
+
+    return userCuisines.map((uc) => uc.cuisine);
+  }
 }
