@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
 import 'package:nibbles/pages/profile/widgets/cooking_appliances_widget.dart';
+import 'package:nibbles/pages/profile/widgets/cuisine_preferrences_widget.dart';
 import 'package:nibbles/pages/profile/widgets/dietary_requirements_widget.dart';
 import 'package:nibbles/pages/profile/widgets/logout_widget.dart';
 import 'package:nibbles/pages/profile/widgets/personal_menu_widget.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/core/logger.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -19,7 +22,9 @@ class ProfilePage extends StatefulWidget {
 class ProfilePageState extends State<ProfilePage> {
   List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
+  final _logger = getLogger();
   List<DietaryRequirementDto> _dietaryRequirements = [];
+  List<CuisineDto> _cuisines = [];
   List<ApplianceRequirementDto> _appliances = [];
   bool isLoading = true;
 
@@ -28,6 +33,7 @@ class ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadDietaryRequirements();
     _loadAppliances();
+    _loadCuisines();
   }
 
   void _addDietaryRequirement(DietaryRequirementDto requirement) {
@@ -54,6 +60,24 @@ class ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  void _addCuisinePreference(CuisineDto cuisine) {
+    _logger.d('Adding cuisine preference: ${cuisine.name} (ID: ${cuisine.id})');
+    setState(() {
+      _cuisines.add(cuisine);
+    });
+    _logger.d('Current cuisine preferences count: ${_cuisines.length}');
+  }
+
+  void _removeCuisinePreference(CuisineDto cuisine) {
+    _logger.d(
+      'Removing cuisine preference: ${cuisine.name} (ID: ${cuisine.id})',
+    );
+    setState(() {
+      _cuisines.removeWhere((r) => r.id == cuisine.id);
+    });
+    _logger.d('Current cuisine preferences count: ${_cuisines.length}');
+  }
+
   /*
    * Loading user specific dietary requirments
    */
@@ -76,6 +100,42 @@ class ProfilePageState extends State<ProfilePage> {
         setState(() {
           isLoading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _loadCuisines() async {
+    if (!mounted) return;
+    _logger.d('Starting to load user cuisines...');
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      final cuisines = await _profileService.getUserCuisines();
+      if (mounted) {
+        _logger.d('Successfully loaded ${cuisines.length} user cuisines');
+        setState(() {
+          _cuisines = cuisines;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      _logger.e('Error fetching user cuisines: $e');
+      debugPrint('Error fetching user cuisines: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        // Show user-friendly error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to load cuisine preferences: ${e.toString()}',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
       }
     }
   }
@@ -152,6 +212,11 @@ class ProfilePageState extends State<ProfilePage> {
                               dietaryRequirements: _dietaryRequirements,
                               onAdd: _addDietaryRequirement,
                               onRemove: _removeDietaryRequirement,
+                            ),
+                            CuisinePreferencesWidget(
+                              cuisinePreferences: _cuisines,
+                              onAdd: _addCuisinePreference,
+                              onRemove: _removeCuisinePreference,
                             ),
                             CookingAppliancesWidget(
                               appliances: _appliances,
