@@ -1,4 +1,4 @@
-import { RestaurantData } from './types';
+import { RestaurantData, CuisineData } from './seedTypes';
 
 // Define the list of appliances
 export const appliances = [
@@ -38,6 +38,493 @@ export const dietaryRequirements = [
   },
 ];
 
+// Define comprehensive cuisine data
+export const cuisines: CuisineData[] = [
+  {
+    name: 'Italian',
+    description:
+      'Traditional cuisine from Italy featuring pasta, pizza, and Mediterranean flavors',
+  },
+  {
+    name: 'Chinese',
+    description:
+      'Diverse regional cuisines from China with rice, noodles, and distinctive cooking techniques',
+  },
+  {
+    name: 'Japanese',
+    description:
+      'Traditional Japanese cuisine emphasizing fresh ingredients, rice, and seafood',
+  },
+  {
+    name: 'Mexican',
+    description:
+      'Vibrant cuisine featuring corn, beans, chilies, and bold spices',
+  },
+  {
+    name: 'Indian',
+    description:
+      'Rich and diverse cuisine known for aromatic spices, curries, and vegetarian options',
+  },
+  {
+    name: 'Thai',
+    description:
+      'Southeast Asian cuisine balancing sweet, sour, salty, and spicy flavors',
+  },
+  {
+    name: 'French',
+    description:
+      'Classic European cuisine known for refined techniques and rich sauces',
+  },
+  {
+    name: 'Greek',
+    description:
+      'Mediterranean cuisine featuring olive oil, fresh herbs, and grilled meats',
+  },
+  {
+    name: 'Korean',
+    description:
+      'East Asian cuisine known for fermented foods, barbecue, and spicy dishes',
+  },
+  {
+    name: 'Vietnamese',
+    description:
+      'Southeast Asian cuisine featuring fresh herbs, rice noodles, and light broths',
+  },
+  {
+    name: 'Spanish',
+    description:
+      'Iberian cuisine known for tapas, paella, and Mediterranean influences',
+  },
+  {
+    name: 'Lebanese',
+    description:
+      'Middle Eastern cuisine featuring mezze, grilled meats, and fresh vegetables',
+  },
+  {
+    name: 'Turkish',
+    description:
+      'Cuisine blending European and Asian influences with grilled meats and spices',
+  },
+  {
+    name: 'American',
+    description:
+      'Diverse cuisine including BBQ, burgers, and regional specialties',
+  },
+  {
+    name: 'Brazilian',
+    description:
+      'South American cuisine featuring grilled meats, tropical fruits, and rice dishes',
+  },
+  {
+    name: 'Moroccan',
+    description:
+      'North African cuisine known for tagines, couscous, and aromatic spices',
+  },
+  {
+    name: 'Ethiopian',
+    description: 'East African cuisine featuring injera bread and spicy stews',
+  },
+  {
+    name: 'Persian',
+    description:
+      'Middle Eastern cuisine known for rice dishes, kebabs, and fragrant herbs',
+  },
+  {
+    name: 'Russian',
+    description:
+      'Eastern European cuisine featuring hearty soups, dumplings, and preserved foods',
+  },
+  {
+    name: 'German',
+    description:
+      'Central European cuisine known for sausages, bread, and beer pairings',
+  },
+  {
+    name: 'British',
+    description:
+      'Traditional cuisine from the British Isles featuring roasts and comfort foods',
+  },
+  {
+    name: 'Argentinian',
+    description:
+      'South American cuisine famous for grilled meats and empanadas',
+  },
+  {
+    name: 'Peruvian',
+    description:
+      'Andean cuisine blending indigenous, Spanish, and Asian influences',
+  },
+  {
+    name: 'Malaysian',
+    description:
+      'Southeast Asian cuisine combining Malay, Chinese, and Indian flavors',
+  },
+  {
+    name: 'Indonesian',
+    description:
+      'Archipelago cuisine known for spicy curries, rice dishes, and tropical flavors',
+  },
+  {
+    name: 'African',
+    description:
+      'Diverse continental cuisine featuring grains, stews, and unique spice blends',
+  },
+  {
+    name: 'Caribbean',
+    description:
+      'Island cuisine featuring tropical fruits, seafood, and jerk spices',
+  },
+  {
+    name: 'Nepalese',
+    description:
+      'Himalayan cuisine featuring dal, rice, and mountain vegetables',
+  },
+  {
+    name: 'Pakistani',
+    description:
+      'South Asian cuisine known for rich curries, tandoor cooking, and flatbreads',
+  },
+  {
+    name: 'Sri Lankan',
+    description:
+      'Island cuisine featuring coconut, curry leaves, and aromatic spices',
+  },
+  {
+    name: 'Burmese',
+    description:
+      'Southeast Asian cuisine known for noodle soups and fermented fish sauce',
+  },
+  {
+    name: 'Cambodian',
+    description:
+      'Southeast Asian cuisine featuring rice, fish, and fresh herbs',
+  },
+  {
+    name: 'Laotian',
+    description:
+      'Southeast Asian cuisine known for sticky rice, papaya salad, and grilled meats',
+  },
+  {
+    name: 'Filipino',
+    description:
+      'Island cuisine blending Spanish, Chinese, and indigenous influences',
+  },
+  {
+    name: 'Polish',
+    description:
+      'Eastern European cuisine featuring hearty dishes, dumplings, and preserved meats',
+  },
+  {
+    name: 'Hungarian',
+    description:
+      'Central European cuisine known for paprika, goulash, and rich stews',
+  },
+  {
+    name: 'Czech',
+    description:
+      'Central European cuisine featuring beer, bread, and hearty meat dishes',
+  },
+  {
+    name: 'Scandinavian',
+    description:
+      'Nordic cuisine emphasizing fresh seafood, preserved foods, and simple preparations',
+  },
+  {
+    name: 'Ukrainian',
+    description:
+      'Eastern European cuisine known for borscht, dumplings, and grain dishes',
+  },
+  {
+    name: 'Irish',
+    description: 'Celtic cuisine featuring potatoes, lamb, and hearty stews',
+  },
+  {
+    name: 'Scottish',
+    description: 'Highland cuisine known for haggis, whisky, and fresh seafood',
+  },
+  {
+    name: 'Portuguese',
+    description:
+      'Iberian cuisine featuring seafood, rice dishes, and custard tarts',
+  },
+  {
+    name: 'Belgian',
+    description: 'European cuisine known for waffles, chocolate, and beer',
+  },
+  {
+    name: 'Dutch',
+    description:
+      'Northern European cuisine featuring cheese, seafood, and hearty winter dishes',
+  },
+  {
+    name: 'Swiss',
+    description:
+      'Alpine cuisine known for cheese dishes, chocolate, and mountain specialties',
+  },
+  {
+    name: 'Austrian',
+    description:
+      'Central European cuisine featuring schnitzel, pastries, and coffee culture',
+  },
+  {
+    name: 'Nordic',
+    description:
+      'Scandinavian cuisine emphasizing local ingredients and preservation techniques',
+  },
+  {
+    name: 'Fusion',
+    description:
+      'Modern cuisine blending techniques and ingredients from multiple culinary traditions',
+  },
+  {
+    name: 'Mediterranean',
+    description:
+      'Coastal cuisine featuring olive oil, fresh vegetables, and grilled seafood',
+  },
+  {
+    name: 'Middle Eastern',
+    description:
+      'Regional cuisine known for spices, grilled meats, and ancient grains',
+  },
+  {
+    name: 'Latin American',
+    description:
+      'Continental cuisine featuring corn, beans, chilies, and tropical ingredients',
+  },
+  {
+    name: 'Asian',
+    description:
+      'Continental cuisine encompassing diverse cooking styles from across Asia',
+  },
+  {
+    name: 'European',
+    description:
+      'Continental cuisine representing diverse traditions from across Europe',
+  },
+  {
+    name: 'Vegetarian',
+    description:
+      'Plant-based cuisine focusing on vegetables, grains, and meat alternatives',
+  },
+  {
+    name: 'Vegan',
+    description: 'Strictly plant-based cuisine excluding all animal products',
+  },
+  {
+    name: 'Gluten-Free',
+    description:
+      'Cuisine prepared without gluten-containing grains for dietary restrictions',
+  },
+  {
+    name: 'Healthy',
+    description:
+      'Cuisine emphasizing nutritious ingredients and balanced meal preparations',
+  },
+  {
+    name: 'Organic',
+    description:
+      'Cuisine featuring organically grown and sustainably sourced ingredients',
+  },
+  {
+    name: 'Raw Food',
+    description: 'Cuisine featuring uncooked foods and living ingredients',
+  },
+  {
+    name: 'Paleo',
+    description:
+      'Cuisine based on presumed ancient human diet excluding processed foods',
+  },
+  {
+    name: 'Keto',
+    description:
+      'Low-carbohydrate, high-fat cuisine for ketogenic diet followers',
+  },
+  {
+    name: 'Street Food',
+    description: 'Casual cuisine typically sold by vendors in public spaces',
+  },
+  {
+    name: 'Fast Food',
+    description: 'Quick-service cuisine designed for speed and convenience',
+  },
+  {
+    name: 'Comfort Food',
+    description:
+      'Nostalgic cuisine providing emotional satisfaction and familiarity',
+  },
+  {
+    name: 'Gourmet',
+    description:
+      'High-quality cuisine featuring premium ingredients and refined techniques',
+  },
+  {
+    name: 'Fine Dining',
+    description:
+      'Upscale cuisine with elaborate presentation and exceptional service',
+  },
+  {
+    name: 'Barbecue',
+    description:
+      'Cooking method and cuisine style featuring slow-cooked, smoked meats',
+  },
+  {
+    name: 'Seafood',
+    description:
+      'Cuisine specializing in fish, shellfish, and other marine life',
+  },
+  {
+    name: 'Steakhouse',
+    description: 'Cuisine specializing in grilled and prepared beef cuts',
+  },
+  {
+    name: 'Sandwich',
+    description:
+      'Cuisine featuring various ingredients served between bread slices',
+  },
+  {
+    name: 'Pizza',
+    description: 'Italian-originated flatbread cuisine with various toppings',
+  },
+  {
+    name: 'Burger',
+    description: 'American cuisine featuring ground meat patties in buns',
+  },
+  {
+    name: 'Taco',
+    description:
+      'Mexican cuisine featuring folded tortillas with various fillings',
+  },
+  {
+    name: 'Sushi',
+    description:
+      'Japanese cuisine featuring vinegared rice with various accompaniments',
+  },
+  {
+    name: 'Ramen',
+    description: 'Japanese noodle soup cuisine with rich broths and toppings',
+  },
+  {
+    name: 'Pasta',
+    description:
+      'Italian cuisine featuring wheat-based noodles with various sauces',
+  },
+  {
+    name: 'Salad',
+    description:
+      'Fresh cuisine featuring mixed greens and vegetables with dressings',
+  },
+  {
+    name: 'Soup',
+    description: 'Liquid-based cuisine combining various ingredients in broth',
+  },
+  {
+    name: 'Dessert',
+    description: 'Sweet cuisine typically served at the end of meals',
+  },
+  {
+    name: 'Ice Cream',
+    description:
+      'Frozen dessert cuisine made from dairy products and sweeteners',
+  },
+  {
+    name: 'Bakery',
+    description:
+      'Baked goods cuisine including bread, pastries, and confections',
+  },
+  {
+    name: 'Cafe',
+    description:
+      'Light cuisine typically served in coffee shops and casual establishments',
+  },
+  {
+    name: 'Coffee',
+    description: 'Beverage-focused cuisine centered around coffee preparations',
+  },
+  {
+    name: 'Tea',
+    description:
+      'Beverage-focused cuisine centered around tea ceremonies and preparations',
+  },
+  {
+    name: 'Juice Bar',
+    description:
+      'Health-focused cuisine featuring fresh fruit and vegetable juices',
+  },
+  {
+    name: 'Smoothie',
+    description:
+      'Blended beverage cuisine combining fruits, vegetables, and other ingredients',
+  },
+  {
+    name: 'Bubble Tea',
+    description:
+      'Taiwanese beverage cuisine featuring tea with chewy tapioca pearls',
+  },
+  {
+    name: 'Wine Bar',
+    description:
+      'Cuisine focused on wine pairings with light foods and appetizers',
+  },
+  {
+    name: 'Cocktail',
+    description:
+      'Mixed drink cuisine featuring creative alcoholic beverage preparations',
+  },
+  {
+    name: 'Brewery',
+    description: 'Beer-focused cuisine often featuring pub-style foods',
+  },
+  {
+    name: 'Buffet',
+    description:
+      'Self-service cuisine style offering multiple dishes simultaneously',
+  },
+  {
+    name: 'Brunch',
+    description: 'Late morning cuisine combining breakfast and lunch elements',
+  },
+  {
+    name: 'Breakfast',
+    description:
+      'Morning cuisine featuring traditional first meal preparations',
+  },
+  {
+    name: 'Diner',
+    description:
+      'American casual cuisine served in informal restaurant settings',
+  },
+  {
+    name: 'Food Truck',
+    description: 'Mobile cuisine served from converted vehicles',
+  },
+  {
+    name: 'Catering',
+    description:
+      'Event-focused cuisine prepared for large groups and special occasions',
+  },
+  {
+    name: 'Tapas',
+    description: 'Spanish small plate cuisine designed for sharing',
+  },
+  {
+    name: 'Dim Sum',
+    description: 'Chinese small plate cuisine traditionally served with tea',
+  },
+  {
+    name: 'Mezze',
+    description:
+      'Middle Eastern small plate cuisine featuring various appetizers',
+  },
+  {
+    name: 'Antipasti',
+    description: 'Italian appetizer cuisine served before main courses',
+  },
+  {
+    name: 'Australian',
+    description:
+      'Modern Australian cuisine blending international influences with local ingredients',
+  },
+];
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
   {
