@@ -1,16 +1,3 @@
-// Add prisma seed script to package.json
-// # Generate Prisma client
-// npx prisma generate
-
-// # Apply migrations(if needed)
-// npx prisma migrate dev --name init
-
-// # Run the seed script
-// npx prisma db seed
-
-// # See the data created
-// npx prisma studio
-
 import { PrismaClient } from '../../generated/prisma';
 import { restaurants, dietaryRequirements, appliances } from './seedConstants';
 import * as argon2 from 'argon2';
@@ -268,5 +255,4 @@ main()
       e instanceof Error ? e.message : String(e),
     );
     await prisma.$disconnect();
-    process.exit(1);
   });

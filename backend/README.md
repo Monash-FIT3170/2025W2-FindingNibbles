@@ -9,6 +9,20 @@ $ npx prisma db seed
 $ npx prisma generate
 ```
 
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Push schema changes to the db
+npx prisma db push
+
+# Run the seed script
+npx prisma db seed
+
+# See the data created
+npx prisma studio
+```
+
 ## Compile and run the project
 
 ```bash
