@@ -13,7 +13,7 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { LocalAuthGuard } from './strategies/local/local-auth.guard';
 import { AuthService } from './auth.service';
-import { User } from 'generated/prisma';
+import { User } from 'prisma/generated';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyEmailDto } from './dto/verify.dto';
 import { UserService } from '../user/user.service';

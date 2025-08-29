@@ -15,7 +15,7 @@ export const appliances = [
 ];
 
 // Defined the list of dietary restrictions
-export const dietaryRequirements = ([] = [
+export const dietaryRequirements = [
   {
     id: 1,
     name: 'Vegetarian',
@@ -36,7 +36,7 @@ export const dietaryRequirements = ([] = [
     name: 'Halal',
     description: 'Meat from animals slaughter',
   },
-]);
+];
 
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
