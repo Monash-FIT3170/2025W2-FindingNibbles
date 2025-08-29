@@ -552,7 +552,10 @@ export const restaurants: RestaurantData[] = [
         width: 6528,
       },
     ],
-    cuisines: ['Chinese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Chinese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJY1PwH5Zr1moR1cqFk01EbFA',
@@ -579,7 +582,7 @@ export const restaurants: RestaurantData[] = [
         width: 5120,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJzXgfRZ1r1moR-yH1U6WtTJI',
@@ -605,7 +608,10 @@ export const restaurants: RestaurantData[] = [
         width: 2880,
       },
     ],
-    cuisines: ['Japanese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Japanese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJx1u48Mtq1moRxSnCra2rVsQ',
@@ -632,7 +638,10 @@ export const restaurants: RestaurantData[] = [
         width: 4096,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJO0nHoctq1moR610E36XekXM',
@@ -660,7 +669,10 @@ export const restaurants: RestaurantData[] = [
         width: 2685,
       },
     ],
-    cuisines: ['Malaysian', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Malaysian')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJJ6kO8stq1moRjjwy5VjHx6w',
@@ -686,7 +698,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Asian', 'Chinese'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Asian')!,
+      cuisines.find((c) => c.name === 'Chinese')!,
+    ],
   },
   {
     place_id: 'ChIJqUyf_stq1moRW19lZEfbNHo',
@@ -714,7 +729,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Seafood'],
+    cuisines: [cuisines.find((c) => c.name === 'Seafood')!],
   },
   {
     place_id: 'ChIJu7wOkstq1moRytNqs-_MGzk',
@@ -741,7 +756,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Mexican', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Mexican')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
   {
     place_id: 'ChIJLXTx8stq1moRwAdi9_ZYQPs',
@@ -768,7 +786,7 @@ export const restaurants: RestaurantData[] = [
         width: 4608,
       },
     ],
-    cuisines: ['Vietnamese'],
+    cuisines: [cuisines.find((c) => c.name === 'Vietnamese')!],
   },
   {
     place_id: 'ChIJ64DH7ctq1moRE7Y1AAaT33s',
@@ -795,7 +813,10 @@ export const restaurants: RestaurantData[] = [
         width: 4284,
       },
     ],
-    cuisines: ['Juice Bar', 'Healthy'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Juice Bar')!,
+      cuisines.find((c) => c.name === 'Healthy')!,
+    ],
   },
   {
     place_id: 'ChIJPRbpjMtq1moRPcCxJz2EpDo',
@@ -823,7 +844,10 @@ export const restaurants: RestaurantData[] = [
         width: 2669,
       },
     ],
-    cuisines: ['Japanese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Japanese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJATDW88tq1moRBX8HgPq1l5s',
@@ -850,7 +874,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJFXnO8Mtq1moRexjO3wfOOW4',
@@ -877,7 +901,10 @@ export const restaurants: RestaurantData[] = [
         width: 5184,
       },
     ],
-    cuisines: ['Sandwich', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Sandwich')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
   {
     place_id: 'ChIJHxa1pFlr1moRHFdLlvSoa_k',
@@ -903,7 +930,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJuwcSCstq1moRG_TzklUYsOQ',
@@ -930,7 +960,10 @@ export const restaurants: RestaurantData[] = [
         width: 1920,
       },
     ],
-    cuisines: ['Cafe', 'Healthy'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Healthy')!,
+    ],
   },
   {
     place_id: 'ChIJj1WC1Mtq1moRJeKoET0Alw4',
@@ -957,7 +990,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Chinese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Chinese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJk1F41Mtq1moREgIhKa2Mad0',
@@ -984,7 +1020,10 @@ export const restaurants: RestaurantData[] = [
         width: 4000,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJxweMcMxq1moRE2mtr4nhNVY',
@@ -1011,7 +1050,7 @@ export const restaurants: RestaurantData[] = [
         width: 4096,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJB3XChUVr1moRURgtzcD-1TM',
@@ -1037,7 +1076,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJ605lD75r1moR9XUl0U8mEJc',
@@ -1065,7 +1104,10 @@ export const restaurants: RestaurantData[] = [
         width: 5616,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJv9hPsEsV1moRXpFmIptz_V4',
@@ -1092,7 +1134,10 @@ export const restaurants: RestaurantData[] = [
         width: 2048,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJg6MP-stq1moR3EFZxw-yz5E',
@@ -1118,7 +1163,10 @@ export const restaurants: RestaurantData[] = [
         width: 1036,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJxzv1mMtq1moRbPu3FCfCf-U',
@@ -1144,7 +1192,10 @@ export const restaurants: RestaurantData[] = [
         width: 1125,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJcbPf1f5r1moRDBVcz8X_Cpg',
@@ -1170,7 +1221,7 @@ export const restaurants: RestaurantData[] = [
         width: 3200,
       },
     ],
-    cuisines: ['Bubble Tea'],
+    cuisines: [cuisines.find((c) => c.name === 'Bubble Tea')!],
   },
   {
     place_id: 'ChIJheE-1shq1moRCK-RBW6jFbI',
@@ -1196,7 +1247,10 @@ export const restaurants: RestaurantData[] = [
         width: 4192,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJn-CZQa5r1moRUvTGwkJAWZw',
@@ -1223,7 +1277,7 @@ export const restaurants: RestaurantData[] = [
         width: 4608,
       },
     ],
-    cuisines: ['Italian'],
+    cuisines: [cuisines.find((c) => c.name === 'Italian')!],
   },
   {
     place_id: 'ChIJR4YcDstq1moR07xYME4nlz8',
@@ -1249,6 +1303,9 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Australian', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Australian')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
 ];

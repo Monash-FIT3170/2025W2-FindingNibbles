@@ -38,7 +38,7 @@ export interface RestaurantData {
   formattedPhoneNum?: string;
   website?: string;
   photos: RestaurantPhoto[];
-  cuisines: string[];
+  cuisines: CuisineData[];
 }
 
 export interface CuisineData {
