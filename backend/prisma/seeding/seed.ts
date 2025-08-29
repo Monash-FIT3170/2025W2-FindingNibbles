@@ -8,6 +8,12 @@ import { CsvRestaurantData } from './types';
 
 const prisma = new PrismaClient();
 
+/**
+ * Creates cuisine objects in the database from the cuisine data
+ * @param cuisineData Array of cuisine objects with name and description
+ * @returns Map of cuisine names to their database IDs
+ */
+
 async function main(): Promise<void> {
   // If you need to reset the database first, run `npx prisma db reset`
   try {
