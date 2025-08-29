@@ -556,7 +556,7 @@ class _MapPageState extends State<MapPage> {
                                                       ),
                                                       TextSpan(
                                                         text:
-                                                            '${restaurant.formattedAddress}',
+                                                            '${restaurant.address}',
                                                       ),
                                                     ],
                                                   ),
