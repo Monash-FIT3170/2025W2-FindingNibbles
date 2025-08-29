@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { getErrorMessage } from 'src/utils';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { Prisma } from 'prisma/generated';
+import { Prisma } from '@prisma/client';
 import {
   RecipeFromFrontEnd,
   RecipeResponseDto,

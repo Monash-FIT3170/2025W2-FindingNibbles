@@ -8,7 +8,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
-import { Prisma, Restaurant } from 'prisma/generated';
+import { Prisma, Restaurant } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('restaurant')

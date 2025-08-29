@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, Restaurant } from 'prisma/generated';
+import { Prisma, Restaurant } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
 import {
