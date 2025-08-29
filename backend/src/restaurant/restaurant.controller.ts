@@ -8,19 +8,20 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
-import { GooglePlacesApiService } from '../google-places-api/google-places-api.service';
 import { Prisma, Restaurant } from 'prisma/generated';
-import { NearbyQueryDto } from './dto/nearby-query.dto';
-import { AutocompleteQueryDto } from './dto/autocomplete-query.dto';
-import { TextSearchQueryDto } from './dto/text-search-query.dto';
-import { NearbyByCuisineQueryDto } from './dto/nearby-by-cuisine-query.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('restaurant')
 export class RestaurantController {
+  private readonly googlePlacesConfig: { apiKey: string };
   constructor(
     private readonly restaurantService: RestaurantService,
-    private readonly googlePlacesService: GooglePlacesApiService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.googlePlacesConfig = {
+      apiKey: this.configService.get<string>('GOOGLE_PLACES_API_KEY') || '',
+    };
+  }
 
   // Fetch all restaurants with optional pagination, sorting, and filtering
   @Get()
@@ -139,115 +140,6 @@ export class RestaurantController {
     return restaurant;
   }
 
-  // ========================
-  // Google Places API Endpoints
-  // ========================
-
-  /**
-   * Get nearby restaurants using Google Places API
-   * GET /restaurant/places/nearby?lat=<latitude>&lng=<longitude>&radius=<radius>&keyword=<keyword>&minprice=<minprice>&maxprice=<maxprice>&opennow=<boolean>
-   */
-  @Get('places/nearby')
-  async getNearbyRestaurants(@Query() query: NearbyQueryDto) {
-    const latitude = parseFloat(query.lat);
-    const longitude = parseFloat(query.lng);
-
-    return this.googlePlacesService.getNearbyRestaurants(
-      latitude,
-      longitude,
-      query.radius ? parseInt(query.radius) : undefined,
-      query.keyword,
-      query.minprice ? parseInt(query.minprice) : undefined,
-      query.maxprice ? parseInt(query.maxprice) : undefined,
-      query.opennow === 'true',
-    );
-  }
-
-  /**
-   * Get restaurant details using Google Places API
-   * GET /restaurant/places/details/:placeId
-   */
-  @Get('places/details/:placeId')
-  async getRestaurantDetails(@Param('placeId') placeId: string) {
-    if (!placeId) {
-      throw new BadRequestException('Place ID is required');
-    }
-
-    const details =
-      await this.googlePlacesService.getRestaurantDetails(placeId);
-
-    if (!details) {
-      throw new NotFoundException(
-        `Restaurant with place ID ${placeId} not found`,
-      );
-    }
-
-    return details;
-  }
-
-  /**
-   * Autocomplete restaurant search using Google Places API
-   * GET /restaurant/places/autocomplete?input=<search_term>&lat=<latitude>&lng=<longitude>&radius=<radius>
-   */
-  @Get('places/autocomplete')
-  async autocompleteRestaurants(@Query() query: AutocompleteQueryDto) {
-    const input = query.input;
-    let latitude: number | undefined;
-    let longitude: number | undefined;
-
-    if (query.lat && query.lng) {
-      latitude = parseFloat(query.lat);
-      longitude = parseFloat(query.lng);
-    }
-
-    return this.googlePlacesService.autocompleteRestaurants(
-      input,
-      latitude,
-      longitude,
-      query.radius ? parseInt(query.radius) : undefined,
-    );
-  }
-
-  /**
-   * Search restaurants by text query using Google Places API
-   * GET /restaurant/places/search?query=<search_term>&lat=<latitude>&lng=<longitude>&radius=<radius>
-   */
-  @Get('places/search')
-  async searchRestaurants(@Query() queryDto: TextSearchQueryDto) {
-    let latitude: number | undefined;
-    let longitude: number | undefined;
-
-    if (queryDto.lat && queryDto.lng) {
-      latitude = parseFloat(queryDto.lat);
-      longitude = parseFloat(queryDto.lng);
-    }
-
-    return this.googlePlacesService.searchRestaurants(
-      queryDto.query,
-      latitude,
-      longitude,
-      queryDto.radius ? parseInt(queryDto.radius) : undefined,
-    );
-  }
-
-  /**
-   * Nearby search by cuisine keyword. Wraps Google Text Search with "<cuisine> restaurant".
-   * GET /restaurant/places/nearby-by-cuisine?cuisine=italian&lat=..&lng=..&radius=..
-   */
-  @Get('places/nearby-by-cuisine')
-  async nearbyByCuisine(@Query() query: NearbyByCuisineQueryDto) {
-    const latitude = parseFloat(query.lat);
-    const longitude = parseFloat(query.lng);
-    const keyword = `${query.cuisine} restaurant`;
-
-    return this.googlePlacesService.searchRestaurants(
-      keyword,
-      latitude,
-      longitude,
-      query.radius ? parseInt(query.radius) : undefined,
-    );
-  }
-
   /**
    * Get photo URL from photo reference
    * GET /restaurant/places/photo/:photoReference?maxWidth=<width>
@@ -263,7 +155,7 @@ export class RestaurantController {
 
     const width = maxWidth ? parseInt(maxWidth) : 400;
     return {
-      photoUrl: this.googlePlacesService.getPhotoUrl(photoReference, width),
+      photoUrl: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${width}&photo_reference=${photoReference}&key=${this.googlePlacesConfig.apiKey}`,
     };
   }
 }

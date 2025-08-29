@@ -2,11 +2,10 @@ import { Module } from '@nestjs/common';
 import { RestaurantController } from './restaurant.controller';
 import { RestaurantService } from './restaurant.service';
 import { DatabaseModule } from '../database/database.module';
-import { GooglePlacesApiService } from '../google-places-api/google-places-api.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [RestaurantController],
-  providers: [RestaurantService, GooglePlacesApiService],
+  providers: [RestaurantService],
 })
 export class RestaurantModule {}
