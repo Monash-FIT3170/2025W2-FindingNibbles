@@ -2,6 +2,10 @@
 
 ```bash
 $ npm install
+$ cd backend
+$ docker compose up -d
+$ npx prisma db push
+$ npx prisma db seed
 $ npx prisma generate
 ```
 
