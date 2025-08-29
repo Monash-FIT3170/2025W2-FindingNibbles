@@ -11,8 +11,7 @@ class RestaurantDto {
   final double? rating;
   final int? userRatingsTotal;
   final int? priceLevel;
-  final bool hasDetails;
-  final String? formattedAddress;
+  final String? address;
   final String? formattedPhoneNum;
   final String? website;
   final bool? dineIn;
@@ -39,8 +38,7 @@ class RestaurantDto {
     this.rating,
     this.userRatingsTotal,
     this.priceLevel,
-    required this.hasDetails,
-    this.formattedAddress,
+    this.address,
     this.formattedPhoneNum,
     this.website,
     this.dineIn,
@@ -72,8 +70,7 @@ class RestaurantDto {
       rating: (json['rating'] as num?)?.toDouble(),
       userRatingsTotal: json['userRatingsTotal'] as int?,
       priceLevel: json['priceLevel'] as int?,
-      hasDetails: json['hasDetails'] as bool,
-      formattedAddress: json['formattedAddress'] as String?,
+      address: json['address'] as String?, // Support both field names
       formattedPhoneNum: json['formattedPhoneNum'] as String?,
       website: json['website'] as String?,
       dineIn: json['dineIn'] as bool?,
@@ -109,8 +106,7 @@ class RestaurantDto {
       'rating': rating,
       'userRatingsTotal': userRatingsTotal,
       'priceLevel': priceLevel,
-      'hasDetails': hasDetails,
-      'formattedAddress': formattedAddress,
+      'address': address,
       'formattedPhoneNum': formattedPhoneNum,
       'website': website,
       'dineIn': dineIn,
