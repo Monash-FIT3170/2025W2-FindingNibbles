@@ -126,6 +126,10 @@ model Restaurant {
   photos            Photo[]
   restaurantReviews RestaurantReview[]
 
+  // Menu Information
+  dishes             Dish[]
+  menuUrl            String?       
+  
   // Additional place details
   dineIn                       Boolean?
   takeout                      Boolean?
@@ -216,6 +220,8 @@ model Dish {
   mealPlanDishes MealPlanDish[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+
+  Restaurant Restaurant[]
 }
 
 model DishDietary {
