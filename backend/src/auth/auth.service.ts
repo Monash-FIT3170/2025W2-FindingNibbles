@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '../mailer/mailer.service';
 import { OAuth2Client } from 'google-auth-library';
 import { AuthTokens } from './dto/tokens.dto';
-import { User } from 'prisma/generated';
+import { User } from '@prisma/client';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()

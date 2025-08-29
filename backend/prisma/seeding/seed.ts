@@ -1,246 +1,126 @@
-import { PrismaClient } from 'prisma/generated';
-import { restaurants, dietaryRequirements, appliances } from './seedConstants';
+import * as fs from 'node:fs';
 import * as argon2 from 'argon2';
+import { parse } from 'csv-parse';
+
+import { PrismaClient } from '@prisma/client';
+import { dietaryRequirements, appliances } from './constants';
+import { CsvRestaurantData } from './types';
 
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  console.log('Start seeding...');
-
+  // If you need to reset the database first, run `npx prisma db reset`
   try {
-    // Create default user
-    console.log('Creating default user...');
     const defaultUserEmail = 'findingnibbles@gmail.com';
-    const defaultUserPassword = '#FindingNibbles123'; // Replace with a secure password
-    const hashedPassword = await argon2.hash(defaultUserPassword); // Hash the password
+    const defaultUserPassword = '#FindingNibbles123';
+    const hashedPassword = await argon2.hash(defaultUserPassword);
 
-    const defaultUser = await prisma.user.upsert({
-      where: { email: defaultUserEmail },
-      update: {}, // No updates needed if the user already exists
-      create: {
+    const defaultUser = await prisma.user.create({
+      data: {
         email: defaultUserEmail,
         passwordHash: hashedPassword,
         firstName: 'Team',
         lastName: 'FindingNibbles',
-        isVerified: true, // Mark the user as verified
-        provider: 'local', // Add the required provider field
+        isVerified: true,
+        provider: 'local',
       },
     });
 
-    console.log(`Default user created: ${defaultUser.email}`);
-    // First, collect and create all unique cuisines
-    console.log('Creating cuisines...');
-    const uniqueCuisines = new Set<string>();
-
-    // Gather all unique cuisine names
-    restaurants.forEach((restaurant) => {
-      if (restaurant.cuisines && restaurant.cuisines.length > 0) {
-        restaurant.cuisines.forEach((cuisine) => uniqueCuisines.add(cuisine));
+    const processFile = async (): Promise<CsvRestaurantData[]> => {
+      const records: CsvRestaurantData[] = [];
+      const parser = fs.createReadStream(`${__dirname}/restaurants.csv`).pipe(
+        parse({
+          columns: true,
+          skip_empty_lines: true,
+          skip_records_with_empty_values: true,
+        }),
+      );
+      for await (const record of parser) {
+        records.push(record as CsvRestaurantData);
       }
+      return records;
+    };
+
+    const records = await processFile();
+    const mappedRecords = records
+      .map((r: CsvRestaurantData) => ({
+        name: r.trading_name,
+        latitude: parseFloat(r.latitude),
+        longitude: parseFloat(r.longitude),
+        rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
+        userRatingsTotal: Math.floor(Math.random() * 500) + 1,
+        priceLevel: Math.floor(Math.random() * 4) + 1,
+        address: r.business_address,
+      }))
+      .filter(
+        (r) =>
+          !isNaN(r.latitude) &&
+          !isNaN(r.longitude) &&
+          r.latitude >= -90 &&
+          r.latitude <= 90 &&
+          r.longitude >= -180 &&
+          r.longitude <= 180,
+      );
+
+    await prisma.restaurant.createMany({
+      data: mappedRecords,
     });
 
-    console.log(`Found ${uniqueCuisines.size} unique cuisines`);
+    // ADD CUISINE CODE HERE. FIND RESTAURANTS WITHIN 10KM OF MELBOURNE CBD
+    // AND FETCH CUISINES FOR THEM FROM GEMINI MODEL
 
-    // Create cuisines in database and track their IDs
-    const cuisineMap = new Map<string, number>();
-    for (const cuisineName of uniqueCuisines) {
-      const cuisine = await prisma.cuisine.upsert({
-        where: { name: cuisineName },
-        update: {}, // No updates needed if it exists
-        create: { name: cuisineName },
+    const cuisineMap = new Map<string, number>([
+      ['japanese', 0],
+      ['italian', 0],
+      ['french', 0],
+      ['chinese', 0],
+      ['australian', 0],
+      ['singaporean', 0],
+      ['middle-eastern', 0],
+    ]);
+
+    for (const cuisineName of cuisineMap.keys()) {
+      const cuisine = await prisma.cuisine.create({
+        data: { name: cuisineName },
       });
       cuisineMap.set(cuisineName, cuisine.id);
-      console.log(`Created cuisine: ${cuisineName}`);
     }
 
-    // Create restaurants
-    console.log('Creating restaurants...');
-    for (const restaurant of restaurants) {
-      try {
-        // Create or update the restaurant
-        const createdRestaurant = await prisma.restaurant.upsert({
-          where: { place_id: restaurant.place_id },
-          update: {
-            name: restaurant.name,
-            latitude: restaurant.latitude,
-            longitude: restaurant.longitude,
-            businessStatus: restaurant.businessStatus,
-            icon: restaurant.icon,
-            rating: restaurant.rating,
-            userRatingsTotal: restaurant.userRatingsTotal,
-            priceLevel: restaurant.priceLevel,
-            formattedAddress: restaurant.formattedAddress,
-            formattedPhoneNum: restaurant.formattedPhoneNum,
-            website: restaurant.website,
-            hasDetails: true,
-            // Clear existing relations
-            restaurantCuisines: {
-              deleteMany: {},
-            },
-            photos: {
-              deleteMany: {},
-            },
-          },
-          create: {
-            place_id: restaurant.place_id,
-            name: restaurant.name,
-            latitude: restaurant.latitude,
-            longitude: restaurant.longitude,
-            businessStatus: restaurant.businessStatus,
-            icon: restaurant.icon,
-            rating: restaurant.rating,
-            userRatingsTotal: restaurant.userRatingsTotal,
-            priceLevel: restaurant.priceLevel,
-            formattedAddress: restaurant.formattedAddress,
-            formattedPhoneNum: restaurant.formattedPhoneNum,
-            website: restaurant.website,
-            hasDetails: true,
-          },
-          include: {
-            restaurantCuisines: true,
-            photos: true,
-          },
-        });
+    await prisma.dietaryRequirement.createMany({
+      data: dietaryRequirements.map((dietary) => ({
+        name: dietary.name,
+        description: dietary.description,
+      })),
+    });
 
-        // Add photos
-        if (restaurant.photos && restaurant.photos.length > 0) {
-          for (const photo of restaurant.photos) {
-            await prisma.photo.create({
-              data: {
-                restaurantId: createdRestaurant.id,
-                photoReference: photo.photoReference,
-                height: photo.height,
-                width: photo.width,
-                htmlAttributions: photo.htmlAttributions,
-              },
-            });
-          }
-        }
+    await prisma.appliance.createMany({
+      data: appliances.map((appliance) => ({
+        name: appliance.name,
+      })),
+    });
 
-        // Add cuisine relationships
-        if (restaurant.cuisines && restaurant.cuisines.length > 0) {
-          for (const cuisineName of restaurant.cuisines) {
-            const cuisineId = cuisineMap.get(cuisineName);
-            if (cuisineId) {
-              await prisma.restaurantCuisine.create({
-                data: {
-                  restaurantId: createdRestaurant.id,
-                  cuisineId: cuisineId,
-                },
-              });
-            }
-          }
-        }
+    const restaurantsSubset = await prisma.restaurant.findMany({
+      select: { id: true },
+      take: 5,
+    });
+    await prisma.userFavouritedRestaurant.createMany({
+      data: restaurantsSubset.map((restaurant) => ({
+        userId: defaultUser.id,
+        restaurantId: restaurant.id,
+      })),
+    });
 
-        console.log(`Created restaurant: ${restaurant.name}`);
-      } catch (error) {
-        // Properly type the error
-        if (error instanceof Error) {
-          console.error(
-            `Error creating restaurant ${restaurant.name}: ${error.message}`,
-          );
-        } else {
-          console.error(`Unknown error creating restaurant ${restaurant.name}`);
-        }
-      }
-    }
-
-    console.log('Adding random favorite restaurants for the default user...');
-    const allRestaurants = await prisma.restaurant.findMany();
-    if (allRestaurants.length >= 5) {
-      const randomRestaurants = allRestaurants
-        .sort(() => 0.5 - Math.random()) // Shuffle the array
-        .slice(0, 5); // Take the first 5
-
-      for (const restaurant of randomRestaurants) {
-        await prisma.userFavouritedRestaurant.upsert({
-          where: {
-            userId_restaurantId: {
-              userId: defaultUser.id,
-              restaurantId: restaurant.id,
-            },
-          },
-          update: {}, // No update needed if it exists
-          create: {
-            userId: defaultUser.id,
-            restaurantId: restaurant.id,
-          },
-        });
-        console.log(`Added favorite restaurant: ${restaurant.name}`);
-      }
-    } else {
-      console.warn('Not enough restaurants to add 5 favorites.');
-    }
-
-    // create dietary Requirements
-    console.log('Creating dietary Requirements...');
-    for (const dietary of dietaryRequirements) {
-      await prisma.dietaryRequirement.upsert({
-        where: { name: dietary.name },
-        update: {}, // No updates needed if it exists
-        create: {
-          name: dietary.name,
-          description: dietary.description,
-        },
-      });
-      console.log(`Created dietary Requirement: ${dietary.name}`);
-    }
-
-    // Create appliances
-    console.log('Creating appliances...');
-    for (const appliance of appliances) {
-      await prisma.appliance.upsert({
-        where: {
-          id:
-            (
-              await prisma.appliance.findFirst({
-                where: { name: appliance.name },
-              })
-            )?.id || 0,
-        },
-        update: {}, // No updates needed if it exists
-        create: {
-          name: appliance.name,
-        },
-      });
-      console.log(`Created appliance: ${appliance.name}`);
-    }
-
-    // Add random appliances to default user
-    console.log('Adding random appliances for the default user...');
-    const allAppliances = await prisma.appliance.findMany();
-    if (allAppliances.length >= 3) {
-      const randomAppliances = allAppliances
-        .sort(() => 0.5 - Math.random()) // Shuffle the array
-        .slice(0, 3); // Take 3 random appliances
-
-      for (const appliance of randomAppliances) {
-        await prisma.userAppliance.upsert({
-          where: {
-            userId_applianceId: {
-              userId: defaultUser.id,
-              applianceId: appliance.id,
-            },
-          },
-          update: {}, // No update needed if it exists
-          create: {
-            userId: defaultUser.id,
-            applianceId: appliance.id,
-          },
-        });
-        console.log(`Added appliance to user: ${appliance.name}`);
-      }
-    }
-
-    console.log('Seeding completed');
+    const appliancesSubset = await prisma.appliance.findMany({
+      take: 3,
+    });
+    await prisma.userAppliance.createMany({
+      data: appliancesSubset.map((appliance) => ({
+        userId: defaultUser.id,
+        applianceId: appliance.id,
+      })),
+    });
   } catch (error) {
-    // Handle any errors in the main process
-    if (error instanceof Error) {
-      console.error(`Seeding error: ${error.message}`);
-    } else {
-      console.error('Unknown seeding error occurred');
-    }
-    throw error; // Re-throw to be caught by the outer catch
+    console.error('Error in seeding script:', error);
   }
 }
 
