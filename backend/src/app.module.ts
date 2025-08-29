@@ -14,19 +14,13 @@ import { RestaurantModule } from './restaurant/restaurant.module';
 import { CuisineModule } from './cuisine/cuisine.module';
 import { ApplianceModule } from './appliance/appliance.module';
 import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
-import { GooglePlacesApiService } from './google-places-api/google-places-api.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid(
-          'development',
-          'production',
-          'test',
-          'provision',
-        ),
+        NODE_ENV: Joi.string().valid('development', 'production'),
         PORT: Joi.number().port().default(3000),
         DATABASE_URL: Joi.string().required(),
         AUTH_SECRET: Joi.string().required(),
@@ -52,7 +46,7 @@ import { GooglePlacesApiService } from './google-places-api/google-places-api.se
       throttlers: [
         {
           ttl: 60, // Time to live in seconds
-          limit: 10, // Maximum number of requests per minute per IP
+          limit: 30, // Maximum number of requests per minute per IP
         },
       ],
     }),
@@ -66,6 +60,5 @@ import { GooglePlacesApiService } from './google-places-api/google-places-api.se
     ApplianceModule,
     RestaurantMenuModule,
   ],
-  providers: [GooglePlacesApiService],
 })
 export class AppModule {}
