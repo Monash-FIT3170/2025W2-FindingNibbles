@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "Multer", "jest"]
   },
-  "include": ["src", "generated/prisma"]
+  "include": ["src", "generated/prisma", "prisma/seeding"]
 }
