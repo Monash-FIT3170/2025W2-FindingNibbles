@@ -14,6 +14,9 @@ jobs:
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
 
     steps:
       - uses: actions/checkout@v4
@@ -23,52 +26,19 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: ./backend
         run: npm ci
 
       - name: Run unit tests
-        working-directory: ./backend
         run: npm test
 
       - name: Run e2e tests
-        working-directory: ./backend
         run: npm run test:e2e
 
       - name: Run coverage tests
-        working-directory: ./backend
         run: npm run test:cov
 
       - name: Run linting
-        working-directory: ./backend
         run: npm run lint
-
-  backend-build-push:
-    name: Backend Image Build and Push
-    needs: backend-test
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout code
-      - uses: actions/checkout@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/finding-nibbles-backend:latest
