@@ -17,7 +17,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["node", "Multer", "jest"]
+    "types": ["node", "multer", "jest"]
   },
   "include": ["src", "prisma"]
 }
