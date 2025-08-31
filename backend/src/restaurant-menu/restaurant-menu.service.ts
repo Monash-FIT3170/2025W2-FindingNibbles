@@ -1,3 +1,4 @@
+import 'multer';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { getErrorMessage, detectMimeType } from 'src/utils';
