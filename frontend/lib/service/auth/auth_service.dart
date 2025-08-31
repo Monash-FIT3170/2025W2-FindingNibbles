@@ -15,12 +15,24 @@ class AuthService {
   late GoogleSignIn _googleSignIn;
 
   AuthService() {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    // Platform-specific GoogleSignIn configuration
+    if (kIsWeb) {
+      // For web, client ID is configured in web/index.html meta tag
+      _googleSignIn = GoogleSignIn(scopes: ['email']);
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // iOS requires clientId to be explicitly set
       _googleSignIn = GoogleSignIn(
-        clientId: AppConstants.googleClientId,
+        clientId: AppConstants.googleClientIdIOS,
         scopes: ['email'],
       );
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      // Android - use Web client ID for server verification (required for Android Credential Manager)
+      _googleSignIn = GoogleSignIn(
+        scopes: ['email'],
+        serverClientId: AppConstants.googleClientIdWeb, // Use Web client ID for server verification
+      );
     } else {
+      // Other platforms
       _googleSignIn = GoogleSignIn(scopes: ['email']);
     }
   }

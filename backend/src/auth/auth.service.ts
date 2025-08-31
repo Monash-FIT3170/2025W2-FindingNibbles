@@ -161,6 +161,7 @@ export class AuthService {
     const ticket = await this.googleClient.verifyIdToken({
       idToken: token,
       audience: [
+        this.configService.get<string>('GOOGLE_CLIENT_ID') || '', // Web client ID (used by Android Credential Manager)
         this.configService.get<string>('GOOGLE_CLIENT_ID_ANDROID') || '',
         this.configService.get<string>('GOOGLE_CLIENT_ID_IOS') || '',
       ],
