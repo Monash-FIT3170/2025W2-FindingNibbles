@@ -10,3 +10,4 @@ The base-64 encoded keystore is included in the Github Repository Secrets, and a
 
 - Setup on GCP Compute Engine
 - E2 medium with 20GB disk, 1-2 vCPUS, 4GB memory on Ubuntu 24.04 LTS x86/64
+- IP address is `34.129.60.144`
