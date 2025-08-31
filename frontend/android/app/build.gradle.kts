@@ -24,7 +24,7 @@ android {
         applicationId = "com.example.nibbles"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 23  // Increased for Android Credential Manager support
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -44,5 +44,11 @@ flutter {
 }
 
 dependencies {
-    implementation("com.google.android.gms:play-services-auth:20.4.1") 
+    // Google Sign-In dependencies for Android Credential Manager (using stable versions)
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0") 
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    
+    // Legacy Google Play Services Auth (still needed for compatibility)
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 }
