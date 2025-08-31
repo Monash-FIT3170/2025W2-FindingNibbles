@@ -11,9 +11,11 @@ class DioClient {
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl:
-          kIsWeb || defaultTargetPlatform != TargetPlatform.android
-              ? 'http://localhost:3000/api/'
-              : 'http://10.0.2.2:3000/api/',
+          kReleaseMode
+              ? 'https://nibbles.lachlanmacphee.com/api/'
+              : kIsWeb || defaultTargetPlatform != TargetPlatform.android
+                  ? 'http://localhost:3000/api/'
+                  : 'http://10.0.2.2:3000/api/',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       validateStatus: (status) => status != null && status < 400,
