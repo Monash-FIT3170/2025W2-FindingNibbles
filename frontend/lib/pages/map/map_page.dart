@@ -161,12 +161,6 @@ class _MapPageState extends State<MapPage> {
       final position = await Geolocator.getCurrentPosition();
       debugPrint('Successfully got position: ${position.latitude}, ${position.longitude}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Using your current location: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
         });
