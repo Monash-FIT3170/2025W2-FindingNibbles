@@ -87,7 +87,7 @@ export class DirectionsService {
           'User-Agent': 'FindingNibbles/1.0',
         },
       });
-
+      console.log(response);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
