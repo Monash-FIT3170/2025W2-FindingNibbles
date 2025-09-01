@@ -36,7 +36,7 @@ class _MapPageState extends State<MapPage> {
   StreamSubscription<Position>? _positionStreamSubscription;
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
-  final bool useCurrentLocation = false; // Use current location if available
+  final bool useCurrentLocation = true;
 
   // Filter variables
   int _minimumRating = 1;
@@ -61,7 +61,6 @@ class _MapPageState extends State<MapPage> {
     try {
       // Get location first
       await _getCurrentLocation();
-
       // Wait a bit for map to be ready
       await Future.delayed(const Duration(milliseconds: 300));
 
@@ -97,6 +96,15 @@ class _MapPageState extends State<MapPage> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       // Set default location if location services are disabled
+      debugPrint('Location services are disabled');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location services are disabled. Using default location (Melbourne).'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
       setState(() {
         _currentPosition = const LatLng(-37.907803, 145.133957);
       });
@@ -110,6 +118,15 @@ class _MapPageState extends State<MapPage> {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         // Set default location if permissions are denied
+        debugPrint('Location permissions denied');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied. Using default location (Melbourne).'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
         setState(() {
           _currentPosition = const LatLng(-37.907803, 145.133957);
         });
@@ -120,6 +137,15 @@ class _MapPageState extends State<MapPage> {
 
     if (permission == LocationPermission.deniedForever) {
       // Set default location if permissions are permanently denied
+      debugPrint('Location permissions denied forever');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permission permanently denied. Please enable in device settings. Using default location (Melbourne).'),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
       setState(() {
         _currentPosition = const LatLng(-37.907803, 145.133957);
       });
@@ -129,14 +155,31 @@ class _MapPageState extends State<MapPage> {
 
     try {
       // Get current position
+      debugPrint('Attempting to get current position...');
       final position = await Geolocator.getCurrentPosition();
+      debugPrint('Successfully got position: ${position.latitude}, ${position.longitude}');
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Using your current location: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
         });
       }
     } catch (e) {
       // Set default location if getting position fails
+      debugPrint('Error getting current position: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get current location: $e. Using default location (Melbourne).'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
       setState(() {
         _currentPosition = const LatLng(-37.907803, 145.133957);
       });
@@ -627,8 +670,31 @@ class _MapPageState extends State<MapPage> {
                           ],
                         ),
                       MarkerLayer(
-                        markers:
-                            _restaurants.map((restaurant) {
+                        markers: [
+                          // Current location marker (grey)
+                          if (_currentPosition != null)
+                            Marker(
+                              point: _currentPosition!,
+                              width: 30,
+                              height: 30,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[600],
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          // Restaurant markers (red)
+                          ..._restaurants.map((restaurant) {
                               return Marker(
                                 point: LatLng(
                                   restaurant.latitude,
@@ -775,6 +841,7 @@ class _MapPageState extends State<MapPage> {
                                 ),
                               );
                             }).toList(),
+                        ],
                       ),
                     ],
                   ),
