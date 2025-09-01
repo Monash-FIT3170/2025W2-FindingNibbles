@@ -40,7 +40,7 @@ export class DirectionsService {
       throw new BadRequestException('LocationIQ API key not configured');
     }
 
-    // Validate coordinates
+    // Validate and sanitize coordinates
     const startLatNum = parseFloat(startLat);
     const startLonNum = parseFloat(startLon);
     const endLatNum = parseFloat(endLat);
@@ -55,13 +55,33 @@ export class DirectionsService {
       throw new BadRequestException('Invalid coordinates provided');
     }
 
-    // LocationIQ API URL format: coordinates separated by semicolon
-    const coordinates = `${startLon},${startLat};${endLon},${endLat}`; // Note: lon,lat format for LocationIQ
+    // Validate coordinate ranges to prevent injection
+    if (
+      startLatNum < -90 ||
+      startLatNum > 90 ||
+      endLatNum < -90 ||
+      endLatNum > 90 ||
+      startLonNum < -180 ||
+      startLonNum > 180 ||
+      endLonNum < -180 ||
+      endLonNum > 180
+    ) {
+      throw new BadRequestException('Coordinates out of valid range');
+    }
+
+    // Use validated numbers to construct safe URL path
     const baseUrl = 'https://us1.locationiq.com/v1/directions/driving';
-    const url = `${baseUrl}/${coordinates}?key=${process.env.LOCATIONIQ_API_KEY}&geometries=polyline&overview=full&steps=true`;
+    const coordinates = `${startLonNum},${startLatNum};${endLonNum},${endLatNum}`; // Use validated numbers only
+
+    // Construct URL with validated, sanitized coordinates
+    const url = new URL(`${baseUrl}/${encodeURIComponent(coordinates)}`);
+    url.searchParams.set('key', process.env.LOCATIONIQ_API_KEY);
+    url.searchParams.set('geometries', 'polyline');
+    url.searchParams.set('overview', 'full');
+    url.searchParams.set('steps', 'true');
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           'User-Agent': 'FindingNibbles/1.0',
