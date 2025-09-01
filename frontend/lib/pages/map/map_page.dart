@@ -47,6 +47,8 @@ class _MapPageState extends State<MapPage> {
   List<LatLng> _routePoints = [];
   bool _isLoadingDirections = false;
   final DirectionsService _directionsService = DirectionsService();
+  double? _routeDuration; // in seconds
+  double? _routeDistance; // in meters
 
   @override
   void initState() {
@@ -410,9 +412,19 @@ class _MapPageState extends State<MapPage> {
               final points = _decodePolyline(geometry);
               debugPrint('Decoded ${points.length} points');
               
+              // Extract duration and distance from route
+              final durationValue = route['duration'];
+              final distanceValue = route['distance'];
+              
+              // Convert to double, handling both int and double types
+              final duration = durationValue is num ? durationValue.toDouble() : null;
+              final distance = distanceValue is num ? distanceValue.toDouble() : null;
+              
               if (points.isNotEmpty) {
                 setState(() {
                   _routePoints = points;
+                  _routeDuration = duration;
+                  _routeDistance = distance;
                 });
                 
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -461,6 +473,8 @@ class _MapPageState extends State<MapPage> {
   void _clearDirections() {
     setState(() {
       _routePoints = [];
+      _routeDuration = null;
+      _routeDistance = null;
     });
   }
 
@@ -612,6 +626,62 @@ class _MapPageState extends State<MapPage> {
         labelStyle: TextStyle(
           color: AppTheme.colorScheme.onPrimary,
           fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  // Helper method to format duration and distance
+  Widget _buildRouteInfoCard() {
+    if (_routeDuration == null || _routeDistance == null) {
+      return const SizedBox.shrink();
+    }
+
+    final durationInMinutes = (_routeDuration! / 60).round();
+    final distanceInKm = (_routeDistance! / 1000);
+
+    return Positioned(
+      top: 16,
+      left: 16,
+      child: Card(
+        color: Colors.white.withOpacity(0.9),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.access_time, size: 16, color: Colors.blue),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${durationInMinutes} min',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.straighten, size: 16, color: Colors.green),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${distanceInKm.toStringAsFixed(1)} km',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -800,14 +870,6 @@ class _MapPageState extends State<MapPage> {
                                               ],
                                             ),
                                             actions: [
-                                              if (_routePoints.isNotEmpty)
-                                                TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                    _clearDirections();
-                                                  },
-                                                  child: const Text('Clear Route'),
-                                                ),
                                               TextButton(
                                                 onPressed: _isLoadingDirections
                                                     ? null
@@ -868,6 +930,7 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                   _buildActiveFiltersChip(),
+                  _buildRouteInfoCard(),
                 ],
               ),
     );
