@@ -1,44 +1,5 @@
 import { RestaurantData, CuisineData } from './types';
 
-// Define the list of appliances
-export const appliances = [
-  { id: 1, name: 'Oven' },
-  { id: 2, name: 'Microwave' },
-  { id: 3, name: 'Blender' },
-  { id: 4, name: 'Food Processor' },
-  { id: 5, name: 'Air Fryer' },
-  { id: 6, name: 'Slow Cooker' },
-  { id: 7, name: 'Mixer' },
-  { id: 8, name: 'Toaster' },
-  { id: 9, name: 'Pressure Cooker' },
-  { id: 10, name: 'Rice Cooker' },
-];
-
-// Defined the list of dietary restrictions
-export const dietaryRequirements = [
-  {
-    id: 1,
-    name: 'Vegetarian',
-    description: 'No meat, fish, or poultry',
-  },
-  {
-    id: 2,
-    name: 'Vegan',
-    description: 'No animal products',
-  },
-  {
-    id: 3,
-    name: 'Gluten Free',
-    description: 'No gluten-containing foods',
-  },
-  {
-    id: 4,
-    name: 'Halal',
-    description: 'Meat from animals slaughter',
-  },
-];
-
-// Define comprehensive cuisine data
 export const cuisines: CuisineData[] = [
   {
     name: 'Italian',
@@ -525,6 +486,45 @@ export const cuisines: CuisineData[] = [
       'Modern Australian cuisine blending international influences with local ingredients',
   },
 ];
+
+// Define the list of appliances
+export const appliances = [
+  { id: 1, name: 'Oven' },
+  { id: 2, name: 'Microwave' },
+  { id: 3, name: 'Blender' },
+  { id: 4, name: 'Food Processor' },
+  { id: 5, name: 'Air Fryer' },
+  { id: 6, name: 'Slow Cooker' },
+  { id: 7, name: 'Mixer' },
+  { id: 8, name: 'Toaster' },
+  { id: 9, name: 'Pressure Cooker' },
+  { id: 10, name: 'Rice Cooker' },
+];
+
+// Defined the list of dietary restrictions
+export const dietaryRequirements = [
+  {
+    id: 1,
+    name: 'Vegetarian',
+    description: 'No meat, fish, or poultry',
+  },
+  {
+    id: 2,
+    name: 'Vegan',
+    description: 'No animal products',
+  },
+  {
+    id: 3,
+    name: 'Gluten Free',
+    description: 'No gluten-containing foods',
+  },
+  {
+    id: 4,
+    name: 'Halal',
+    description: 'Meat from animals slaughter',
+  },
+];
+
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
   {

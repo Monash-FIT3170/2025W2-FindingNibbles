@@ -1,19 +1,20 @@
 import * as fs from 'node:fs';
 import * as argon2 from 'argon2';
-import { parse } from 'csv-parse';
 
 import { PrismaClient } from '@prisma/client';
-import { dietaryRequirements, appliances } from './constants';
-import { CsvRestaurantData } from './types';
-import { cuisines } from './constants';
+import { dietaryRequirements, appliances, cuisines } from './constants';
+import { JsonRestaurantData } from './types';
 
 const prisma = new PrismaClient();
 
-/**
- * Creates cuisine objects in the database from the cuisine data
- * @param cuisineData Array of cuisine objects with name and description
- * @returns Map of cuisine names to their database IDs
- */
+interface RestaurantWithCuisines {
+  trading_name: string;
+  building_address: string;
+  longitude: string;
+  latitude: string;
+  distanceFromCBD: number;
+  cuisines: string[];
+}
 
 async function main(): Promise<void> {
   // If you need to reset the database first, run `npx prisma db reset`
@@ -33,66 +34,164 @@ async function main(): Promise<void> {
       },
     });
 
-    const processFile = async (): Promise<CsvRestaurantData[]> => {
-      const records: CsvRestaurantData[] = [];
-      const parser = fs.createReadStream(`${__dirname}/restaurants.csv`).pipe(
-        parse({
-          columns: true,
-          skip_empty_lines: true,
-          skip_records_with_empty_values: true,
-        }),
-      );
-      for await (const record of parser) {
-        records.push(record as CsvRestaurantData);
-      }
-      return records;
-    };
+    // Check if we have pre-generated restaurant-cuisine data
+    const preGeneratedDataPath = `${__dirname}/cuisine/restaurants_with_cuisines.json`;
+    let usePreGeneratedData = false;
+    let restaurantsWithCuisines: RestaurantWithCuisines[] = [];
 
-    const records = await processFile();
-    const mappedRecords = records
-      .map((r: CsvRestaurantData) => ({
+    try {
+      const fileContent = fs.readFileSync(preGeneratedDataPath, 'utf8');
+      restaurantsWithCuisines = JSON.parse(
+        fileContent,
+      ) as RestaurantWithCuisines[];
+      usePreGeneratedData = true;
+      console.log(
+        `✅ Found pre-generated cuisine data for ${restaurantsWithCuisines.length} restaurants`,
+      );
+    } catch {
+      console.log(
+        '⚠️  No pre-generated cuisine data found. Using basic restaurant data only.',
+      );
+      console.log(
+        '💡 Run "npm run db:generate-cuisines" to generate cuisine assignments first.',
+      );
+    }
+
+    interface RestaurantRecord {
+      name: string;
+      latitude: number;
+      longitude: number;
+      rating: number;
+      userRatingsTotal: number;
+      priceLevel: number;
+      address: string;
+    }
+
+    let mappedRecords: RestaurantRecord[];
+
+    if (usePreGeneratedData) {
+      // Use pre-generated data with cuisines
+      mappedRecords = restaurantsWithCuisines.map((r) => ({
         name: r.trading_name,
         latitude: parseFloat(r.latitude),
         longitude: parseFloat(r.longitude),
         rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
         userRatingsTotal: Math.floor(Math.random() * 500) + 1,
         priceLevel: Math.floor(Math.random() * 4) + 1,
-        address: r.business_address,
-      }))
-      .filter(
-        (r) =>
-          !isNaN(r.latitude) &&
-          !isNaN(r.longitude) &&
-          r.latitude >= -90 &&
-          r.latitude <= 90 &&
-          r.longitude >= -180 &&
-          r.longitude <= 180,
-      );
+        address: r.building_address,
+      }));
+    } else {
+      // Fallback to basic restaurant data from JSON
+      const processFile = (): JsonRestaurantData[] => {
+        const fileContent = fs.readFileSync(
+          `${__dirname}/cuisine/restaurants_cleaned.json`,
+          'utf8',
+        );
+        const records: JsonRestaurantData[] = JSON.parse(
+          fileContent,
+        ) as JsonRestaurantData[];
+        return records;
+      };
 
+      const records = processFile();
+      mappedRecords = records
+        .map((r: JsonRestaurantData) => ({
+          name: r.trading_name,
+          latitude: parseFloat(r.latitude),
+          longitude: parseFloat(r.longitude),
+          rating: Math.round((Math.random() * 4 + 1) * 10) / 10,
+          userRatingsTotal: Math.floor(Math.random() * 500) + 1,
+          priceLevel: Math.floor(Math.random() * 4) + 1,
+          address: r.building_address,
+        }))
+        .filter(
+          (r) =>
+            !isNaN(r.latitude) &&
+            !isNaN(r.longitude) &&
+            r.latitude >= -90 &&
+            r.latitude <= 90 &&
+            r.longitude >= -180 &&
+            r.longitude <= 180,
+        );
+    }
+
+    console.log(`📍 Creating ${mappedRecords.length} restaurants...`);
     await prisma.restaurant.createMany({
       data: mappedRecords,
     });
 
-    // ADD CUISINE CODE HERE. FIND RESTAURANTS WITHIN 10KM OF MELBOURNE CBD
-    // AND FETCH CUISINES FOR THEM FROM GEMINI MODEL
-
+    // Create all possible cuisines
     const cuisineMap = new Map<string, number>();
+    console.log('🍽️  Creating cuisine types...');
 
-    for (const cuisine of cuisines) {
-      const created = await prisma.cuisine.create({
+    for (const cuisineData of cuisines) {
+      const cuisine = await prisma.cuisine.create({
         data: {
-          name: cuisine.name,
-          description: cuisine.description,
+          name: cuisineData.name,
+          description: cuisineData.description,
         },
       });
-      cuisineMap.set(cuisine.name, created.id);
+      cuisineMap.set(cuisineData.name, cuisine.id);
     }
 
-    for (const cuisineName of cuisineMap.keys()) {
-      const cuisine = await prisma.cuisine.create({
-        data: { name: cuisineName },
+    // Create restaurant-cuisine relationships if we have pre-generated data
+    if (usePreGeneratedData) {
+      console.log('🔗 Creating restaurant-cuisine relationships...');
+
+      const createdRestaurants = await prisma.restaurant.findMany({
+        select: { id: true, name: true },
       });
-      cuisineMap.set(cuisineName, cuisine.id);
+
+      // Create a map for quick restaurant lookup
+      const restaurantNameToId = new Map<string, number>();
+      createdRestaurants.forEach((restaurant) => {
+        restaurantNameToId.set(restaurant.name, restaurant.id);
+      });
+
+      let relationshipsCreated = 0;
+      for (const restaurantData of restaurantsWithCuisines) {
+        const restaurantId = restaurantNameToId.get(
+          restaurantData.trading_name,
+        );
+
+        if (restaurantId) {
+          for (const cuisineName of restaurantData.cuisines) {
+            const cuisineId = cuisineMap.get(cuisineName);
+            if (cuisineId) {
+              await prisma.restaurantCuisine.create({
+                data: {
+                  restaurantId: restaurantId,
+                  cuisineId: cuisineId,
+                },
+              });
+              relationshipsCreated++;
+            }
+          }
+        }
+      }
+
+      console.log(
+        `✅ Created ${relationshipsCreated} restaurant-cuisine relationships`,
+      );
+
+      // Show cuisine distribution
+      const cuisineCounts = restaurantsWithCuisines.reduce(
+        (acc, restaurant) => {
+          restaurant.cuisines.forEach((cuisine) => {
+            acc[cuisine] = (acc[cuisine] || 0) + 1;
+          });
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      console.log('📊 Top cuisine types:');
+      Object.entries(cuisineCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .forEach(([cuisine, count]) => {
+          console.log(`  ${cuisine}: ${count} restaurants`);
+        });
     }
 
     await prisma.dietaryRequirement.createMany({
