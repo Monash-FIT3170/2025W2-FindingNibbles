@@ -360,11 +360,15 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   children: [
                     Icon(Icons.restaurant, color: colorScheme.primary),
                     const SizedBox(width: 8),
-                    Text(
-                      'Scanning menu for ${widget.restaurantName}',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        'Scanning menu for ${widget.restaurantName}',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
                     ),
                   ],
