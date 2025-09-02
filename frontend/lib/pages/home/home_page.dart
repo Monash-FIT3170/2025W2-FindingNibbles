@@ -5,6 +5,7 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'package:nibbles/theme/app_theme.dart';
 import 'dart:math';
 
 class HomePage extends StatefulWidget {
@@ -560,40 +561,151 @@ class _HomePageState extends State<HomePage> {
                       itemBuilder: (context, index) {
                         final restaurant = _restaurants[index];
                         return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  restaurant.name,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    color: colorScheme.primary,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      color: colorScheme.secondary,
-                                      size: 18,
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(
+                                    restaurant.name,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      restaurant.rating?.toStringAsFixed(1) ??
-                                          '',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      RichText(
+                                        text: TextSpan(
+                                          style: DefaultTextStyle.of(context).style,
+                                          children: [
+                                            const TextSpan(
+                                              text: 'Rating: ',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.rating}',
+                                            ),
+                                          ],
+                                        ),
                                       ),
+                                      const SizedBox(height: 8),
+                                      RichText(
+                                        text: TextSpan(
+                                          style: DefaultTextStyle.of(context).style,
+                                          children: [
+                                            const TextSpan(
+                                              text: 'Total reviews: ',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.userRatingsTotal}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      RichText(
+                                        text: TextSpan(
+                                          style: DefaultTextStyle.of(context).style,
+                                          children: [
+                                            const TextSpan(
+                                              text: 'PH: ',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.formattedPhoneNum ?? 'Not available'}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      RichText(
+                                        text: TextSpan(
+                                          style: DefaultTextStyle.of(context).style,
+                                          children: [
+                                            const TextSpan(
+                                              text: 'Address: ',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                            TextSpan(
+                                              text: '${restaurant.address}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(formatPriceLevel(restaurant.priceLevel)),
-                              ],
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          restaurant.name,
+                                          style: theme.textTheme.titleSmall?.copyWith(
+                                            color: colorScheme.primary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.qr_code_scanner),
+                                        iconSize: 20,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => MenuScannerPage(
+                                                restaurantId: restaurant.id,
+                                                restaurantName: restaurant.name,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.star,
+                                        color: colorScheme.secondary,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        restaurant.rating?.toStringAsFixed(1) ??
+                                            '',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(formatPriceLevel(restaurant.priceLevel)),
+                                ],
+                              ),
                             ),
                           ),
                         );

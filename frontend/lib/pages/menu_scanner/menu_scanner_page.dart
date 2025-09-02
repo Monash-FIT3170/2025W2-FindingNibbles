@@ -6,7 +6,14 @@ import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class MenuScannerPage extends StatefulWidget {
-  const MenuScannerPage({super.key});
+  final int? restaurantId;
+  final String? restaurantName;
+  
+  const MenuScannerPage({
+    super.key,
+    this.restaurantId,
+    this.restaurantName,
+  });
 
   @override
   State<MenuScannerPage> createState() => _MenuScannerPageState();
@@ -307,7 +314,11 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menu Scanner'),
+        title: Text(
+          widget.restaurantName != null 
+            ? 'Menu Scanner - ${widget.restaurantName}'
+            : 'Menu Scanner'
+        ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
       ),
@@ -331,6 +342,32 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                     color: colorScheme.error,
                     fontWeight: FontWeight.w600,
                   ),
+                ),
+              ),
+
+            // Show restaurant info if available
+            if (widget.restaurantName != null)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colorScheme.primary),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.restaurant, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Scanning menu for ${widget.restaurantName}',
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
