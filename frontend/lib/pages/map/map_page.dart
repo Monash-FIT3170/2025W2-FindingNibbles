@@ -102,7 +102,9 @@ class _MapPageState extends State<MapPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Location services are disabled. Using default location (Melbourne).'),
+            content: Text(
+              'Location services are disabled. Using default location (Melbourne).',
+            ),
             duration: Duration(seconds: 3),
           ),
         );
@@ -124,7 +126,9 @@ class _MapPageState extends State<MapPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Location permission denied. Using default location (Melbourne).'),
+              content: Text(
+                'Location permission denied. Using default location (Melbourne).',
+              ),
               duration: Duration(seconds: 3),
             ),
           );
@@ -143,7 +147,9 @@ class _MapPageState extends State<MapPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Location permission permanently denied. Please enable in device settings. Using default location (Melbourne).'),
+            content: Text(
+              'Location permission permanently denied. Please enable in device settings. Using default location (Melbourne).',
+            ),
             duration: Duration(seconds: 4),
           ),
         );
@@ -159,7 +165,9 @@ class _MapPageState extends State<MapPage> {
       // Get current position
       debugPrint('Attempting to get current position...');
       final position = await Geolocator.getCurrentPosition();
-      debugPrint('Successfully got position: ${position.latitude}, ${position.longitude}');
+      debugPrint(
+        'Successfully got position: ${position.latitude}, ${position.longitude}',
+      );
       if (mounted) {
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
@@ -171,7 +179,9 @@ class _MapPageState extends State<MapPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to get current location: $e. Using default location (Melbourne).'),
+            content: Text(
+              'Failed to get current location: $e. Using default location (Melbourne).',
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -381,8 +391,10 @@ class _MapPageState extends State<MapPage> {
     });
 
     try {
-      debugPrint('Getting directions from ${_currentPosition!.latitude}, ${_currentPosition!.longitude} to ${restaurant.latitude}, ${restaurant.longitude}');
-      
+      debugPrint(
+        'Getting directions from ${_currentPosition!.latitude}, ${_currentPosition!.longitude} to ${restaurant.latitude}, ${restaurant.longitude}',
+      );
+
       final directionsData = await _directionsService.getDirections(
         startLat: _currentPosition!.latitude,
         startLon: _currentPosition!.longitude,
@@ -394,35 +406,42 @@ class _MapPageState extends State<MapPage> {
 
       if (directionsData != null) {
         // Check if we have routes
-        if (directionsData['routes'] != null && directionsData['routes'] is List) {
+        if (directionsData['routes'] != null &&
+            directionsData['routes'] is List) {
           final routes = directionsData['routes'] as List;
           if (routes.isNotEmpty) {
             final route = routes[0] as Map<String, dynamic>;
             final geometry = route['geometry'];
-            
+
             if (geometry != null && geometry is String) {
-              debugPrint('Decoding polyline geometry: ${geometry.substring(0, math.min(50, geometry.length))}...');
-              
+              debugPrint(
+                'Decoding polyline geometry: ${geometry.substring(0, math.min(50, geometry.length))}...',
+              );
+
               final points = _decodePolyline(geometry);
               debugPrint('Decoded ${points.length} points');
-              
+
               // Extract duration and distance from route
               final durationValue = route['duration'];
               final distanceValue = route['distance'];
-              
+
               // Convert to double, handling both int and double types
-              final duration = durationValue is num ? durationValue.toDouble() : null;
-              final distance = distanceValue is num ? distanceValue.toDouble() : null;
-              
+              final duration =
+                  durationValue is num ? durationValue.toDouble() : null;
+              final distance =
+                  distanceValue is num ? distanceValue.toDouble() : null;
+
               if (points.isNotEmpty) {
                 setState(() {
                   _routePoints = points;
                   _routeDuration = duration;
                   _routeDistance = distance;
                 });
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Directions to ${restaurant.name} loaded!')),
+                  SnackBar(
+                    content: Text('Directions to ${restaurant.name} loaded!'),
+                  ),
                 );
                 return;
               } else {
@@ -444,7 +463,9 @@ class _MapPageState extends State<MapPage> {
       debugPrint('Exception getting directions: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error getting directions: ${e.toString().replaceFirst('Exception: ', '')}'),
+          content: Text(
+            'Error getting directions: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
           duration: const Duration(seconds: 5),
         ),
       );
@@ -759,144 +780,152 @@ class _MapPageState extends State<MapPage> {
                             ),
                           // Restaurant markers (red)
                           ..._restaurants.map((restaurant) {
-                              return Marker(
-                                point: LatLng(
-                                  restaurant.latitude,
-                                  restaurant.longitude,
-                                ),
-                                width: 40,
-                                height: 40,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              restaurant.name,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.titleLarge,
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Rating: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
+                            return Marker(
+                              point: LatLng(
+                                restaurant.latitude,
+                                restaurant.longitude,
+                              ),
+                              width: 40,
+                              height: 40,
+                              child: GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text(
+                                            restaurant.name,
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.titleLarge,
+                                          ),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              RichText(
+                                                text: TextSpan(
+                                                  style:
+                                                      DefaultTextStyle.of(
+                                                        context,
+                                                      ).style,
+                                                  children: [
+                                                    TextSpan(
+                                                      text: 'Rating: ',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                       ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.rating}',
-                                                      ),
-                                                    ],
-                                                  ),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          '${restaurant.rating}',
+                                                    ),
+                                                  ],
                                                 ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Total reviews: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.userRatingsTotal}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Address: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.address}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: _isLoadingDirections
-                                                    ? null
-                                                    : () {
-                                                        Navigator.pop(context);
-                                                        _getDirectionsToRestaurant(restaurant);
-                                                      },
-                                                child: _isLoadingDirections
-                                                    ? const SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                                      )
-                                                    : const Text('Get Directions'),
                                               ),
-                                              TextButton(
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                                child: const Text('Close'),
+                                              SizedBox(height: 8),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: 'Total reviews: ',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          '${restaurant.userRatingsTotal}',
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: 'PH: ',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          restaurant
+                                                              .formattedPhoneNum ??
+                                                          'Not available',
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text.rich(
+                                                TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: 'Address: ',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          '${restaurant.address}',
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
                                             ],
                                           ),
-                                    );
-                                  },
-                                  child: const Icon(
-                                    Icons.location_pin,
-                                    color: Colors.red,
-                                    size: 40,
-                                  ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  _isLoadingDirections
+                                                      ? null
+                                                      : () {
+                                                        Navigator.pop(context);
+                                                        _getDirectionsToRestaurant(
+                                                          restaurant,
+                                                        );
+                                                      },
+                                              child:
+                                                  _isLoadingDirections
+                                                      ? const SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              strokeWidth: 2,
+                                                            ),
+                                                      )
+                                                      : const Text(
+                                                        'Get Directions',
+                                                      ),
+                                            ),
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(context),
+                                              child: const Text('Close'),
+                                            ),
+                                          ],
+                                        ),
+                                  );
+                                },
+                                child: const Icon(
+                                  Icons.location_pin,
+                                  color: Colors.red,
+                                  size: 40,
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                            );
+                          }).toList(),
                         ],
                       ),
                     ],

@@ -32,13 +32,15 @@ class DirectionsService {
         debugPrint('Successfully received directions data');
         return response.data;
       } else {
-        throw Exception('Failed to get directions: HTTP ${response.statusCode}');
+        throw Exception(
+          'Failed to get directions: HTTP ${response.statusCode}',
+        );
       }
     } on DioException catch (e) {
       debugPrint('DioException: ${e.type}');
       debugPrint('Error message: ${e.message}');
       debugPrint('Response data: ${e.response?.data}');
-      
+
       // Return more specific error messages
       if (e.response?.data != null && e.response!.data is Map) {
         final errorData = e.response!.data as Map<String, dynamic>;
@@ -46,7 +48,7 @@ class DirectionsService {
           throw Exception('Directions error: ${errorData['message']}');
         }
       }
-      
+
       throw Exception('Network error getting directions: ${e.message}');
     } catch (e) {
       debugPrint('General error getting directions: $e');
