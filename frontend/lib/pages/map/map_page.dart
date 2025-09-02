@@ -438,11 +438,13 @@ class _MapPageState extends State<MapPage> {
                   _routeDistance = distance;
                 });
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Directions to ${restaurant.name} loaded!'),
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Directions to ${restaurant.name} loaded!'),
+                    ),
+                  );
+                }
                 return;
               } else {
                 throw Exception('No route points could be decoded');
@@ -461,22 +463,26 @@ class _MapPageState extends State<MapPage> {
       }
     } on Exception catch (e) {
       debugPrint('Exception getting directions: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error getting directions: ${e.toString().replaceFirst('Exception: ', '')}',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error getting directions: ${e.toString().replaceFirst('Exception: ', '')}',
+            ),
+            duration: const Duration(seconds: 5),
           ),
-          duration: const Duration(seconds: 5),
-        ),
-      );
+        );
+      }
     } catch (e) {
       debugPrint('Unexpected error getting directions: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Unexpected error: ${e.toString()}'),
-          duration: const Duration(seconds: 5),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unexpected error: ${e.toString()}'),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoadingDirections = false;
@@ -659,7 +665,7 @@ class _MapPageState extends State<MapPage> {
       top: 16,
       left: 16,
       child: Card(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -672,7 +678,7 @@ class _MapPageState extends State<MapPage> {
                   const Icon(Icons.access_time, size: 16, color: Colors.blue),
                   const SizedBox(width: 4),
                   Text(
-                    '${durationInMinutes} min',
+                    '$durationInMinutes min',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -925,7 +931,7 @@ class _MapPageState extends State<MapPage> {
                                 ),
                               ),
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                     ],
