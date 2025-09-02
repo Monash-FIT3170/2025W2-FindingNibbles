@@ -29,7 +29,9 @@ class AuthService {
       // Android - use Web client ID for server verification (required for Android Credential Manager)
       _googleSignIn = GoogleSignIn(
         scopes: ['email'],
-        serverClientId: AppConstants.googleClientIdWeb, // Use Web client ID for server verification
+        serverClientId:
+            AppConstants
+                .googleClientIdWeb, // Use Web client ID for server verification
       );
     } else {
       // Other platforms
