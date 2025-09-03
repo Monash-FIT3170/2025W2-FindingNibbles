@@ -35,7 +35,6 @@ class CuisineService {
       // Combine favourites first, then the rest
       final mergedList = [...favCuisines, ...nonFavCuisines];
 
-
       return mergedList;
     } catch (e) {
       rethrow;
