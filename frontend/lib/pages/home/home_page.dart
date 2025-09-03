@@ -593,7 +593,9 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                 ),
                                                 TextSpan(
-                                                  text: restaurant.rating.toString(),
+                                                  text:
+                                                      restaurant.rating
+                                                          .toString(),
                                                 ),
                                               ],
                                             ),
@@ -613,7 +615,10 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                 ),
                                                 TextSpan(
-                                                  text: restaurant.userRatingsTotal.toString(),
+                                                  text:
+                                                      restaurant
+                                                          .userRatingsTotal
+                                                          .toString(),
                                                 ),
                                               ],
                                             ),
@@ -633,7 +638,10 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                 ),
                                                 TextSpan(
-                                                  text: restaurant.formattedPhoneNum ?? 'Not available',
+                                                  text:
+                                                      restaurant
+                                                          .formattedPhoneNum ??
+                                                      'Not available',
                                                 ),
                                               ],
                                             ),
