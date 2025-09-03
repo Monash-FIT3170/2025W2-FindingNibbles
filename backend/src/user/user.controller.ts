@@ -8,12 +8,16 @@ import {
   Patch,
   Put,
   Logger,
+  Query,
 } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common/exceptions';
+import {
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common/exceptions';
 import { UserService } from './user.service';
 import { RequestUser } from 'src/types';
 import { CreateDietaryRequirementDto } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
-import { UpdateUserDto } from './dto/update-user_dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 
@@ -25,6 +29,62 @@ export class UserController {
   @Get('profile')
   async getProfile(@Req() req: RequestUser) {
     return this.userService.getProfile(req.user.sub);
+  }
+
+  @Post('calorie-log')
+  logCalorie(
+    @Req() req: RequestUser,
+    @Body('calories') calories: number,
+    @Body('date') dateStr: string,
+    @Body('recipeId') recipeId: number,
+  ) {
+    let date: Date;
+    if (dateStr) {
+      const parsedDate = new Date(dateStr);
+      if (isNaN(parsedDate.getTime())) {
+        throw new BadRequestException('Invalid date');
+      }
+      date = parsedDate;
+    } else {
+      date = new Date();
+    }
+    return this.userService.logCalorie(req.user.sub, calories, date, recipeId);
+  }
+
+  @Get('calorie-log')
+  getDailyCalories(
+    @Req() req: RequestUser,
+    @Query('date') dateStr: string,
+  ): Promise<number> {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date');
+    }
+    return this.userService.getDailyCalories(req.user.sub, date);
+  }
+
+  @Get('calorie-log-recipes')
+  getCalorieLogRecipes(
+    @Req() req: RequestUser,
+    @Query('date') dateStr: string,
+  ) {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date');
+    }
+    return this.userService.getDailyCalorieLogs(req.user.sub, date);
+  }
+
+  @Delete('calorie-log')
+  async deleteCalorieLog(
+    @Req() req: RequestUser,
+    @Body('logId') logId: number,
+  ) {
+    if (!logId || typeof logId !== 'number' || logId <= 0) {
+      throw new BadRequestException('Invalid logId');
+    }
+    await this.userService.removeCalorieLog(req.user.sub, logId);
+    return { success: true };
   }
 
   @Post('favourite-restaurant')
@@ -186,5 +246,13 @@ export class UserController {
       `User with ID ${req.user.sub} updated location with ID ${updatedLocation.id}`,
     );
     return updatedLocation;
+  }
+  @Delete('location')
+  async removeLocation(
+    @Req() req: RequestUser,
+    @Body('locationId') locationId: number,
+  ) {
+    await this.userService.removeUserLocation(req.user.sub, locationId);
+    return { message: 'Location removed successfully' };
   }
 }

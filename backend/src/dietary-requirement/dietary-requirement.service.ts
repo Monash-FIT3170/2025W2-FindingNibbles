@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
-import { Prisma } from 'generated/prisma';
+import { Prisma } from '@prisma/client';
 import { DietaryRequirementDto } from './dto/create-dietary-requirement.dto';
 
 @Injectable()

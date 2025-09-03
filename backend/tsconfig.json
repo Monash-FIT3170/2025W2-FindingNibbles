@@ -16,10 +16,8 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": ["node", "multer", "jest"]
   },
-  "include": [
-    "src",
-    "generated/prisma"
-  ]
+  "include": ["src", "prisma"]
 }

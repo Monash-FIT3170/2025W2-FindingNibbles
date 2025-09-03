@@ -1,5 +1,10 @@
 import * as argon2 from 'argon2';
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './strategies/jwt/jwt.strategy';
@@ -10,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { MailerService } from '../mailer/mailer.service';
 import { OAuth2Client } from 'google-auth-library';
 import { AuthTokens } from './dto/tokens.dto';
-import { User } from 'generated/prisma';
+import { User } from '@prisma/client';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
@@ -156,6 +161,7 @@ export class AuthService {
     const ticket = await this.googleClient.verifyIdToken({
       idToken: token,
       audience: [
+        this.configService.get<string>('GOOGLE_CLIENT_ID') || '', // Web client ID (used by Android Credential Manager)
         this.configService.get<string>('GOOGLE_CLIENT_ID_ANDROID') || '',
         this.configService.get<string>('GOOGLE_CLIENT_ID_IOS') || '',
       ],

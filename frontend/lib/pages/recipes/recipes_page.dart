@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/widgets/appliances_selection.dart';
 import 'package:nibbles/pages/recipes/widgets/dietary_requirements.dart';
@@ -29,6 +30,7 @@ class _RecipesPageState extends State<RecipesPage> {
   List<DietaryRequirementDto> selectedDietaries = [];
   bool isLoading = false;
   bool useDietaryRequirements = true;
+  int? calorieCount;
 
   // Services
   final ProfileService _profileService = ProfileService();
@@ -105,6 +107,28 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Future<void> _generateRecipes() async {
+    // Check if at least one appliance is selected
+    if (selectedAppliances.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Missing Kitchen Appliances'),
+            content: const Text(
+              'Please select at least one kitchen appliance to generate recipes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
     // Show loading dialog
     showDialog(
       context: context,
@@ -140,6 +164,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 : [],
         kitchenAppliances: selectedAppliances.map((a) => a.id).toList(),
         difficultyLevel: selectedDifficulty,
+        calorieCount: calorieCount,
       );
 
       _logger.d(recipeResults);
@@ -346,6 +371,25 @@ class _RecipesPageState extends State<RecipesPage> {
                                 onRemoveIngredient: _removeIngredient,
                               ),
                             ),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Calorie Count (Optional)',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  calorieCount = int.tryParse(value);
+                                });
+                              },
+                            ),
                           ],
                         ),
                       ),
@@ -385,9 +429,19 @@ class _RecipesPageState extends State<RecipesPage> {
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: _generateRecipes,
+                            onPressed:
+                                selectedAppliances.isNotEmpty
+                                    ? _generateRecipes
+                                    : null,
                             icon: Icon(Icons.restaurant_menu),
                             label: Text('Generate Recipes'),
+                            style:
+                                selectedAppliances.isEmpty
+                                    ? ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.grey.shade300,
+                                      foregroundColor: Colors.grey.shade600,
+                                    )
+                                    : null,
                           ),
                         ),
                       ),

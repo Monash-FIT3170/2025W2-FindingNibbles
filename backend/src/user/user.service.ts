@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma, Restaurant } from 'generated/prisma';
+import { Prisma, Restaurant } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
 import {
@@ -34,6 +34,118 @@ export class UserService {
   async update(id: number, updateUserDto: Prisma.UserUpdateInput) {
     return this.db.user.update({ where: { id }, data: updateUserDto });
   }
+
+  async logCalorie(
+    userId: number,
+    calories: number,
+    date: Date,
+    recipeId: number,
+  ): Promise<any> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const calorieLog = await this.db.userCalorieLog.create({
+        data: {
+          userId: userId,
+          calories: calories,
+          date: date,
+          recipeId: recipeId,
+        },
+      });
+
+      this.logger.log(
+        `Logged ${calories} calories for user ${userId} on ${date?.toISOString()}`,
+      );
+      return calorieLog;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to log calories for user ${userId}: ${error.message}`,
+          error.stack,
+        );
+      } else {
+        this.logger.error(
+          `Failed to log calories for user ${userId}: ${JSON.stringify(error)}`,
+        );
+      }
+      throw error;
+    }
+  }
+
+  async getDailyCalories(userId: number, date: Date): Promise<number> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const calorieLogs = await this.db.userCalorieLog.findMany({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    let totalCalories = 0;
+    calorieLogs.forEach((log) => {
+      totalCalories += log.calories;
+    });
+
+    return totalCalories;
+  }
+
+  async getDailyCalorieLogs(userId: number, date: Date): Promise<RecipeDto[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    const calorieLogs = await this.db.userCalorieLog.findMany({
+      where: {
+        userId: userId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      include: {
+        recipe: {
+          include: {
+            cuisine: true,
+          },
+        },
+      },
+    });
+
+    return calorieLogs.map((log) => ({
+      id: log.recipe.id,
+      title: log.recipe.title,
+      description: log.recipe.description,
+      ingredients: log.recipe.ingredients,
+      instructions: log.recipe.instructions,
+      estimatedTimeMinutes: log.recipe.estimatedTimeMinutes,
+      servings: log.recipe.servings,
+      nutritionalInfo: log.recipe.nutritionalInfo,
+      difficultyLevel: log.recipe.difficultyLevel,
+      cuisine: log.recipe.cuisine?.name || 'Other',
+      cuisineId: log.recipe.cuisine?.id ?? 0,
+      dietaryTags: log.recipe.dietaryTags || [],
+      logId: log.id,
+    }));
+  }
+
+  async removeCalorieLog(userId: number, logId: number) {
+    await this.db.userCalorieLog.delete({
+      where: {
+        id: logId,
+        userId: userId,
+      },
+    });
+  }
+
   /**
    * Create a new user favourite restaurant
    * @param userId d

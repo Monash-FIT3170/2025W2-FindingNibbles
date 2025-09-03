@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -30,7 +23,6 @@ model User {
   userDietaries          UserDietary[]
   mealPlans              UserMealPlan[]
   calorieLogs            UserCalorieLog[]
-  restaurantReviews      RestaurantReview[]
   favouriteRestaurants   UserFavouritedRestaurant[]
   userCuisinePreferences UserCuisine[]
   appliances             UserAppliance[]
@@ -105,27 +97,24 @@ model UserCuisine {
 
 model Restaurant {
   id                 Int                        @id @default(autoincrement())
-  place_id           String                     @unique // Google Places ID
   name               String
   latitude           Float
   longitude          Float
-  businessStatus     String?
   icon               String?
   rating             Float?
   userRatingsTotal   Int?
   priceLevel         Int?
   restaurantCuisines RestaurantCuisine[]
   favouritedBy       UserFavouritedRestaurant[]
-
-  // Detailed information (from Details API)
-  hasDetails        Boolean            @default(false) // Flag if we have detailed info
-  formattedAddress  String?
-  formattedPhoneNum String?
+  address  String?
   website           String?
   openingHours      Json?
   photos            Photo[]
-  restaurantReviews RestaurantReview[]
 
+  // Menu Information
+  dishes             Dish[]
+  menuUrl            String?       
+  
   // Additional place details
   dineIn                       Boolean?
   takeout                      Boolean?
@@ -152,35 +141,6 @@ model Photo {
   width            Int
   htmlAttributions String[]
   createdAt        DateTime   @default(now())
-}
-
-model RestaurantReview {
-  id           Int        @id @default(autoincrement())
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
-  restaurantId Int
-
-  // Core review data
-  authorName String? // from Google or user's name
-  rating     Int
-  text       String?
-  time       DateTime? // original timestamp (Google) or set by user
-
-  // Distinguish Google-sourced vs. user-submitted
-  source            ReviewSource @default(LOCAL)
-  googleReviewId    String?      @unique
-  profile_photo_url String? // Google profile photo URL
-
-  // Optional relation to your application user for LOCAL reviews
-  user   User? @relation(fields: [userId], references: [id])
-  userId Int?
-
-  createdAt DateTime @default(now())
-}
-
-// Review source indicator
-enum ReviewSource {
-  GOOGLE
-  LOCAL
 }
 
 model Cuisine {
@@ -216,6 +176,8 @@ model Dish {
   mealPlanDishes MealPlanDish[]
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+
+  Restaurant Restaurant[]
 }
 
 model DishDietary {
@@ -248,8 +210,10 @@ model MealPlanDish {
 
 model UserCalorieLog {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
   userId    Int
+  recipeId  Int
+  recipe    Recipe  @relation(fields: [recipeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   date      DateTime
   calories  Int
   createdAt DateTime @default(now())
@@ -307,6 +271,8 @@ model Recipe {
   instructions         String[]
   appliances           RecipeUserAppliance[]
   favouriteBy          UserFavouritedRecipe[]
+  loggedBy             UserCalorieLog[]
+  calories             Int?
   estimatedTimeMinutes Int
   servings             Int
   dietaryTags          String[]

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart';
 import 'recipe_model.dart';
 
 class RecipeIngredientsPage extends StatefulWidget {
@@ -12,6 +14,8 @@ class RecipeIngredientsPage extends StatefulWidget {
 class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
   int currentTab = 0;
+  final RecipeService _recipeService = RecipeService();
+  final _logger = getLogger();
 
   late List<bool> checkedIngredients;
 
@@ -22,6 +26,36 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
       widget.recipe.ingredients.length,
       (_) => false,
     );
+  }
+
+  Future<void> _logCalories() async {
+    DateTime? selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (selectedDate != null) {
+      try {
+        await _recipeService.logCalories(
+          widget.recipe.calories,
+          selectedDate,
+          widget.recipe,
+        );
+        if (!mounted) return;
+        _logger.i('Calories logged successfully!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Calories logged successfully!')),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        _logger.e('Failed to log calories: ${e.toString()}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   Widget _buildIngredientsList(TextTheme textTheme, ColorScheme colorScheme) {
@@ -136,16 +170,14 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           ),
 
           // Step navigation at the bottom - horizontally scrollable
-          Center(
-            child: Container(
-              width:
-                  MediaQuery.of(context).size.width *
-                  5 /
-                  6, // Limit width to 5/6 of screen
-              padding: const EdgeInsets.symmetric(vertical: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(widget.recipe.instructions.length, (
                     index,
@@ -205,18 +237,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        leading: BackButton(color: colorScheme.onSurface),
-        title: Text(
-          widget
-              .recipe
-              .title, // Changed from 'Recipe List' to actual recipe title
-          style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
-        ),
-      ),
+      appBar: AppBar(title: Text(widget.recipe.title)),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -272,6 +294,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   currentTab == 0
                       ? _buildIngredientsList(textTheme, colorScheme)
                       : _buildInstructionList(textTheme, colorScheme),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _logCalories,
+                child: const Text('Log Calories'),
+              ),
             ),
           ],
         ),

@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/pages/profile_page.dart';
-import '../pages/home_page.dart';
+import 'package:nibbles/pages/profile/profile_page.dart';
+import '../pages/home/home_page.dart';
 import '../pages/recipes/recipes_page.dart';
-import '../pages/map_page.dart';
+import '../pages/map/map_page.dart';
 
 class AppNavigation extends StatefulWidget {
-  const AppNavigation({super.key});
+  final int initialPageIndex;
+  const AppNavigation({super.key, this.initialPageIndex = 0});
 
   @override
   State<AppNavigation> createState() => _AppNavigationState();
 }
 
 class _AppNavigationState extends State<AppNavigation> {
-  int currentPageIndex = 0;
+  late int currentPageIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    currentPageIndex = widget.initialPageIndex;
+  }
 
   @override
   Widget build(BuildContext context) {

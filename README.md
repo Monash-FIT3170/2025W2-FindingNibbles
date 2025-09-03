@@ -75,14 +75,8 @@ Our project leverages a modern, scalable technology stack:
 
 ## Infrastructure
 
-- **OpenTofu**: Infrastructure as Code (IaC) tool
-  - Declarative configuration for cloud resources
-  - State management for infrastructure
-  - Modular structure for reusable components
 - **Google Cloud Platform (GCP)**: Cloud provider
-  - Cloud Run for containerized applications
-  - Cloud SQL for managed database services
-  - Cloud Storage for object storage
+  - Compute Engine for database, backend, and object storage
 
 ## CI/CD Pipeline
 
@@ -93,10 +87,6 @@ Our project leverages a modern, scalable technology stack:
 
 ## AI/ML
 
-- **SciKit Learn**: Machine learning library
-  - Implementation of collaborative filtering algorithms for recommendations
-  - Feature engineering and data preprocessing
-  - Model evaluation and validation
 - **Google Gemini**: Large Language Model
   - Natural language processing for menu analysis
   - Recipe generation and recommendations

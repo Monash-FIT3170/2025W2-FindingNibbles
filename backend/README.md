@@ -2,7 +2,10 @@
 
 ```bash
 $ npm install
-$ npx prisma generate
+$ cd backend
+$ docker compose up -d
+$ npm run db:push
+$ npm run db:seed
 ```
 
 ## Compile and run the project

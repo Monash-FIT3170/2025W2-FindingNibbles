@@ -8,12 +8,20 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RestaurantService } from './restaurant.service';
-import { Prisma } from '../../generated/prisma';
-import { Restaurant } from 'generated/prisma';
+import { Prisma, Restaurant } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('restaurant')
 export class RestaurantController {
-  constructor(private readonly restaurantService: RestaurantService) {}
+  private readonly googlePlacesConfig: { apiKey: string };
+  constructor(
+    private readonly restaurantService: RestaurantService,
+    private configService: ConfigService,
+  ) {
+    this.googlePlacesConfig = {
+      apiKey: this.configService.get<string>('GOOGLE_PLACES_API_KEY') || '',
+    };
+  }
 
   // Fetch all restaurants with optional pagination, sorting, and filtering
   @Get()
@@ -130,5 +138,24 @@ export class RestaurantController {
 
     await this.restaurantService.incrementViewCount(id);
     return restaurant;
+  }
+
+  /**
+   * Get photo URL from photo reference
+   * GET /restaurant/places/photo/:photoReference?maxWidth=<width>
+   */
+  @Get('places/photo/:photoReference')
+  getPhotoUrl(
+    @Param('photoReference') photoReference: string,
+    @Query('maxWidth') maxWidth?: string,
+  ) {
+    if (!photoReference) {
+      throw new BadRequestException('Photo reference is required');
+    }
+
+    const width = maxWidth ? parseInt(maxWidth) : 400;
+    return {
+      photoUrl: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${width}&photo_reference=${photoReference}&key=${this.googlePlacesConfig.apiKey}`,
+    };
   }
 }
