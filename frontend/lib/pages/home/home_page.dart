@@ -149,6 +149,7 @@ class _HomePageState extends State<HomePage> {
                           );
 
                           if (!alreadyLiked) {
+                            if (!context.mounted) return;
                             final shouldAdd = await showDialog<bool>(
                               context: context,
                               builder:
@@ -180,6 +181,7 @@ class _HomePageState extends State<HomePage> {
                                 setState(() {
                                   _favoriteCuisines.add(value);
                                 });
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
@@ -189,6 +191,7 @@ class _HomePageState extends State<HomePage> {
                                 );
                               } catch (e) {
                                 debugPrint("Failed to add ${value.name}: $e");
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
