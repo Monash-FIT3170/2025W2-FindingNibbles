@@ -8,12 +8,8 @@ import 'package:nibbles/theme/app_theme.dart';
 class MenuScannerPage extends StatefulWidget {
   final int? restaurantId;
   final String? restaurantName;
-  
-  const MenuScannerPage({
-    super.key,
-    this.restaurantId,
-    this.restaurantName,
-  });
+
+  const MenuScannerPage({super.key, this.restaurantId, this.restaurantName});
 
   @override
   State<MenuScannerPage> createState() => _MenuScannerPageState();
@@ -315,9 +311,9 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.restaurantName != null 
-            ? 'Menu Scanner - ${widget.restaurantName}'
-            : 'Menu Scanner'
+          widget.restaurantName != null
+              ? 'Menu Scanner - ${widget.restaurantName}'
+              : 'Menu Scanner',
         ),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,

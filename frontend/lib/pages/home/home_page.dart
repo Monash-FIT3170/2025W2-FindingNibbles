@@ -565,87 +565,112 @@ class _HomePageState extends State<HomePage> {
                             onTap: () {
                               showDialog(
                                 context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(
-                                    restaurant.name,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: Text(
+                                        restaurant.name,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          RichText(
+                                            text: TextSpan(
+                                              style:
+                                                  DefaultTextStyle.of(
+                                                    context,
+                                                  ).style,
+                                              children: [
+                                                const TextSpan(
+                                                  text: 'Rating: ',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: '${restaurant.rating}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          RichText(
+                                            text: TextSpan(
+                                              style:
+                                                  DefaultTextStyle.of(
+                                                    context,
+                                                  ).style,
+                                              children: [
+                                                const TextSpan(
+                                                  text: 'Total reviews: ',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text:
+                                                      '${restaurant.userRatingsTotal}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          RichText(
+                                            text: TextSpan(
+                                              style:
+                                                  DefaultTextStyle.of(
+                                                    context,
+                                                  ).style,
+                                              children: [
+                                                const TextSpan(
+                                                  text: 'PH: ',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text:
+                                                      '${restaurant.formattedPhoneNum ?? 'Not available'}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          RichText(
+                                            text: TextSpan(
+                                              style:
+                                                  DefaultTextStyle.of(
+                                                    context,
+                                                  ).style,
+                                              children: [
+                                                const TextSpan(
+                                                  text: 'Address: ',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                TextSpan(
+                                                  text: '${restaurant.address}',
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: const Text('Close'),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      RichText(
-                                        text: TextSpan(
-                                          style: DefaultTextStyle.of(context).style,
-                                          children: [
-                                            const TextSpan(
-                                              text: 'Rating: ',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: '${restaurant.rating}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      RichText(
-                                        text: TextSpan(
-                                          style: DefaultTextStyle.of(context).style,
-                                          children: [
-                                            const TextSpan(
-                                              text: 'Total reviews: ',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: '${restaurant.userRatingsTotal}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      RichText(
-                                        text: TextSpan(
-                                          style: DefaultTextStyle.of(context).style,
-                                          children: [
-                                            const TextSpan(
-                                              text: 'PH: ',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: '${restaurant.formattedPhoneNum ?? 'Not available'}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      RichText(
-                                        text: TextSpan(
-                                          style: DefaultTextStyle.of(context).style,
-                                          children: [
-                                            const TextSpan(
-                                              text: 'Address: ',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: '${restaurant.address}',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Close'),
-                                    ),
-                                  ],
-                                ),
                               );
                             },
                             child: Padding(
@@ -658,9 +683,10 @@ class _HomePageState extends State<HomePage> {
                                       Expanded(
                                         child: Text(
                                           restaurant.name,
-                                          style: theme.textTheme.titleSmall?.copyWith(
-                                            color: colorScheme.primary,
-                                          ),
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                                color: colorScheme.primary,
+                                              ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -674,10 +700,12 @@ class _HomePageState extends State<HomePage> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => MenuScannerPage(
-                                                restaurantId: restaurant.id,
-                                                restaurantName: restaurant.name,
-                                              ),
+                                              builder:
+                                                  (context) => MenuScannerPage(
+                                                    restaurantId: restaurant.id,
+                                                    restaurantName:
+                                                        restaurant.name,
+                                                  ),
                                             ),
                                           );
                                         },
