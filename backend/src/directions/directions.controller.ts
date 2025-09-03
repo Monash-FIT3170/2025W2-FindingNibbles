@@ -39,7 +39,9 @@ export class DirectionsController {
     }
 
     // Log the request for debugging
-    console.log(`Directions request: ${startLat},${startLon} to ${endLat},${endLon}`);
+    console.log(
+      `Directions request: ${startLat},${startLon} to ${endLat},${endLon}`,
+    );
 
     const directions = await this.directionsService.getDirections(
       startLat,

@@ -38,10 +38,7 @@ export class AuthService {
     }
 
     try {
-      await this.mailerService.sendVerificationEmail(
-        registerDto.email,
-        verifyCode,
-      );
+      this.mailerService.sendVerificationEmail(registerDto.email, verifyCode);
     } catch (err) {
       console.error('Failed to send verification email:', err);
     }
@@ -82,7 +79,7 @@ export class AuthService {
     user.verifyCode = newCode;
     await this.userService.update(user.id, { verifyCode: newCode });
     try {
-      await this.mailerService.sendNewVerificationEmail(email, newCode);
+      this.mailerService.sendNewVerificationEmail(email, newCode);
     } catch (err) {
       console.error('Failed to send new verification email:', err);
     }

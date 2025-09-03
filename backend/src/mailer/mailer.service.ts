@@ -4,13 +4,18 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailerService {
-  private transporter;
+  private fromEmail: string;
+  private transporter: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
+    this.fromEmail =
+      this.configService.get<string>('MAIL_USER') || 'findingnibbles@gmail.com';
+
+    const port = this.configService.get<number>('MAIL_PORT') || 587;
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('MAIL_HOST'),
-      port: this.configService.get<number>('MAIL_PORT'),
-      secure: false, // true for 465, false for other ports
+      port,
+      secure: port === 465,
       auth: {
         user: this.configService.get<string>('MAIL_USER'),
         pass: this.configService.get<string>('MAIL_PASS'),
@@ -18,47 +23,37 @@ export class MailerService {
     });
   }
 
-  async sendMail(to: string, subject: string, html: string) {
+  sendMail(to: string, subject: string, html: string) {
     const fromEmail = this.configService.get<string>('MAIL_USER');
-    const info = await this.transporter.sendMail({
-      from: `"Fynds" <${fromEmail}>`,
+    const mailOptions = {
+      from: `"FindingNibbles" <${fromEmail}>`,
       to,
       subject,
       html,
+    };
+
+    this.transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent successfully');
+      }
     });
-
-    console.log('✉️  Message sent: %s', info.messageId);
-    return info;
   }
 
-  async sendVerificationEmail(email: string, code: number) {
-    const fromEmail = this.configService.get<string>('MAIL_USER');
-    try {
-      const info = await this.transporter.sendMail({
-        from: `"FindingNibbles" <${fromEmail}>`,
-        to: email,
-        subject: 'Verify your email address',
-        text: `Your verification code is ${code}.`,
-      });
-
-      console.log('✉️  Verification email sent: %s', info.messageId);
-    } catch (error) {
-      console.error('❌ Error sending verification email:', error);
-    }
+  sendVerificationEmail(email: string, code: number) {
+    this.sendMail(
+      email,
+      'Verify your email address',
+      `Your verification code is ${code}.`,
+    );
   }
 
-  async sendNewVerificationEmail(email: string, code: number) {
-    const fromEmail = this.configService.get<string>('MAIL_USER');
-    try {
-      const info = await this.transporter.sendMail({
-        from: `"FindingNibbles" <${fromEmail}>`,
-        to: email,
-        subject: 'New verification code',
-        text: `Your new verification code is ${code}.`,
-      });
-      console.log('✉️  New verification email sent: %s', info.messageId);
-    } catch (error) {
-      console.error('❌ Error sending new verification email:', error);
-    }
+  sendNewVerificationEmail(email: string, code: number) {
+    this.sendMail(
+      email,
+      'New verification code',
+      `Your new verification code is ${code}.`,
+    );
   }
 }

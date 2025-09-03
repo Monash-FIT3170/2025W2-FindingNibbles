@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "multer", "jest"]
   },
-  "include": ["src", "prisma"]
+  "include": ["src", "prisma", "test"]
 }
