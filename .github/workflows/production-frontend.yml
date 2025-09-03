@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     name: Build Frontend
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     defaults:
       run:
