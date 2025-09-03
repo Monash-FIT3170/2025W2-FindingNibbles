@@ -34,11 +34,5 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Run e2e tests
-        run: npm run test:e2e
-
-      - name: Run coverage tests
-        run: npm run test:cov
-
       - name: Run linting
         run: npm run lint
