@@ -1,4 +1,4 @@
-import { RestaurantData, CuisineData } from './seedTypes';
+import { RestaurantData, CuisineData } from './types';
 
 // Define the list of appliances
 export const appliances = [
