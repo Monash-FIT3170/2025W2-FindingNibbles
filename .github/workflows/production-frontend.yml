@@ -5,12 +5,14 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
-      - ".github/workflows"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
   build:
     name: Build Frontend
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     defaults:
       run:
