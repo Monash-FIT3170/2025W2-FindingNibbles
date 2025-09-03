@@ -61,8 +61,8 @@ jobs:
         with:
           name: Releases
           path: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+            frontend/build/app/outputs/flutter-apk/app-release.apk
+            frontend/build/app/outputs/bundle/release/app-release.aab
 
       - name: Extract version from pubspec.yaml
         id: extract_version
@@ -89,5 +89,5 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/flutter-apk/app-release.apk,build/app/outputs/bundle/release/app-release.aab,build/ios_build.tar.gz"
+          artifacts: "frontend/build/app/outputs/flutter-apk/app-release.apk,frontend/build/app/outputs/bundle/release/app-release.aab"
           tag: v${{ env.VERSION }}

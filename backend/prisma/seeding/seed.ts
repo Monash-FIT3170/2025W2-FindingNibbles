@@ -5,8 +5,15 @@ import { parse } from 'csv-parse';
 import { PrismaClient } from '@prisma/client';
 import { dietaryRequirements, appliances } from './constants';
 import { CsvRestaurantData } from './types';
+import { cuisines } from './constants';
 
 const prisma = new PrismaClient();
+
+/**
+ * Creates cuisine objects in the database from the cuisine data
+ * @param cuisineData Array of cuisine objects with name and description
+ * @returns Map of cuisine names to their database IDs
+ */
 
 async function main(): Promise<void> {
   // If you need to reset the database first, run `npx prisma db reset`
@@ -69,15 +76,17 @@ async function main(): Promise<void> {
     // ADD CUISINE CODE HERE. FIND RESTAURANTS WITHIN 10KM OF MELBOURNE CBD
     // AND FETCH CUISINES FOR THEM FROM GEMINI MODEL
 
-    const cuisineMap = new Map<string, number>([
-      ['japanese', 0],
-      ['italian', 0],
-      ['french', 0],
-      ['chinese', 0],
-      ['australian', 0],
-      ['singaporean', 0],
-      ['middle-eastern', 0],
-    ]);
+    const cuisineMap = new Map<string, number>();
+
+    for (const cuisine of cuisines) {
+      const created = await prisma.cuisine.create({
+        data: {
+          name: cuisine.name,
+          description: cuisine.description,
+        },
+      });
+      cuisineMap.set(cuisine.name, created.id);
+    }
 
     for (const cuisineName of cuisineMap.keys()) {
       const cuisine = await prisma.cuisine.create({

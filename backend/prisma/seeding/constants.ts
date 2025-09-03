@@ -1,4 +1,4 @@
-import { RestaurantData } from './types';
+import { RestaurantData, CuisineData } from './types';
 
 // Define the list of appliances
 export const appliances = [
@@ -38,6 +38,493 @@ export const dietaryRequirements = [
   },
 ];
 
+// Define comprehensive cuisine data
+export const cuisines: CuisineData[] = [
+  {
+    name: 'Italian',
+    description:
+      'Traditional cuisine from Italy featuring pasta, pizza, and Mediterranean flavors',
+  },
+  {
+    name: 'Chinese',
+    description:
+      'Diverse regional cuisines from China with rice, noodles, and distinctive cooking techniques',
+  },
+  {
+    name: 'Japanese',
+    description:
+      'Traditional Japanese cuisine emphasizing fresh ingredients, rice, and seafood',
+  },
+  {
+    name: 'Mexican',
+    description:
+      'Vibrant cuisine featuring corn, beans, chilies, and bold spices',
+  },
+  {
+    name: 'Indian',
+    description:
+      'Rich and diverse cuisine known for aromatic spices, curries, and vegetarian options',
+  },
+  {
+    name: 'Thai',
+    description:
+      'Southeast Asian cuisine balancing sweet, sour, salty, and spicy flavors',
+  },
+  {
+    name: 'French',
+    description:
+      'Classic European cuisine known for refined techniques and rich sauces',
+  },
+  {
+    name: 'Greek',
+    description:
+      'Mediterranean cuisine featuring olive oil, fresh herbs, and grilled meats',
+  },
+  {
+    name: 'Korean',
+    description:
+      'East Asian cuisine known for fermented foods, barbecue, and spicy dishes',
+  },
+  {
+    name: 'Vietnamese',
+    description:
+      'Southeast Asian cuisine featuring fresh herbs, rice noodles, and light broths',
+  },
+  {
+    name: 'Spanish',
+    description:
+      'Iberian cuisine known for tapas, paella, and Mediterranean influences',
+  },
+  {
+    name: 'Lebanese',
+    description:
+      'Middle Eastern cuisine featuring mezze, grilled meats, and fresh vegetables',
+  },
+  {
+    name: 'Turkish',
+    description:
+      'Cuisine blending European and Asian influences with grilled meats and spices',
+  },
+  {
+    name: 'American',
+    description:
+      'Diverse cuisine including BBQ, burgers, and regional specialties',
+  },
+  {
+    name: 'Brazilian',
+    description:
+      'South American cuisine featuring grilled meats, tropical fruits, and rice dishes',
+  },
+  {
+    name: 'Moroccan',
+    description:
+      'North African cuisine known for tagines, couscous, and aromatic spices',
+  },
+  {
+    name: 'Ethiopian',
+    description: 'East African cuisine featuring injera bread and spicy stews',
+  },
+  {
+    name: 'Persian',
+    description:
+      'Middle Eastern cuisine known for rice dishes, kebabs, and fragrant herbs',
+  },
+  {
+    name: 'Russian',
+    description:
+      'Eastern European cuisine featuring hearty soups, dumplings, and preserved foods',
+  },
+  {
+    name: 'German',
+    description:
+      'Central European cuisine known for sausages, bread, and beer pairings',
+  },
+  {
+    name: 'British',
+    description:
+      'Traditional cuisine from the British Isles featuring roasts and comfort foods',
+  },
+  {
+    name: 'Argentinian',
+    description:
+      'South American cuisine famous for grilled meats and empanadas',
+  },
+  {
+    name: 'Peruvian',
+    description:
+      'Andean cuisine blending indigenous, Spanish, and Asian influences',
+  },
+  {
+    name: 'Malaysian',
+    description:
+      'Southeast Asian cuisine combining Malay, Chinese, and Indian flavors',
+  },
+  {
+    name: 'Indonesian',
+    description:
+      'Archipelago cuisine known for spicy curries, rice dishes, and tropical flavors',
+  },
+  {
+    name: 'African',
+    description:
+      'Diverse continental cuisine featuring grains, stews, and unique spice blends',
+  },
+  {
+    name: 'Caribbean',
+    description:
+      'Island cuisine featuring tropical fruits, seafood, and jerk spices',
+  },
+  {
+    name: 'Nepalese',
+    description:
+      'Himalayan cuisine featuring dal, rice, and mountain vegetables',
+  },
+  {
+    name: 'Pakistani',
+    description:
+      'South Asian cuisine known for rich curries, tandoor cooking, and flatbreads',
+  },
+  {
+    name: 'Sri Lankan',
+    description:
+      'Island cuisine featuring coconut, curry leaves, and aromatic spices',
+  },
+  {
+    name: 'Burmese',
+    description:
+      'Southeast Asian cuisine known for noodle soups and fermented fish sauce',
+  },
+  {
+    name: 'Cambodian',
+    description:
+      'Southeast Asian cuisine featuring rice, fish, and fresh herbs',
+  },
+  {
+    name: 'Laotian',
+    description:
+      'Southeast Asian cuisine known for sticky rice, papaya salad, and grilled meats',
+  },
+  {
+    name: 'Filipino',
+    description:
+      'Island cuisine blending Spanish, Chinese, and indigenous influences',
+  },
+  {
+    name: 'Polish',
+    description:
+      'Eastern European cuisine featuring hearty dishes, dumplings, and preserved meats',
+  },
+  {
+    name: 'Hungarian',
+    description:
+      'Central European cuisine known for paprika, goulash, and rich stews',
+  },
+  {
+    name: 'Czech',
+    description:
+      'Central European cuisine featuring beer, bread, and hearty meat dishes',
+  },
+  {
+    name: 'Scandinavian',
+    description:
+      'Nordic cuisine emphasizing fresh seafood, preserved foods, and simple preparations',
+  },
+  {
+    name: 'Ukrainian',
+    description:
+      'Eastern European cuisine known for borscht, dumplings, and grain dishes',
+  },
+  {
+    name: 'Irish',
+    description: 'Celtic cuisine featuring potatoes, lamb, and hearty stews',
+  },
+  {
+    name: 'Scottish',
+    description: 'Highland cuisine known for haggis, whisky, and fresh seafood',
+  },
+  {
+    name: 'Portuguese',
+    description:
+      'Iberian cuisine featuring seafood, rice dishes, and custard tarts',
+  },
+  {
+    name: 'Belgian',
+    description: 'European cuisine known for waffles, chocolate, and beer',
+  },
+  {
+    name: 'Dutch',
+    description:
+      'Northern European cuisine featuring cheese, seafood, and hearty winter dishes',
+  },
+  {
+    name: 'Swiss',
+    description:
+      'Alpine cuisine known for cheese dishes, chocolate, and mountain specialties',
+  },
+  {
+    name: 'Austrian',
+    description:
+      'Central European cuisine featuring schnitzel, pastries, and coffee culture',
+  },
+  {
+    name: 'Nordic',
+    description:
+      'Scandinavian cuisine emphasizing local ingredients and preservation techniques',
+  },
+  {
+    name: 'Fusion',
+    description:
+      'Modern cuisine blending techniques and ingredients from multiple culinary traditions',
+  },
+  {
+    name: 'Mediterranean',
+    description:
+      'Coastal cuisine featuring olive oil, fresh vegetables, and grilled seafood',
+  },
+  {
+    name: 'Middle Eastern',
+    description:
+      'Regional cuisine known for spices, grilled meats, and ancient grains',
+  },
+  {
+    name: 'Latin American',
+    description:
+      'Continental cuisine featuring corn, beans, chilies, and tropical ingredients',
+  },
+  {
+    name: 'Asian',
+    description:
+      'Continental cuisine encompassing diverse cooking styles from across Asia',
+  },
+  {
+    name: 'European',
+    description:
+      'Continental cuisine representing diverse traditions from across Europe',
+  },
+  {
+    name: 'Vegetarian',
+    description:
+      'Plant-based cuisine focusing on vegetables, grains, and meat alternatives',
+  },
+  {
+    name: 'Vegan',
+    description: 'Strictly plant-based cuisine excluding all animal products',
+  },
+  {
+    name: 'Gluten-Free',
+    description:
+      'Cuisine prepared without gluten-containing grains for dietary restrictions',
+  },
+  {
+    name: 'Healthy',
+    description:
+      'Cuisine emphasizing nutritious ingredients and balanced meal preparations',
+  },
+  {
+    name: 'Organic',
+    description:
+      'Cuisine featuring organically grown and sustainably sourced ingredients',
+  },
+  {
+    name: 'Raw Food',
+    description: 'Cuisine featuring uncooked foods and living ingredients',
+  },
+  {
+    name: 'Paleo',
+    description:
+      'Cuisine based on presumed ancient human diet excluding processed foods',
+  },
+  {
+    name: 'Keto',
+    description:
+      'Low-carbohydrate, high-fat cuisine for ketogenic diet followers',
+  },
+  {
+    name: 'Street Food',
+    description: 'Casual cuisine typically sold by vendors in public spaces',
+  },
+  {
+    name: 'Fast Food',
+    description: 'Quick-service cuisine designed for speed and convenience',
+  },
+  {
+    name: 'Comfort Food',
+    description:
+      'Nostalgic cuisine providing emotional satisfaction and familiarity',
+  },
+  {
+    name: 'Gourmet',
+    description:
+      'High-quality cuisine featuring premium ingredients and refined techniques',
+  },
+  {
+    name: 'Fine Dining',
+    description:
+      'Upscale cuisine with elaborate presentation and exceptional service',
+  },
+  {
+    name: 'Barbecue',
+    description:
+      'Cooking method and cuisine style featuring slow-cooked, smoked meats',
+  },
+  {
+    name: 'Seafood',
+    description:
+      'Cuisine specializing in fish, shellfish, and other marine life',
+  },
+  {
+    name: 'Steakhouse',
+    description: 'Cuisine specializing in grilled and prepared beef cuts',
+  },
+  {
+    name: 'Sandwich',
+    description:
+      'Cuisine featuring various ingredients served between bread slices',
+  },
+  {
+    name: 'Pizza',
+    description: 'Italian-originated flatbread cuisine with various toppings',
+  },
+  {
+    name: 'Burger',
+    description: 'American cuisine featuring ground meat patties in buns',
+  },
+  {
+    name: 'Taco',
+    description:
+      'Mexican cuisine featuring folded tortillas with various fillings',
+  },
+  {
+    name: 'Sushi',
+    description:
+      'Japanese cuisine featuring vinegared rice with various accompaniments',
+  },
+  {
+    name: 'Ramen',
+    description: 'Japanese noodle soup cuisine with rich broths and toppings',
+  },
+  {
+    name: 'Pasta',
+    description:
+      'Italian cuisine featuring wheat-based noodles with various sauces',
+  },
+  {
+    name: 'Salad',
+    description:
+      'Fresh cuisine featuring mixed greens and vegetables with dressings',
+  },
+  {
+    name: 'Soup',
+    description: 'Liquid-based cuisine combining various ingredients in broth',
+  },
+  {
+    name: 'Dessert',
+    description: 'Sweet cuisine typically served at the end of meals',
+  },
+  {
+    name: 'Ice Cream',
+    description:
+      'Frozen dessert cuisine made from dairy products and sweeteners',
+  },
+  {
+    name: 'Bakery',
+    description:
+      'Baked goods cuisine including bread, pastries, and confections',
+  },
+  {
+    name: 'Cafe',
+    description:
+      'Light cuisine typically served in coffee shops and casual establishments',
+  },
+  {
+    name: 'Coffee',
+    description: 'Beverage-focused cuisine centered around coffee preparations',
+  },
+  {
+    name: 'Tea',
+    description:
+      'Beverage-focused cuisine centered around tea ceremonies and preparations',
+  },
+  {
+    name: 'Juice Bar',
+    description:
+      'Health-focused cuisine featuring fresh fruit and vegetable juices',
+  },
+  {
+    name: 'Smoothie',
+    description:
+      'Blended beverage cuisine combining fruits, vegetables, and other ingredients',
+  },
+  {
+    name: 'Bubble Tea',
+    description:
+      'Taiwanese beverage cuisine featuring tea with chewy tapioca pearls',
+  },
+  {
+    name: 'Wine Bar',
+    description:
+      'Cuisine focused on wine pairings with light foods and appetizers',
+  },
+  {
+    name: 'Cocktail',
+    description:
+      'Mixed drink cuisine featuring creative alcoholic beverage preparations',
+  },
+  {
+    name: 'Brewery',
+    description: 'Beer-focused cuisine often featuring pub-style foods',
+  },
+  {
+    name: 'Buffet',
+    description:
+      'Self-service cuisine style offering multiple dishes simultaneously',
+  },
+  {
+    name: 'Brunch',
+    description: 'Late morning cuisine combining breakfast and lunch elements',
+  },
+  {
+    name: 'Breakfast',
+    description:
+      'Morning cuisine featuring traditional first meal preparations',
+  },
+  {
+    name: 'Diner',
+    description:
+      'American casual cuisine served in informal restaurant settings',
+  },
+  {
+    name: 'Food Truck',
+    description: 'Mobile cuisine served from converted vehicles',
+  },
+  {
+    name: 'Catering',
+    description:
+      'Event-focused cuisine prepared for large groups and special occasions',
+  },
+  {
+    name: 'Tapas',
+    description: 'Spanish small plate cuisine designed for sharing',
+  },
+  {
+    name: 'Dim Sum',
+    description: 'Chinese small plate cuisine traditionally served with tea',
+  },
+  {
+    name: 'Mezze',
+    description:
+      'Middle Eastern small plate cuisine featuring various appetizers',
+  },
+  {
+    name: 'Antipasti',
+    description: 'Italian appetizer cuisine served before main courses',
+  },
+  {
+    name: 'Australian',
+    description:
+      'Modern Australian cuisine blending international influences with local ingredients',
+  },
+];
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
   {
@@ -65,7 +552,10 @@ export const restaurants: RestaurantData[] = [
         width: 6528,
       },
     ],
-    cuisines: ['Chinese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Chinese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJY1PwH5Zr1moR1cqFk01EbFA',
@@ -92,7 +582,7 @@ export const restaurants: RestaurantData[] = [
         width: 5120,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJzXgfRZ1r1moR-yH1U6WtTJI',
@@ -118,7 +608,10 @@ export const restaurants: RestaurantData[] = [
         width: 2880,
       },
     ],
-    cuisines: ['Japanese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Japanese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJx1u48Mtq1moRxSnCra2rVsQ',
@@ -145,7 +638,10 @@ export const restaurants: RestaurantData[] = [
         width: 4096,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJO0nHoctq1moR610E36XekXM',
@@ -173,7 +669,10 @@ export const restaurants: RestaurantData[] = [
         width: 2685,
       },
     ],
-    cuisines: ['Malaysian', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Malaysian')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJJ6kO8stq1moRjjwy5VjHx6w',
@@ -199,7 +698,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Asian', 'Chinese'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Asian')!,
+      cuisines.find((c) => c.name === 'Chinese')!,
+    ],
   },
   {
     place_id: 'ChIJqUyf_stq1moRW19lZEfbNHo',
@@ -227,7 +729,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Seafood'],
+    cuisines: [cuisines.find((c) => c.name === 'Seafood')!],
   },
   {
     place_id: 'ChIJu7wOkstq1moRytNqs-_MGzk',
@@ -254,7 +756,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Mexican', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Mexican')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
   {
     place_id: 'ChIJLXTx8stq1moRwAdi9_ZYQPs',
@@ -281,7 +786,7 @@ export const restaurants: RestaurantData[] = [
         width: 4608,
       },
     ],
-    cuisines: ['Vietnamese'],
+    cuisines: [cuisines.find((c) => c.name === 'Vietnamese')!],
   },
   {
     place_id: 'ChIJ64DH7ctq1moRE7Y1AAaT33s',
@@ -308,7 +813,10 @@ export const restaurants: RestaurantData[] = [
         width: 4284,
       },
     ],
-    cuisines: ['Juice Bar', 'Healthy'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Juice Bar')!,
+      cuisines.find((c) => c.name === 'Healthy')!,
+    ],
   },
   {
     place_id: 'ChIJPRbpjMtq1moRPcCxJz2EpDo',
@@ -336,7 +844,10 @@ export const restaurants: RestaurantData[] = [
         width: 2669,
       },
     ],
-    cuisines: ['Japanese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Japanese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJATDW88tq1moRBX8HgPq1l5s',
@@ -363,7 +874,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJFXnO8Mtq1moRexjO3wfOOW4',
@@ -390,7 +901,10 @@ export const restaurants: RestaurantData[] = [
         width: 5184,
       },
     ],
-    cuisines: ['Sandwich', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Sandwich')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
   {
     place_id: 'ChIJHxa1pFlr1moRHFdLlvSoa_k',
@@ -416,7 +930,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJuwcSCstq1moRG_TzklUYsOQ',
@@ -443,7 +960,10 @@ export const restaurants: RestaurantData[] = [
         width: 1920,
       },
     ],
-    cuisines: ['Cafe', 'Healthy'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Healthy')!,
+    ],
   },
   {
     place_id: 'ChIJj1WC1Mtq1moRJeKoET0Alw4',
@@ -470,7 +990,10 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Chinese', 'Asian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Chinese')!,
+      cuisines.find((c) => c.name === 'Asian')!,
+    ],
   },
   {
     place_id: 'ChIJk1F41Mtq1moREgIhKa2Mad0',
@@ -497,7 +1020,10 @@ export const restaurants: RestaurantData[] = [
         width: 4000,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJxweMcMxq1moRE2mtr4nhNVY',
@@ -524,7 +1050,7 @@ export const restaurants: RestaurantData[] = [
         width: 4096,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJB3XChUVr1moRURgtzcD-1TM',
@@ -550,7 +1076,7 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Cafe'],
+    cuisines: [cuisines.find((c) => c.name === 'Cafe')!],
   },
   {
     place_id: 'ChIJ605lD75r1moR9XUl0U8mEJc',
@@ -578,7 +1104,10 @@ export const restaurants: RestaurantData[] = [
         width: 5616,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJv9hPsEsV1moRXpFmIptz_V4',
@@ -605,7 +1134,10 @@ export const restaurants: RestaurantData[] = [
         width: 2048,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJg6MP-stq1moR3EFZxw-yz5E',
@@ -631,7 +1163,10 @@ export const restaurants: RestaurantData[] = [
         width: 1036,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJxzv1mMtq1moRbPu3FCfCf-U',
@@ -657,7 +1192,10 @@ export const restaurants: RestaurantData[] = [
         width: 1125,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJcbPf1f5r1moRDBVcz8X_Cpg',
@@ -683,7 +1221,7 @@ export const restaurants: RestaurantData[] = [
         width: 3200,
       },
     ],
-    cuisines: ['Bubble Tea'],
+    cuisines: [cuisines.find((c) => c.name === 'Bubble Tea')!],
   },
   {
     place_id: 'ChIJheE-1shq1moRCK-RBW6jFbI',
@@ -709,7 +1247,10 @@ export const restaurants: RestaurantData[] = [
         width: 4192,
       },
     ],
-    cuisines: ['Cafe', 'Australian'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Cafe')!,
+      cuisines.find((c) => c.name === 'Australian')!,
+    ],
   },
   {
     place_id: 'ChIJn-CZQa5r1moRUvTGwkJAWZw',
@@ -736,7 +1277,7 @@ export const restaurants: RestaurantData[] = [
         width: 4608,
       },
     ],
-    cuisines: ['Italian'],
+    cuisines: [cuisines.find((c) => c.name === 'Italian')!],
   },
   {
     place_id: 'ChIJR4YcDstq1moR07xYME4nlz8',
@@ -762,6 +1303,9 @@ export const restaurants: RestaurantData[] = [
         width: 4032,
       },
     ],
-    cuisines: ['Australian', 'Fast Food'],
+    cuisines: [
+      cuisines.find((c) => c.name === 'Australian')!,
+      cuisines.find((c) => c.name === 'Fast Food')!,
+    ],
   },
 ];
