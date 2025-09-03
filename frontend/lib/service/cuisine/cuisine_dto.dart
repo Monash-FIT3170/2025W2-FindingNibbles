@@ -16,7 +16,8 @@ class CuisineDto {
       id: json['id'],
       name: json['name'],
       description: json['description'], // <-- map from JSON
-      isFavourite: json['isFavourite'] ??
+      isFavourite:
+          json['isFavourite'] ??
           json['is_favourite'] ??
           json['favourite'] ??
           false,
