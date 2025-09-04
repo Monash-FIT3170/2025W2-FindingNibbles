@@ -20,6 +20,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
   bool _isUploading = false;
   List<dynamic>? _analysisResult;
   String? _errorMessage;
+  bool _isMenuAnalyzed = false; // Track if menu has been successfully analyzed
   final ImagePicker _picker = ImagePicker();
   final RestaurantMenuService _menuService = RestaurantMenuService();
 
@@ -128,6 +129,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
       setState(() {
         _analysisResult = result;
         _isUploading = false;
+        _isMenuAnalyzed = true; // Mark menu as successfully analyzed
       });
     } catch (e) {
       setState(() {
@@ -436,60 +438,81 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
             // Action buttons
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _showImageSourceDialog,
-                      icon: const Icon(Icons.add_a_photo),
-                      label: const Text('Select Image'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.secondary,
-                        foregroundColor: colorScheme.onSecondary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+              child: _isMenuAnalyzed
+                  ? // Show "Choose best dish for me!" button after analysis
+                  SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // TODO: Implement choose best dish functionality
+                        },
+                        icon: const Icon(Icons.restaurant_menu),
+                        label: const Text('Choose best dish for me!'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          elevation: 0,
+                          textStyle: textTheme.labelLarge,
                         ),
-                        elevation: 0,
-                        textStyle: textTheme.labelLarge,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed:
-                          _imageFile != null && !_isUploading
-                              ? _uploadAndAnalyze
-                              : null,
-                      icon:
-                          _isUploading
-                              ? SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colorScheme.onPrimary,
-                                ),
-                              )
-                              : const Icon(Icons.upload),
-                      label: Text(
-                        _isUploading ? 'Analysing...' : 'Analyse Menu',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                    )
+                  : // Show original upload buttons before analysis
+                  Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _showImageSourceDialog,
+                            icon: const Icon(Icons.add_a_photo),
+                            label: const Text('Select Image'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.secondary,
+                              foregroundColor: colorScheme.onSecondary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              elevation: 0,
+                              textStyle: textTheme.labelLarge,
+                            ),
+                          ),
                         ),
-                        elevation: 0,
-                        textStyle: textTheme.labelLarge,
-                      ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _imageFile != null && !_isUploading
+                                ? _uploadAndAnalyze
+                                : null,
+                            icon: _isUploading
+                                ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: colorScheme.onPrimary,
+                                    ),
+                                  )
+                                : const Icon(Icons.upload),
+                            label: Text(
+                              _isUploading ? 'Analysing...' : 'Analyse Menu',
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              elevation: 0,
+                              textStyle: textTheme.labelLarge,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
 
             // Results display
