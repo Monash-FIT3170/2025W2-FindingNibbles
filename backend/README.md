@@ -1,11 +1,12 @@
 ## Project setup
 
 ```bash
-$ npm install
-$ cd backend
-$ docker compose up -d
-$ npm run db:push
-$ npm run db:seed
+npm install
+cd backend
+docker compose down --volumes
+docker compose up -d
+npm run db:push
+npm run db:seed
 ```
 
 ## Compile and run the project
