@@ -78,7 +78,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.colorScheme.secondary,
+                  color: AppTheme.colorScheme.onPrimary,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.symmetric(
@@ -175,9 +175,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                           initialDate: _selectedDay,
                           firstDate: DateTime.utc(2020, 1, 1),
                           lastDate: DateTime.utc(2030, 12, 31),
-                          initialEntryMode:
-                              DatePickerEntryMode
-                                  .calendarOnly, // show calendar (month) view
+                          initialEntryMode: DatePickerEntryMode.calendarOnly,
                           helpText: 'Select date',
                           builder: (context, child) {
                             return Theme(
@@ -193,7 +191,6 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                             );
                           },
                         );
-
                         if (picked != null) {
                           setState(() {
                             _selectedDay = picked;
@@ -218,7 +215,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: AppTheme.colorScheme.secondary,
+                    color: AppTheme.colorScheme.onPrimary,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   padding: const EdgeInsets.all(16),
@@ -235,13 +232,45 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppTheme.colorScheme.secondary,
+        backgroundColor: AppTheme.colorScheme.onPrimary,
         child: Icon(Icons.add, color: AppTheme.colorScheme.primary, size: 36),
-        onPressed: () {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const AppNavigation(initialPageIndex: 2),
-            ),
+        onPressed: () async {
+          await showDialog(
+            context: context,
+            builder:
+                (ctx) => AlertDialog(
+                  content: const Text(
+                    'Please generate a recipe first in order to log calories',
+                    style: TextStyle(fontSize: 16, color: AppTheme.textPrimary),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.colorScheme.primary,
+                        foregroundColor: AppTheme.colorScheme.onPrimary,
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.colorScheme.primary,
+                        foregroundColor: AppTheme.colorScheme.onPrimary,
+                      ),
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const AppNavigation(initialPageIndex: 2),
+                          ),
+                        );
+                      },
+                      child: const Text('Go to Recipes'),
+                    ),
+                  ],
+                ),
           );
         },
       ),
