@@ -177,6 +177,170 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
     );
   }
 
+  Future<void> _chooseBestDish() async {
+    try {
+      // For now, use some common dietary requirements as a test
+      // In a real app, these would come from user preferences
+      const testDietaryRequirements = ['VEGETARIAN', 'GLUTEN-FREE'];
+      
+      final randomDish = await _menuService.getRandomDishByDietaryRequirements(testDietaryRequirements);
+      
+      if (mounted) {
+        _showDishPopup(randomDish);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to find a suitable dish: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showDishPopup(Map<String, dynamic> dish) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.restaurant_menu, color: colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Your Perfect Dish!',
+                  style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dish card with same styling as menu items
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: colorScheme.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              dish['name'] ?? 'Unnamed Dish',
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (dish['price'] != null)
+                            Text(
+                              '\$${dish['price'].toStringAsFixed(2)}',
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (dish['category'] != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          dish['category'],
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.secondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                      if (dish['description'] != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          dish['description'],
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                      if (dish['dietaryTags'] != null &&
+                          (dish['dietaryTags'] as List).isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: (dish['dietaryTags'] as List<dynamic>)
+                              .map(
+                                (tag) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    tag.toString(),
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'From: ${dish['restaurantName'] ?? 'Unknown Restaurant'}',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.secondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Close',
+                style: TextStyle(color: colorScheme.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildResultsDisplay() {
     if (_analysisResult == null) return const SizedBox.shrink();
 
@@ -443,9 +607,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          // TODO: Implement choose best dish functionality
-                        },
+                        onPressed: _chooseBestDish,
                         icon: const Icon(Icons.restaurant_menu),
                         label: const Text('Choose best dish for me!'),
                         style: ElevatedButton.styleFrom(
