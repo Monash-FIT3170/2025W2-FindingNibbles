@@ -110,13 +110,21 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
   Future<void> _uploadAndAnalyze() async {
     if (_imageFile == null) return;
 
+    // Check if restaurant ID is provided
+    if (widget.restaurantId == null) {
+      setState(() {
+        _errorMessage = 'Restaurant ID is required to analyze menu';
+      });
+      return;
+    }
+
     setState(() {
       _isUploading = true;
       _errorMessage = null;
     });
 
     try {
-      final result = await _menuService.uploadMenuImage(_imageFile!);
+      final result = await _menuService.uploadMenuImage(_imageFile!, widget.restaurantId!);
       setState(() {
         _analysisResult = result;
         _isUploading = false;
