@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/widgets/restaurant_card.dart';
 import 'package:nibbles/pages/recipes/widgets/recipe_card.dart';
+import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
@@ -18,11 +19,15 @@ class LikedPage extends StatefulWidget {
 
 class _LikedPageState extends State<LikedPage> {
   final ProfileService _profileService = ProfileService();
+  final CuisineService _cuisineService = CuisineService();
   List<RestaurantDto> _favoriteRestaurants = [];
   List<RecipeDto> _favoriteRecipes = [];
+  List<RecipeDto> _filteredRecipes = [];
   List<CuisineDto> _favoriteCuisines = [];
+  List<CuisineDto> _allCuisines = [];
   bool _isLoading = true;
   final _logger = getLogger();
+  CuisineDto? _selectedCuisine;
 
   @override
   void initState() {
@@ -35,11 +40,14 @@ class _LikedPageState extends State<LikedPage> {
       final restaurants = await _profileService.getFavouriteRestaurants();
       final recipes = await _profileService.getFavouriteRecipes();
       final cuisines = await _profileService.getUserCuisines(); // ✅ changed
+      final allCuisines = await _cuisineService.getAllCuisines();
 
       setState(() {
         _favoriteRestaurants = restaurants;
         _favoriteRecipes = recipes;
+        _filteredRecipes = recipes;
         _favoriteCuisines = cuisines;
+        _allCuisines = allCuisines;
         _isLoading = false;
       });
     } catch (e) {
@@ -48,6 +56,20 @@ class _LikedPageState extends State<LikedPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _filterRecipesByCuisine(CuisineDto? cuisine) {
+    setState(() {
+      _selectedCuisine = cuisine;
+      if (cuisine == null) {
+        _filteredRecipes = List.from(_favoriteRecipes);
+      } else {
+        _filteredRecipes =
+            _favoriteRecipes
+                .where((recipe) => recipe.cuisineId == cuisine.id)
+                .toList();
+      }
+    });
   }
 
   @override
@@ -180,19 +202,53 @@ class _LikedPageState extends State<LikedPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Favourite Recipes',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.colorScheme.primary,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Favourite Recipes',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      DropdownButton<CuisineDto>(
+                                        value: _selectedCuisine,
+                                        hint: const Text('All Cuisines'),
+                                        items: [
+                                          const DropdownMenuItem<CuisineDto>(
+                                            value: null,
+                                            child: Text('All Cuisines'),
+                                          ),
+                                          ..._allCuisines.map((cuisine) {
+                                            return DropdownMenuItem<CuisineDto>(
+                                              value: cuisine,
+                                              child: Text(cuisine.name),
+                                            );
+                                          }),
+                                        ],
+                                        onChanged: _filterRecipesByCuisine,
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 12),
                                   SizedBox(
                                     height: 320,
                                     child:
-                                        _favoriteRecipes.isEmpty
+                                        _filteredRecipes.isEmpty &&
+                                                _selectedCuisine != null
+                                            ? Center(
+                                              child: Text(
+                                                'No favourite recipes for this cuisine yet.',
+                                                style:
+                                                    AppTheme
+                                                        .textTheme
+                                                        .bodyLarge,
+                                              ),
+                                            )
+                                            : _favoriteRecipes.isEmpty
                                             ? Center(
                                               child: Text(
                                                 'No favourite recipes yet.',
@@ -204,10 +260,10 @@ class _LikedPageState extends State<LikedPage> {
                                             )
                                             : ListView.builder(
                                               itemCount:
-                                                  _favoriteRecipes.length,
+                                                  _filteredRecipes.length,
                                               itemBuilder: (context, index) {
                                                 final recipe =
-                                                    _favoriteRecipes[index];
+                                                    _filteredRecipes[index];
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsets.only(
@@ -227,6 +283,9 @@ class _LikedPageState extends State<LikedPage> {
                                                         setState(() {
                                                           _favoriteRecipes
                                                               .remove(recipe);
+                                                          _filterRecipesByCuisine(
+                                                            _selectedCuisine,
+                                                          );
                                                         });
                                                       } catch (e) {
                                                         _logger.e(
