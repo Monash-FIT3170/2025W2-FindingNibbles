@@ -36,7 +36,6 @@ export class RestaurantMenuController {
     @UploadedFile() menu: Express.Multer.File,
   ) {
     const restaurantIdNum = parseInt(restaurantId, 10);
-    await this.restaurantMenuService.analyseAndStoreMenu(menu, restaurantIdNum);
-    return;
+    return this.restaurantMenuService.analyseAndStoreMenu(menu, restaurantIdNum);
   }
 }

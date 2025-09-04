@@ -7,7 +7,7 @@ class RestaurantMenuService {
   final Dio _dio = DioClient().client;
 
   /// Upload a menu image and get analysis results
-  Future<List<dynamic>> uploadMenuImage(File imageFile) async {
+  Future<List<dynamic>> uploadMenuImage(File imageFile, int restaurantId) async {
     try {
       // Validate file size (max 20MB for Gemini API)
       final fileSize = await imageFile.length();
@@ -24,7 +24,7 @@ class RestaurantMenuService {
       });
 
       final response = await _dio.post(
-        'restaurant-menu',
+        'restaurant-menu/$restaurantId',
         data: formData,
         options: Options(
           headers: {'Content-Type': 'multipart/form-data'},
@@ -36,7 +36,22 @@ class RestaurantMenuService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return response.data as List<dynamic>;
+        final responseData = response.data;
+        
+        // Handle new structured response format
+        if (responseData is Map<String, dynamic>) {
+          if (responseData['success'] == true) {
+            // Return the dishes array from the structured response
+            return (responseData['dishes'] as List<dynamic>?) ?? [];
+          } else {
+            // Handle error response
+            final errorMessage = responseData['message'] ?? 'Unknown error occurred';
+            throw Exception(errorMessage);
+          }
+        }
+        
+        // Fallback for old response format (direct array)
+        return responseData as List<dynamic>;
       } else {
         throw Exception('Failed to upload menu image: ${response.statusCode}');
       }
