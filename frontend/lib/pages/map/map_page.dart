@@ -49,6 +49,10 @@ class _MapPageState extends State<MapPage> {
   final DirectionsService _directionsService = DirectionsService();
   double? _routeDuration; // in seconds
   double? _routeDistance; // in meters
+  // Search variables
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearchMode = false;
 
   @override
   void initState() {
@@ -212,24 +216,34 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     try {
-      final bounds =
-          _currentPosition != null
-              ? _getBoundsAroundPosition(
-                _currentPosition!,
-                0.01,
-              ) // Create bounds around current position
-              : LatLngBounds(
-                LatLng(37.9011, 145.1267), // Melbourne area fallback
-                LatLng(37.9211, 145.1467),
-              );
+      List<RestaurantDto> allRestaurants;
 
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Otherwise, use the existing bounds filtering logic
+        final bounds =
+            _currentPosition != null
+                ? _getBoundsAroundPosition(
+                  _currentPosition!,
+                  0.01,
+                ) // Create bounds around current position
+                : LatLngBounds(
+                  LatLng(37.9011, 145.1267), // Melbourne area fallback
+                  LatLng(37.9211, 145.1467),
+                );
+
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -260,15 +274,25 @@ class _MapPageState extends State<MapPage> {
     });
 
     try {
-      final bounds = _mapController.camera.visibleBounds;
+      List<RestaurantDto> allRestaurants;
 
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Otherwise, use the existing bounds filtering logic
+        final bounds = _mapController.camera.visibleBounds;
+
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -291,13 +315,23 @@ class _MapPageState extends State<MapPage> {
   // Helper to fetch with known bounds (no loading state management)
   Future<void> _fetchWithBounds(LatLngBounds bounds) async {
     try {
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      List<RestaurantDto> allRestaurants;
+
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Otherwise, use the bounds filtering logic
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -317,6 +351,29 @@ class _MapPageState extends State<MapPage> {
 
     final bounds = _mapController.camera.visibleBounds;
     await _fetchWithBounds(bounds);
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+      _isSearchMode = _searchQuery.isNotEmpty;
+    });
+
+    // Debounce the search to avoid too many API calls
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (_searchQuery == query.trim()) {
+        _fetchRestaurantsInitial();
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _isSearchMode = false;
+    });
+    _fetchRestaurantsInitial();
   }
 
   // Apply rating filter to the list of restaurants
@@ -546,31 +603,40 @@ class _MapPageState extends State<MapPage> {
                       },
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Cuisine'),
-                    subtitle: DropdownButton<CuisineDto?>(
-                      value: _selectedCuisine,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<CuisineDto?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                        ..._availableCuisines.map(
-                          (cuisine) => DropdownMenuItem(
-                            value: cuisine,
-                            child: Text(cuisine.name),
+                  if (!_isSearchMode) // Only show cuisine filter when not searching
+                    ListTile(
+                      leading: const Icon(Icons.restaurant_menu),
+                      title: const Text('Cuisine'),
+                      subtitle: DropdownButton<CuisineDto?>(
+                        value: _selectedCuisine,
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<CuisineDto?>(
+                            value: null,
+                            child: Text('All'),
                           ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCuisine = value;
-                        });
-                      },
+                          ..._availableCuisines.map(
+                            (cuisine) => DropdownMenuItem(
+                              value: cuisine,
+                              child: Text(cuisine.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCuisine = value;
+                          });
+                        },
+                      ),
                     ),
-                  ),
+                  if (_isSearchMode)
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Search Mode'),
+                      subtitle: Text(
+                        'Cuisine filter disabled while searching for "${_searchQuery}"',
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -609,7 +675,11 @@ class _MapPageState extends State<MapPage> {
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
 
-    if (_selectedCuisine != null) {
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      filterWidgets.add(Text('Search: "${_searchQuery}"'));
+    }
+
+    if (!_isSearchMode && _selectedCuisine != null) {
       filterWidgets.add(Text(_selectedCuisine!.name));
     }
 
@@ -636,11 +706,15 @@ class _MapPageState extends State<MapPage> {
           color: AppTheme.colorScheme.onPrimary,
         ),
         onDeleted: () {
-          setState(() {
-            _selectedCuisine = null;
-            _minimumRating = 1;
-          });
-          _forceFetchRestaurants();
+          if (_isSearchMode) {
+            _clearSearch();
+          } else {
+            setState(() {
+              _selectedCuisine = null;
+              _minimumRating = 1;
+            });
+            _forceFetchRestaurants();
+          }
         },
         backgroundColor: AppTheme.colorScheme.primary,
         side: BorderSide.none,
@@ -739,7 +813,7 @@ class _MapPageState extends State<MapPage> {
                         // Map is ready - no action needed since we handle loading in initState
                       },
                       onPositionChanged: (MapCamera camera, bool hasGesture) {
-                        if (hasGesture && !_isLoading) {
+                        if (hasGesture && !_isLoading && !_isSearchMode) {
                           _fetchRestaurantsInBounds();
                         }
                       },
@@ -936,6 +1010,43 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ],
                   ),
+                  // Floating Search Bubble
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 80, // Leave space for filter button
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(25),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          decoration: InputDecoration(
+                            hintText: 'Search restaurants by name...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Separate Filter Button
                   Positioned(
                     top: 16,
                     right: 16,
@@ -969,6 +1080,7 @@ class _MapPageState extends State<MapPage> {
   void dispose() {
     _positionStreamSubscription?.cancel();
     _mapController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }
