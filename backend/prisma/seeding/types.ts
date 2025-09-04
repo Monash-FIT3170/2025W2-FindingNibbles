@@ -52,8 +52,3 @@ export interface RestaurantData {
   photos: RestaurantPhoto[];
   cuisines: CuisineData[];
 }
-
-export interface CuisineData {
-  name: string;
-  description?: string;
-}
