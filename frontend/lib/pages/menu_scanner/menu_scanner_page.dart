@@ -190,14 +190,98 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to find a suitable dish: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // Check if it's specifically a "no matching dishes" error
+        if (e.toString().contains('No dishes found that satisfy all dietary requirements') ||
+            e.toString().contains('No matching dishes found')) {
+          _showNoDishesFoundPopup();
+        } else {
+          // Show generic error for other issues (network, server, etc.)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to find a suitable dish: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     }
+  }
+
+  void _showNoDishesFoundPopup() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.sentiment_dissatisfied, color: colorScheme.error, size: 28),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Oh no!',
+                  style: textTheme.titleLarge?.copyWith(color: colorScheme.error),
+                ),
+              ),
+            ],
+          ),
+          content: Container(
+            constraints: const BoxConstraints(maxWidth: 300),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No items on the menu meet your dietary requirements!',
+                  style: textTheme.bodyLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lightbulb_outline, color: colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Try adjusting your dietary preferences or check a different restaurant\'s menu.',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Got it',
+                style: TextStyle(color: colorScheme.primary),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showDishPopup(Map<String, dynamic> dish) {
