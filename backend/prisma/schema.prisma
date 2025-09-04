@@ -170,14 +170,23 @@ model Dish {
   calories       Int?
   price          Float?
   restaurantId   Int
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id])
   cuisine        Cuisine?       @relation(fields: [cuisineId], references: [id])
   cuisineId      Int?
   dishDietaries  DishDietary[]
   mealPlanDishes MealPlanDish[]
+  category       String?        // Menu category like "Appetizers", "Mains"
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  
+  // MENU STORAGE PLAN:
+  // - This model will store AI-classified menu items
+  // - restaurantId links dishes to specific restaurants
+  // - dishDietaries stores AI dietary classifications via junction table
+  // - Deduplication by (name + restaurantId) composite key
+  // - createdAt preserves first upload, updatedAt tracks modifications
 
-  Restaurant Restaurant[]
+  @@unique([name, restaurantId]) // Prevent duplicate dishes per restaurant
 }
 
 model DishDietary {

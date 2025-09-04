@@ -105,10 +105,11 @@ class LoginPage extends StatelessWidget {
                     // Email field with floating label
                     TextField(
                       controller: emailController,
+                      autocorrect: false,
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         hintText: 'example@mail.com',
-                      ), // Use the theme's default InputDecoration
+                      ),
                     ),
                     const SizedBox(height: 24),
 
@@ -116,9 +117,8 @@ class LoginPage extends StatelessWidget {
                     TextField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                      ), // Use the theme's default InputDecoration
+                      autocorrect: false,
+                      decoration: const InputDecoration(labelText: 'Password'),
                     ),
 
                     // Forgot password aligned right

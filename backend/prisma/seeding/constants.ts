@@ -1,44 +1,5 @@
 import { RestaurantData, CuisineData } from './types';
 
-// Define the list of appliances
-export const appliances = [
-  { id: 1, name: 'Oven' },
-  { id: 2, name: 'Microwave' },
-  { id: 3, name: 'Blender' },
-  { id: 4, name: 'Food Processor' },
-  { id: 5, name: 'Air Fryer' },
-  { id: 6, name: 'Slow Cooker' },
-  { id: 7, name: 'Mixer' },
-  { id: 8, name: 'Toaster' },
-  { id: 9, name: 'Pressure Cooker' },
-  { id: 10, name: 'Rice Cooker' },
-];
-
-// Defined the list of dietary restrictions
-export const dietaryRequirements = [
-  {
-    id: 1,
-    name: 'Vegetarian',
-    description: 'No meat, fish, or poultry',
-  },
-  {
-    id: 2,
-    name: 'Vegan',
-    description: 'No animal products',
-  },
-  {
-    id: 3,
-    name: 'Gluten Free',
-    description: 'No gluten-containing foods',
-  },
-  {
-    id: 4,
-    name: 'Halal',
-    description: 'Meat from animals slaughter',
-  },
-];
-
-// Define comprehensive cuisine data
 export const cuisines: CuisineData[] = [
   {
     name: 'Italian',
@@ -524,7 +485,76 @@ export const cuisines: CuisineData[] = [
     description:
       'Modern Australian cuisine blending international influences with local ingredients',
   },
+  {
+    name: 'Modern Australian',
+    description:
+      'A cuisine style that blends traditional Australian ingredients with global culinary techniques, often featuring fresh seafood, native herbs, and multicultural influences.',
+  },
+  {
+    name: 'International',
+    description:
+      'A broad category that encompasses dishes and flavors from multiple global cuisines, offering a diverse mix of tastes and cooking styles.',
+  },
+  {
+    name: 'Asian Fusion',
+    description:
+      'A creative combination of flavors and techniques from various Asian cuisines, such as Chinese, Japanese, Thai, and Korean, often merged into innovative dishes.',
+  },
+  {
+    name: 'Contemporary',
+    description:
+      'Modern, innovative cuisine that emphasizes current culinary trends, fresh presentation, and often combines traditional techniques with new ideas.',
+  },
+  {
+    name: 'Dumplings',
+    description:
+      'A category of cuisine centered around small parcels of dough filled with meat, seafood, or vegetables, common in many Asian culinary traditions.',
+  },
+  {
+    name: 'Halal',
+    description:
+      'Cuisine prepared according to Islamic dietary laws, ensuring ingredients and cooking methods are permissible, often featuring Middle Eastern and South Asian influences.',
+  },
 ];
+
+// Define the list of appliances
+export const appliances = [
+  { id: 1, name: 'Oven' },
+  { id: 2, name: 'Microwave' },
+  { id: 3, name: 'Blender' },
+  { id: 4, name: 'Food Processor' },
+  { id: 5, name: 'Air Fryer' },
+  { id: 6, name: 'Slow Cooker' },
+  { id: 7, name: 'Mixer' },
+  { id: 8, name: 'Toaster' },
+  { id: 9, name: 'Pressure Cooker' },
+  { id: 10, name: 'Rice Cooker' },
+];
+
+// Defined the list of dietary restrictions
+export const dietaryRequirements = [
+  {
+    id: 1,
+    name: 'Vegetarian',
+    description: 'No meat, fish, or poultry',
+  },
+  {
+    id: 2,
+    name: 'Vegan',
+    description: 'No animal products',
+  },
+  {
+    id: 3,
+    name: 'Gluten Free',
+    description: 'No gluten-containing foods',
+  },
+  {
+    id: 4,
+    name: 'Halal',
+    description: 'Meat from animals slaughter',
+  },
+];
+
 // Define the list of restaurants
 export const restaurants: RestaurantData[] = [
   {

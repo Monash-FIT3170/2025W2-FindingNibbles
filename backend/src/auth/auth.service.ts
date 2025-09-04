@@ -129,7 +129,7 @@ export class AuthService {
       lastName: user.lastName,
     };
     return {
-      access_token: this.jwtService.sign(payload, { expiresIn: '1m' }),
+      access_token: this.jwtService.sign(payload, { expiresIn: '1d' }),
       refresh_token: this.jwtService.sign(payload, { expiresIn: '30d' }),
     };
   }

@@ -1,4 +1,9 @@
 // Type definitions for custom data structures
+export type CuisineData = {
+  name: string;
+  description: string;
+};
+
 export type RestaurantPhoto = {
   photoReference: string;
   height: number;
@@ -24,6 +29,13 @@ export type CsvRestaurantData = {
   location: string;
 };
 
+export type JsonRestaurantData = {
+  building_address: string;
+  trading_name: string;
+  longitude: string;
+  latitude: string;
+};
+
 export interface RestaurantData {
   place_id: string;
   name: string;
@@ -39,9 +51,4 @@ export interface RestaurantData {
   website?: string;
   photos: RestaurantPhoto[];
   cuisines: CuisineData[];
-}
-
-export interface CuisineData {
-  name: string;
-  description?: string;
 }

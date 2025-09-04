@@ -24,8 +24,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Install npm dependencies
         run: npm install
@@ -33,13 +31,28 @@ jobs:
       - name: Run build task
         run: npm run build
 
-      # - name: Deploy to Production Server
-      #   uses: easingthemes/ssh-deploy@main
-      #   with:
-      #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      #     ARGS: "-avzr --delete"
-      #     SOURCE: "dist/"
-      #     REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-      #     REMOTE_USER: ${{ secrets.REMOTE_USER }}
-      #     TARGET: ${{ secrets.REMOTE_TARGET }}
-      #     EXCLUDE: "/dist/, /node_modules/"
+      - name: Deploy to Production Server
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-avzr --delete"
+          SOURCE: "./"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET_PROD }}
+          EXCLUDE: "/node_modules/, /.git/, /coverage/, /.env.example"
+          
+      - name: Install dependencies and restart production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.REMOTE_TARGET_PROD }}
+            forever stopall
+            docker compose down --volumes
+            docker compose up -d
+            npm run db:push
+            npm run db:seed
+            forever start dist/src/main.js
