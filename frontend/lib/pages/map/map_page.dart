@@ -37,6 +37,15 @@ class _MapPageState extends State<MapPage> {
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
   final bool useCurrentLocation = true;
+  static const double _minimumZoomForRestaurants = 12.0;
+
+  // Optimization variables
+  Timer? _debounceTimer;
+  Timer? _positionUpdateTimer;
+  static const Duration _debounceDelay = Duration(milliseconds: 500);
+  final Map<String, List<RestaurantDto>> _restaurantCache = {};
+  LatLngBounds? _lastFetchedBounds;
+  double? _lastFetchedZoom;
 
   // Filter variables
   int _minimumRating = 1;
@@ -49,6 +58,10 @@ class _MapPageState extends State<MapPage> {
   final DirectionsService _directionsService = DirectionsService();
   double? _routeDuration; // in seconds
   double? _routeDistance; // in meters
+  // Search variables
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearchMode = false;
 
   @override
   void initState() {
@@ -193,16 +206,19 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    // Listen for position updates (but don't fetch restaurants on each update)
-    _positionStreamSubscription = Geolocator.getPositionStream().listen((
-      Position pos,
-    ) {
+    // Listen for position updates with reduced frequency
+    _positionStreamSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Only update when moved 10 meters
+      ),
+    ).listen((Position pos) {
       final newPos = LatLng(pos.latitude, pos.longitude);
       if (mounted) {
         setState(() {
           _currentPosition = newPos;
         });
-        _mapController.move(newPos, _mapController.camera.zoom);
+        // Removed automatic map centering to allow manual panning
       }
     });
   }
@@ -212,24 +228,46 @@ class _MapPageState extends State<MapPage> {
     if (!mounted) return;
 
     try {
-      final bounds =
-          _currentPosition != null
-              ? _getBoundsAroundPosition(
-                _currentPosition!,
-                0.01,
-              ) // Create bounds around current position
-              : LatLngBounds(
-                LatLng(37.9011, 145.1267), // Melbourne area fallback
-                LatLng(37.9211, 145.1467),
-              );
+      List<RestaurantDto> allRestaurants;
 
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Check if zoom level is sufficient for loading restaurants (only if map controller is ready)
+        if (_isMapControllerReady() &&
+            _mapController.camera.zoom < _minimumZoomForRestaurants) {
+          setState(() {
+            _restaurants = [];
+          });
+          return;
+        }
+
+        // Otherwise, use the existing bounds filtering logic
+        final bounds =
+            _currentPosition != null
+                ? _getBoundsAroundPosition(
+                  _currentPosition!,
+                  0.01,
+                ) // Create bounds around current position
+                : LatLngBounds(
+                  LatLng(-37.9211, 145.1267), // Melbourne area fallback
+                  LatLng(-37.9011, 145.1467),
+                );
+
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+
+        // Filter restaurants to only show those within bounds for non-search mode
+        allRestaurants = _filterRestaurantsInBounds(allRestaurants, bounds);
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -251,6 +289,85 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  // Check if map controller is ready to use
+  bool _isMapControllerReady() {
+    try {
+      // Try to access the camera - this will throw if not ready
+      _mapController.camera.zoom;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Filter restaurants to only include those within the visible bounds
+  List<RestaurantDto> _filterRestaurantsInBounds(
+    List<RestaurantDto> restaurants,
+    LatLngBounds bounds,
+  ) {
+    return restaurants.where((restaurant) {
+      final restaurantPoint = LatLng(restaurant.latitude, restaurant.longitude);
+      return bounds.contains(restaurantPoint);
+    }).toList();
+  }
+
+  // Generate cache key for restaurant data
+  String _generateCacheKey(
+    LatLngBounds bounds,
+    CuisineDto? cuisine,
+    int minRating,
+    String searchQuery,
+  ) {
+    return '${bounds.southWest.latitude.toStringAsFixed(4)}_${bounds.southWest.longitude.toStringAsFixed(4)}_'
+        '${bounds.northEast.latitude.toStringAsFixed(4)}_${bounds.northEast.longitude.toStringAsFixed(4)}_'
+        '${cuisine?.id ?? 'all'}_${minRating}_${searchQuery.isEmpty ? 'nosearch' : searchQuery}';
+  }
+
+  // Check if we need to fetch new data based on bounds change
+  bool _shouldFetchNewData(LatLngBounds currentBounds, double currentZoom) {
+    if (_lastFetchedBounds == null || _lastFetchedZoom == null) return true;
+
+    // Check if zoom level changed significantly
+    if ((currentZoom - _lastFetchedZoom!).abs() > 1.0) return true;
+
+    // Check if bounds changed significantly (moved more than 20% of current bounds)
+    final currentWidth =
+        currentBounds.northEast.longitude - currentBounds.southWest.longitude;
+    final currentHeight =
+        currentBounds.northEast.latitude - currentBounds.southWest.latitude;
+
+    // Check if center moved significantly
+    final currentCenter = LatLng(
+      (currentBounds.northEast.latitude + currentBounds.southWest.latitude) / 2,
+      (currentBounds.northEast.longitude + currentBounds.southWest.longitude) /
+          2,
+    );
+    final lastCenter = LatLng(
+      (_lastFetchedBounds!.northEast.latitude +
+              _lastFetchedBounds!.southWest.latitude) /
+          2,
+      (_lastFetchedBounds!.northEast.longitude +
+              _lastFetchedBounds!.southWest.longitude) /
+          2,
+    );
+
+    final distance = _calculateDistance(currentCenter, lastCenter);
+    final significantDistance =
+        math.max(currentWidth, currentHeight) * 0.2; // 20% threshold
+
+    return distance > significantDistance;
+  }
+
+  // Calculate distance between two points in degrees (approximate)
+  double _calculateDistance(LatLng point1, LatLng point2) {
+    final lat1 = point1.latitude;
+    final lon1 = point1.longitude;
+    final lat2 = point2.latitude;
+    final lon2 = point2.longitude;
+
+    return math.sqrt(math.pow(lat2 - lat1, 2) + math.pow(lon2 - lon1, 2));
+  }
+
   // Force fetch restaurants (shows loading indicator)
   Future<void> _forceFetchRestaurants() async {
     if (!mounted) return;
@@ -260,15 +377,84 @@ class _MapPageState extends State<MapPage> {
     });
 
     try {
-      final bounds = _mapController.camera.visibleBounds;
+      List<RestaurantDto> allRestaurants;
 
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Check if map controller is ready before using it
+        if (!_isMapControllerReady()) {
+          // If map isn't ready, use default bounds
+          final bounds =
+              _currentPosition != null
+                  ? _getBoundsAroundPosition(_currentPosition!, 0.01)
+                  : LatLngBounds(
+                    LatLng(-37.9211, 145.1267), // Melbourne area fallback
+                    LatLng(-37.9011, 145.1467),
+                  );
+          await _fetchWithBounds(bounds);
+          return;
+        }
+
+        // Check if zoom level is sufficient for loading restaurants
+        if (_mapController.camera.zoom < _minimumZoomForRestaurants) {
+          setState(() {
+            _restaurants = [];
+          });
+          return;
+        }
+
+        // Otherwise, use the existing bounds filtering logic
+        final bounds = _mapController.camera.visibleBounds;
+
+        // Check cache first (only for non-search mode)
+        final cacheKey = _generateCacheKey(
+          bounds,
+          _selectedCuisine,
+          _minimumRating,
+          '',
+        );
+        if (_restaurantCache.containsKey(cacheKey)) {
+          final cachedRestaurants = _restaurantCache[cacheKey]!;
+          final visibleRestaurants = _filterRestaurantsInBounds(
+            cachedRestaurants,
+            bounds,
+          );
+
+          if (mounted) {
+            setState(() {
+              _restaurants = _applyRatingFilter(visibleRestaurants);
+            });
+          }
+          return;
+        }
+
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+
+        // Cache the results (only for non-search mode)
+        _restaurantCache[cacheKey] = allRestaurants;
+
+        // Clean up old cache entries if cache gets too large
+        if (_restaurantCache.length > 20) {
+          final keysToRemove =
+              _restaurantCache.keys.take(_restaurantCache.length - 15).toList();
+          for (final key in keysToRemove) {
+            _restaurantCache.remove(key);
+          }
+        }
+
+        // Filter restaurants to only show those within bounds
+        allRestaurants = _filterRestaurantsInBounds(allRestaurants, bounds);
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -291,13 +477,69 @@ class _MapPageState extends State<MapPage> {
   // Helper to fetch with known bounds (no loading state management)
   Future<void> _fetchWithBounds(LatLngBounds bounds) async {
     try {
-      final allRestaurants = await MapService().getRestaurants(
-        swLat: bounds.southWest.latitude,
-        swLng: bounds.southWest.longitude,
-        neLat: bounds.northEast.latitude,
-        neLng: bounds.northEast.longitude,
-        cuisineId: _selectedCuisine?.id,
-      );
+      List<RestaurantDto> allRestaurants;
+
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await MapService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Check if zoom level is sufficient for loading restaurants (only if map controller is ready)
+        if (_isMapControllerReady() &&
+            _mapController.camera.zoom < _minimumZoomForRestaurants) {
+          setState(() {
+            _restaurants = [];
+          });
+          return;
+        }
+
+        // Check cache first (only for non-search mode)
+        final cacheKey = _generateCacheKey(
+          bounds,
+          _selectedCuisine,
+          _minimumRating,
+          '',
+        );
+        if (_restaurantCache.containsKey(cacheKey)) {
+          final cachedRestaurants = _restaurantCache[cacheKey]!;
+          final visibleRestaurants = _filterRestaurantsInBounds(
+            cachedRestaurants,
+            bounds,
+          );
+
+          if (mounted) {
+            setState(() {
+              _restaurants = _applyRatingFilter(visibleRestaurants);
+            });
+          }
+          return;
+        }
+
+        // Otherwise, use the bounds filtering logic
+        allRestaurants = await MapService().getRestaurants(
+          swLat: bounds.southWest.latitude,
+          swLng: bounds.southWest.longitude,
+          neLat: bounds.northEast.latitude,
+          neLng: bounds.northEast.longitude,
+          cuisineId: _selectedCuisine?.id,
+        );
+
+        // Cache the results (only for non-search mode)
+        _restaurantCache[cacheKey] = allRestaurants;
+
+        // Clean up old cache entries if cache gets too large
+        if (_restaurantCache.length > 20) {
+          final keysToRemove =
+              _restaurantCache.keys.take(_restaurantCache.length - 15).toList();
+          for (final key in keysToRemove) {
+            _restaurantCache.remove(key);
+          }
+        }
+
+        // Filter restaurants to only show those within bounds
+        allRestaurants = _filterRestaurantsInBounds(allRestaurants, bounds);
+      }
 
       final filteredRestaurants = _applyRatingFilter(allRestaurants);
 
@@ -313,10 +555,67 @@ class _MapPageState extends State<MapPage> {
 
   // Fetch restaurants in response to user actions (like dragging the map)
   Future<void> _fetchRestaurantsInBounds() async {
-    if (!mounted || _isLoading) return;
+    if (!mounted || _isLoading || !_isMapControllerReady()) return;
 
     final bounds = _mapController.camera.visibleBounds;
     await _fetchWithBounds(bounds);
+  }
+
+  // Debounced restaurant fetching to prevent excessive API calls
+  void _debouncedFetchRestaurants() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDelay, () {
+      if (mounted && !_isLoading && _isMapControllerReady()) {
+        final currentBounds = _mapController.camera.visibleBounds;
+        final currentZoom = _mapController.camera.zoom;
+
+        // Check if we really need to fetch new data
+        if (_shouldFetchNewData(currentBounds, currentZoom)) {
+          _fetchRestaurantsInBounds();
+          _lastFetchedBounds = currentBounds;
+          _lastFetchedZoom = currentZoom;
+        }
+      }
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+      _isSearchMode = _searchQuery.isNotEmpty;
+    });
+
+    // Clear cache when switching between search and map modes
+    if (_searchQuery.isEmpty || query.trim().isEmpty) {
+      _restaurantCache.clear();
+      _lastFetchedBounds = null;
+      _lastFetchedZoom = null;
+    }
+
+    // Cancel previous debounce timer
+    _debounceTimer?.cancel();
+
+    // Debounce the search to avoid too many API calls
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery == query.trim() && mounted) {
+        _fetchRestaurantsInitial();
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _isSearchMode = false;
+    });
+
+    // Clear cache when switching back to map mode
+    _restaurantCache.clear();
+    _lastFetchedBounds = null;
+    _lastFetchedZoom = null;
+
+    _fetchRestaurantsInitial();
   }
 
   // Apply rating filter to the list of restaurants
@@ -546,31 +845,40 @@ class _MapPageState extends State<MapPage> {
                       },
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Cuisine'),
-                    subtitle: DropdownButton<CuisineDto?>(
-                      value: _selectedCuisine,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<CuisineDto?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                        ..._availableCuisines.map(
-                          (cuisine) => DropdownMenuItem(
-                            value: cuisine,
-                            child: Text(cuisine.name),
+                  if (!_isSearchMode) // Only show cuisine filter when not searching
+                    ListTile(
+                      leading: const Icon(Icons.restaurant_menu),
+                      title: const Text('Cuisine'),
+                      subtitle: DropdownButton<CuisineDto?>(
+                        value: _selectedCuisine,
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<CuisineDto?>(
+                            value: null,
+                            child: Text('All'),
                           ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCuisine = value;
-                        });
-                      },
+                          ..._availableCuisines.map(
+                            (cuisine) => DropdownMenuItem(
+                              value: cuisine,
+                              child: Text(cuisine.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCuisine = value;
+                          });
+                        },
+                      ),
                     ),
-                  ),
+                  if (_isSearchMode)
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Search Mode'),
+                      subtitle: Text(
+                        'Cuisine filter disabled while searching for "$_searchQuery"',
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -601,6 +909,11 @@ class _MapPageState extends State<MapPage> {
 
   // Refresh filters and re-fetch restaurants
   void _refreshFilters() {
+    // Clear cache when filters change
+    _restaurantCache.clear();
+    _lastFetchedBounds = null;
+    _lastFetchedZoom = null;
+
     // Re-fetch from API (for cuisine filter) and apply rating filter
     _forceFetchRestaurants();
   }
@@ -609,7 +922,11 @@ class _MapPageState extends State<MapPage> {
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
 
-    if (_selectedCuisine != null) {
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      filterWidgets.add(Text('Search: "$_searchQuery"'));
+    }
+
+    if (!_isSearchMode && _selectedCuisine != null) {
       filterWidgets.add(Text(_selectedCuisine!.name));
     }
 
@@ -636,11 +953,19 @@ class _MapPageState extends State<MapPage> {
           color: AppTheme.colorScheme.onPrimary,
         ),
         onDeleted: () {
-          setState(() {
-            _selectedCuisine = null;
-            _minimumRating = 1;
-          });
-          _forceFetchRestaurants();
+          if (_isSearchMode) {
+            _clearSearch();
+          } else {
+            setState(() {
+              _selectedCuisine = null;
+              _minimumRating = 1;
+            });
+            // Clear cache when filters change
+            _restaurantCache.clear();
+            _lastFetchedBounds = null;
+            _lastFetchedZoom = null;
+            _forceFetchRestaurants();
+          }
         },
         backgroundColor: AppTheme.colorScheme.primary,
         side: BorderSide.none,
@@ -739,8 +1064,16 @@ class _MapPageState extends State<MapPage> {
                         // Map is ready - no action needed since we handle loading in initState
                       },
                       onPositionChanged: (MapCamera camera, bool hasGesture) {
-                        if (hasGesture && !_isLoading) {
-                          _fetchRestaurantsInBounds();
+                        if (hasGesture && !_isLoading && !_isSearchMode) {
+                          // Check if zoom level is sufficient, if not clear restaurants
+                          if (camera.zoom < _minimumZoomForRestaurants) {
+                            setState(() {
+                              _restaurants = [];
+                            });
+                          } else {
+                            // Use debounced fetching to prevent excessive API calls
+                            _debouncedFetchRestaurants();
+                          }
                         }
                       },
                     ),
@@ -784,158 +1117,202 @@ class _MapPageState extends State<MapPage> {
                                 ),
                               ),
                             ),
-                          // Restaurant markers (red)
-                          ..._restaurants.map((restaurant) {
-                            return Marker(
-                              point: LatLng(
-                                restaurant.latitude,
-                                restaurant.longitude,
-                              ),
-                              width: 40,
-                              height: 40,
-                              child: GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (context) => AlertDialog(
-                                          title: Text(
-                                            restaurant.name,
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.titleLarge,
-                                          ),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              RichText(
-                                                text: TextSpan(
-                                                  style:
-                                                      DefaultTextStyle.of(
-                                                        context,
-                                                      ).style,
-                                                  children: [
-                                                    TextSpan(
-                                                      text: 'Rating: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                          // Restaurant markers (red) - show in search mode or when zoom is sufficient
+                          if (_isSearchMode ||
+                              !_isMapControllerReady() ||
+                              _mapController.camera.zoom >=
+                                  _minimumZoomForRestaurants)
+                            ..._restaurants.map((restaurant) {
+                              return Marker(
+                                point: LatLng(
+                                  restaurant.latitude,
+                                  restaurant.longitude,
+                                ),
+                                width: 40,
+                                height: 40,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: Text(
+                                              restaurant.name,
+                                              style:
+                                                  Theme.of(
+                                                    context,
+                                                  ).textTheme.titleLarge,
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        DefaultTextStyle.of(
+                                                          context,
+                                                        ).style,
+                                                    children: [
+                                                      TextSpan(
+                                                        text: 'Rating: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          '${restaurant.rating}',
-                                                    ),
-                                                  ],
+                                                      TextSpan(
+                                                        text:
+                                                            '${restaurant.rating}',
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
+                                                SizedBox(height: 8),
+                                                Text.rich(
+                                                  TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: 'Total reviews: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            '${restaurant.userRatingsTotal}',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 8),
+                                                Text.rich(
+                                                  TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: 'PH: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            restaurant
+                                                                .formattedPhoneNum ??
+                                                            'Not available',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                SizedBox(height: 8),
+                                                Text.rich(
+                                                  TextSpan(
+                                                    children: [
+                                                      TextSpan(
+                                                        text: 'Address: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            '${restaurant.address}',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    _isLoadingDirections
+                                                        ? null
+                                                        : () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          _getDirectionsToRestaurant(
+                                                            restaurant,
+                                                          );
+                                                        },
+                                                child:
+                                                    _isLoadingDirections
+                                                        ? const SizedBox(
+                                                          width: 16,
+                                                          height: 16,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                              ),
+                                                        )
+                                                        : const Text(
+                                                          'Get Directions',
+                                                        ),
                                               ),
-                                              SizedBox(height: 8),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text: 'Total reviews: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          '${restaurant.userRatingsTotal}',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              SizedBox(height: 8),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text: 'PH: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          restaurant
-                                                              .formattedPhoneNum ??
-                                                          'Not available',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              SizedBox(height: 8),
-                                              Text.rich(
-                                                TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text: 'Address: ',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          '${restaurant.address}',
-                                                    ),
-                                                  ],
-                                                ),
+                                              TextButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.pop(context),
+                                                child: const Text('Close'),
                                               ),
                                             ],
                                           ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  _isLoadingDirections
-                                                      ? null
-                                                      : () {
-                                                        Navigator.pop(context);
-                                                        _getDirectionsToRestaurant(
-                                                          restaurant,
-                                                        );
-                                                      },
-                                              child:
-                                                  _isLoadingDirections
-                                                      ? const SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                            ),
-                                                      )
-                                                      : const Text(
-                                                        'Get Directions',
-                                                      ),
-                                            ),
-                                            TextButton(
-                                              onPressed:
-                                                  () => Navigator.pop(context),
-                                              child: const Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                  );
-                                },
-                                child: const Icon(
-                                  Icons.location_pin,
-                                  color: Colors.red,
-                                  size: 40,
+                                    );
+                                  },
+                                  child: const Icon(
+                                    Icons.location_pin,
+                                    color: Colors.red,
+                                    size: 40,
+                                  ),
                                 ),
-                              ),
-                            );
-                          }),
+                              );
+                            }),
                         ],
                       ),
                     ],
                   ),
+                  // Floating Search Bubble
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 80, // Leave space for filter button
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(25),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          decoration: InputDecoration(
+                            hintText: 'Search restaurants by name...',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Separate Filter Button
                   Positioned(
                     top: 16,
                     right: 16,
@@ -968,7 +1345,11 @@ class _MapPageState extends State<MapPage> {
   @override
   void dispose() {
     _positionStreamSubscription?.cancel();
+    _debounceTimer?.cancel();
+    _positionUpdateTimer?.cancel();
+    _restaurantCache.clear();
     _mapController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 }

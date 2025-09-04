@@ -101,4 +101,21 @@ class RestaurantService {
       return [];
     }
   }
+
+  /// search restaurants by name
+  Future<List<RestaurantDto>> searchRestaurantsByName(String name) async {
+    try {
+      final response = await _dio.get('restaurant/search/$name');
+
+      if (response.statusCode == 200) {
+        final data = response.data as List;
+        return data.map((json) => RestaurantDto.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to search restaurants by name');
+      }
+    } catch (e) {
+      debugPrint('Error searching restaurants by name: $e');
+      return [];
+    }
+  }
 }
