@@ -19,8 +19,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ProfileService _profileService = ProfileService();
   final Random _random = Random();
+  final ScrollController _scrollController = ScrollController();
   List<RestaurantDto> _restaurants = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
+  int _currentPage = 0;
+  static const int _pageSize = 20;
   List<CuisineDto> _availableCuisines = [];
   List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
   CuisineDto? _selectedCuisine;
@@ -35,12 +40,24 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
     _fetchCuisines();
     _loadFavouriteCuisines(); // load favourite cuisines
+    _setupScrollListener();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _setupScrollListener() {
+    _scrollController.addListener(() {
+      // Load more when user is near the bottom (within 200 pixels)
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        _loadMoreRestaurants();
+      }
+    });
   }
 
   Future<void> _loadFavouriteCuisines() async {
@@ -65,33 +82,57 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _fetchRestaurants() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchRestaurants({bool isLoadMore = false}) async {
+    if (isLoadMore) {
+      if (_isLoadingMore || !_hasMoreData) return;
+      setState(() => _isLoadingMore = true);
+    } else {
+      setState(() {
+        _isLoading = true;
+        _currentPage = 0;
+        _hasMoreData = true;
+      });
+    }
+
     try {
-      List<RestaurantDto> allRestaurants;
+      List<RestaurantDto> newRestaurants;
 
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        allRestaurants = await RestaurantService().searchRestaurantsByName(
+        // Note: Search doesn't support pagination in the current API
+        newRestaurants = await RestaurantService().searchRestaurantsByName(
           _searchQuery,
         );
+        if (isLoadMore) {
+          // For search, we don't have pagination, so no more data
+          setState(() {
+            _hasMoreData = false;
+            _isLoadingMore = false;
+          });
+          return;
+        }
       } else {
-        // Otherwise, use the existing filtering logic
-        allRestaurants =
+        // Calculate skip value for pagination
+        final skip = isLoadMore ? _currentPage * _pageSize : 0;
+
+        // Otherwise, use the existing filtering logic with pagination
+        newRestaurants =
             _selectedCuisine != null
                 ? await RestaurantService().getRestaurantsByCuisine(
                   cuisineId: _selectedCuisine!.id,
                   orderBy: 'rating',
-                  take: 20,
+                  skip: skip,
+                  take: _pageSize,
                 )
                 : await RestaurantService().getAllRestaurants(
                   orderBy: 'rating',
-                  take: 20,
+                  skip: skip,
+                  take: _pageSize,
                 );
       }
 
       final filteredRestaurants =
-          allRestaurants
+          newRestaurants
               .where(
                 (restaurant) =>
                     restaurant.rating != null &&
@@ -100,13 +141,38 @@ class _HomePageState extends State<HomePage> {
               .toList();
 
       setState(() {
-        _restaurants = filteredRestaurants;
-        _isLoading = false;
+        if (isLoadMore) {
+          _restaurants.addAll(filteredRestaurants);
+          _currentPage++;
+          _isLoadingMore = false;
+          // Check if we got fewer results than expected (end of data)
+          if (filteredRestaurants.length < _pageSize) {
+            _hasMoreData = false;
+          }
+        } else {
+          _restaurants = filteredRestaurants;
+          _currentPage = 1;
+          _isLoading = false;
+          // Check if we got fewer results than expected (end of data)
+          if (filteredRestaurants.length < _pageSize) {
+            _hasMoreData = false;
+          }
+        }
       });
     } catch (e) {
       debugPrint('Error fetching restaurants: $e');
-      setState(() => _isLoading = false);
+      setState(() {
+        if (isLoadMore) {
+          _isLoadingMore = false;
+        } else {
+          _isLoading = false;
+        }
+      });
     }
+  }
+
+  Future<void> _loadMoreRestaurants() async {
+    await _fetchRestaurants(isLoadMore: true);
   }
 
   void _onSearchChanged(String query) {
@@ -522,6 +588,8 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _restaurants = filteredRestaurants;
         _isLoading = false;
+        _currentPage = 1;
+        _hasMoreData = filteredRestaurants.length >= _pageSize;
       });
 
       // Create subtitle with cuisine info if filtered
@@ -725,222 +793,259 @@ class _HomePageState extends State<HomePage> {
                                   : 'No restaurants found.',
                             ),
                           )
-                          : GridView.builder(
-                            itemCount: _restaurants.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                  childAspectRatio: 1,
-                                ),
-                            itemBuilder: (context, index) {
-                              final restaurant = _restaurants[index];
-                              return Card(
-                                child: InkWell(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              restaurant.name,
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: colorScheme.onSurface,
+                          : Column(
+                            children: [
+                              Expanded(
+                                child: GridView.builder(
+                                  controller: _scrollController,
+                                  itemCount: _restaurants.length,
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 8,
+                                        crossAxisSpacing: 8,
+                                        childAspectRatio: 1,
+                                      ),
+                                  itemBuilder: (context, index) {
+                                    final restaurant = _restaurants[index];
+                                    return Card(
+                                      child: InkWell(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder:
+                                                (context) => AlertDialog(
+                                                  title: Text(
+                                                    restaurant.name,
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          colorScheme.onSurface,
+                                                    ),
+                                                  ),
+                                                  content: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      RichText(
+                                                        text: TextSpan(
+                                                          style:
+                                                              DefaultTextStyle.of(
+                                                                context,
+                                                              ).style,
+                                                          children: [
+                                                            const TextSpan(
+                                                              text: 'Rating: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            TextSpan(
+                                                              text:
+                                                                  restaurant
+                                                                      .rating
+                                                                      .toString(),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      RichText(
+                                                        text: TextSpan(
+                                                          style:
+                                                              DefaultTextStyle.of(
+                                                                context,
+                                                              ).style,
+                                                          children: [
+                                                            const TextSpan(
+                                                              text:
+                                                                  'Total reviews: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            TextSpan(
+                                                              text:
+                                                                  restaurant
+                                                                      .userRatingsTotal
+                                                                      .toString(),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      RichText(
+                                                        text: TextSpan(
+                                                          style:
+                                                              DefaultTextStyle.of(
+                                                                context,
+                                                              ).style,
+                                                          children: [
+                                                            const TextSpan(
+                                                              text: 'PH: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            TextSpan(
+                                                              text:
+                                                                  restaurant
+                                                                      .formattedPhoneNum ??
+                                                                  'Not available',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 8),
+                                                      RichText(
+                                                        text: TextSpan(
+                                                          style:
+                                                              DefaultTextStyle.of(
+                                                                context,
+                                                              ).style,
+                                                          children: [
+                                                            const TextSpan(
+                                                              text: 'Address: ',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            TextSpan(
+                                                              text:
+                                                                  restaurant
+                                                                      .address,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed:
+                                                          () => Navigator.pop(
+                                                            context,
+                                                          ),
+                                                      child: const Text(
+                                                        'Close',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                          );
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      restaurant.name,
+                                                      style: theme
+                                                          .textTheme
+                                                          .titleSmall
+                                                          ?.copyWith(
+                                                            color:
+                                                                colorScheme
+                                                                    .primary,
+                                                          ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.qr_code_scanner,
+                                                    ),
+                                                    iconSize: 20,
+                                                    padding: EdgeInsets.zero,
+                                                    constraints:
+                                                        const BoxConstraints(),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                context,
+                                                              ) => MenuScannerPage(
+                                                                restaurantId:
+                                                                    restaurant
+                                                                        .id,
+                                                                restaurantName:
+                                                                    restaurant
+                                                                        .name,
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'Rating: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant.rating
-                                                                .toString(),
-                                                      ),
-                                                    ],
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.star,
+                                                    color:
+                                                        colorScheme.secondary,
+                                                    size: 18,
                                                   ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'Total reviews: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .userRatingsTotal
-                                                                .toString(),
-                                                      ),
-                                                    ],
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    restaurant.rating
+                                                            ?.toStringAsFixed(
+                                                              1,
+                                                            ) ??
+                                                        '',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
                                                   ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                formatPriceLevel(
+                                                  restaurant.priceLevel,
                                                 ),
-                                                const SizedBox(height: 8),
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      const TextSpan(
-                                                        text: 'Address: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant.address,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                                child: const Text('Close'),
                                               ),
                                             ],
                                           ),
+                                        ),
+                                      ),
                                     );
                                   },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                restaurant.name,
-                                                style: theme
-                                                    .textTheme
-                                                    .titleSmall
-                                                    ?.copyWith(
-                                                      color:
-                                                          colorScheme.primary,
-                                                    ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.qr_code_scanner,
-                                              ),
-                                              iconSize: 20,
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                              onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (context) =>
-                                                            MenuScannerPage(
-                                                              restaurantId:
-                                                                  restaurant.id,
-                                                              restaurantName:
-                                                                  restaurant
-                                                                      .name,
-                                                            ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.star,
-                                              color: colorScheme.secondary,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              restaurant.rating
-                                                      ?.toStringAsFixed(1) ??
-                                                  '',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          formatPriceLevel(
-                                            restaurant.priceLevel,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                ),
+                              ),
+                              // Pagination loading indicator
+                              if (_isLoadingMore)
+                                const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
                                   ),
                                 ),
-                              );
-                            },
+                            ],
                           ),
                 ),
                 _buildActiveFiltersChip(),
