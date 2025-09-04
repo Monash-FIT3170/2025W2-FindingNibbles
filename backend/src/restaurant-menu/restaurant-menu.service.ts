@@ -10,6 +10,11 @@ import {
   AnalyseRestaurantMenuResponseDto,
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
+import {
+  GetRandomDishSuccessResponseDto,
+  GetRandomDishErrorResponseDto,
+  RandomDishResponseDto,
+} from './dto/random-dish.dto';
 import { basicMenuSchema, menuAnalysisSchema } from './schemas';
 
 @Injectable()
@@ -374,5 +379,105 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
     }
 
     return menuResponse.menu_items;
+  }
+
+  async getRandomDishByDietaryRequirements(
+    dietaryRequirements: string[],
+  ): Promise<GetRandomDishSuccessResponseDto | GetRandomDishErrorResponseDto> {
+    try {
+      // Validate that dietary requirements exist in the database
+      const validDietaryRequirements = await this.db.dietaryRequirement.findMany({
+        where: {
+          name: { in: dietaryRequirements },
+        },
+        select: { id: true, name: true },
+      });
+
+      if (validDietaryRequirements.length === 0) {
+        return {
+          success: false,
+          error: 'INVALID_DIETARY_REQUIREMENTS',
+          message: 'None of the provided dietary requirements are valid.',
+          requestedDietaryRequirements: dietaryRequirements,
+        };
+      }
+
+      const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
+
+      // Find dishes that match ALL the provided dietary requirements
+      const matchingDishes = await this.db.dish.findMany({
+        where: {
+          dishDietaries: {
+            every: {
+              dietaryId: { in: validDietaryIds },
+            },
+          },
+          // Ensure the dish has dietary relationships for ALL required dietaries
+          AND: validDietaryIds.map((dietaryId) => ({
+            dishDietaries: {
+              some: {
+                dietaryId: dietaryId,
+              },
+            },
+          })),
+        },
+        include: {
+          restaurant: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          dishDietaries: {
+            include: {
+              dietary: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (matchingDishes.length === 0) {
+        return {
+          success: false,
+          error: 'NO_MATCHING_DISHES',
+          message: `No dishes found that satisfy all dietary requirements: ${dietaryRequirements.join(', ')}.`,
+          requestedDietaryRequirements: dietaryRequirements,
+        };
+      }
+
+      // Randomly select one dish from the matching dishes
+      const randomIndex = Math.floor(Math.random() * matchingDishes.length);
+      const selectedDish = matchingDishes[randomIndex];
+
+      // Format the response
+      const dishResponse: RandomDishResponseDto = {
+        id: selectedDish.id,
+        name: selectedDish.name,
+        description: selectedDish.description || undefined,
+        price: selectedDish.price || undefined,
+        category: selectedDish.category || undefined,
+        dietaryTags: selectedDish.dishDietaries.map((dd) => dd.dietary.name),
+        restaurantId: selectedDish.restaurant.id,
+        restaurantName: selectedDish.restaurant.name,
+      };
+
+      return {
+        success: true,
+        dish: dishResponse,
+        message: `Found a random dish matching your dietary requirements: ${dietaryRequirements.join(', ')}.`,
+      };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        error: 'DATABASE_ERROR',
+        message: 'An error occurred while searching for dishes.',
+        requestedDietaryRequirements: dietaryRequirements,
+      };
+    }
   }
 }

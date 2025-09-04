@@ -6,9 +6,11 @@ import {
   UseInterceptors,
   UploadedFile,
   Param,
+  Body,
 } from '@nestjs/common';
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { GetRandomDishDto } from './dto/random-dish.dto';
 
 /**
  * CONTROLLER UPDATES NEEDED:
@@ -37,5 +39,12 @@ export class RestaurantMenuController {
   ) {
     const restaurantIdNum = parseInt(restaurantId, 10);
     return this.restaurantMenuService.analyseAndStoreMenu(menu, restaurantIdNum);
+  }
+
+  @Post('random-dish')
+  async getRandomDish(@Body() getRandomDishDto: GetRandomDishDto) {
+    return this.restaurantMenuService.getRandomDishByDietaryRequirements(
+      getRandomDishDto.dietaryRequirements,
+    );
   }
 }
