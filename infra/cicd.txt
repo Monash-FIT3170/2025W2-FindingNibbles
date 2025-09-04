@@ -1,0 +1,87 @@
+graph TD;
+    %% Trigger Events
+    A[Push to dev/main] --> |frontend changes| B[Frontend Staging Job]
+    A --> |backend changes| C[Backend Staging Job]
+    A --> |main branch| F[Production Jobs]
+    
+    PR[Pull Request] --> |frontend changes| B
+    PR --> |backend changes| C
+    
+    CODEQL[CodeQL Security Scan] --> |on push/PR| CQ[Analyse Code Security]
+    
+    %% Staging Frontend (dev branch)
+    B --> B1[Setup Flutter 3.29.2]
+    B1 --> B2[Install Dependencies]
+    B2 --> B3[Format Check]
+    B3 --> B4[Analyse Code]
+    B4 --> B5[Run Tests]
+    B5 --> B_END[Dev Testing Complete ✓]
+
+    %% Staging Backend (dev branch)
+    C --> C1[Setup Node.js 22]
+    C1 --> C2[Install Dependencies]
+    C2 --> C3[Run Unit Tests]
+    C3 --> C4[Run Linting]
+    C4 --> C_END[Dev Testing Complete ✓]
+
+    %% Production Frontend (main branch)
+    F --> PF[Production Frontend Job]
+    PF --> PF1[Setup Java 17 & Flutter 3.29.2]
+    PF1 --> PF2[Install Dependencies]
+    PF2 --> PF3[Decode Keystore]
+    PF3 --> PF4[Build APK Release]
+    PF4 --> PF5[Build App Bundle]
+    PF5 --> PF6[Upload Artifacts]
+    PF6 --> PF7[Create GitHub Release]
+    PF7 --> PF_END[Production Frontend Complete 🎉]
+
+    %% Production Backend (main branch)
+    F --> PB[Production Backend Job]
+    PB --> PB1[Setup Node.js 22]
+    PB1 --> PB2[Install Dependencies]
+    PB2 --> PB3[Build Application]
+    PB3 --> PB4[SSH Deploy to Server]
+    PB4 --> PB5[Stop Previous Services]
+    PB5 --> PB6[Docker Compose Up]
+    PB6 --> PB7[Database Push & Seed]
+    PB7 --> PB8[Start with Forever]
+    PB8 --> PB_END[Production Backend Complete 🎉]
+
+    %% Manual Trigger Option
+    MANUAL[Manual Workflow Dispatch] --> F
+
+    %% Styling
+    style B fill:#ffcc00,stroke:#333,stroke-width:2px;
+    style B1 fill:#ffcc00;
+    style B2 fill:#ffcc00;
+    style B3 fill:#ffcc00;
+    style B4 fill:#ffcc00;
+    style B5 fill:#ffcc00;
+
+    style C fill:#66ccff,stroke:#333,stroke-width:2px;
+    style C1 fill:#66ccff;
+    style C2 fill:#66ccff;
+    style C3 fill:#66ccff;
+    style C4 fill:#66ccff;
+
+    style PF fill:#ff9999,stroke:#333,stroke-width:2px;
+    style PF1 fill:#ff9999;
+    style PF2 fill:#ff9999;
+    style PF3 fill:#ff9999;
+    style PF4 fill:#ff9999;
+    style PF5 fill:#ff9999;
+    style PF6 fill:#ff9999;
+    style PF7 fill:#ff9999;
+
+    style PB fill:#99ff99,stroke:#333,stroke-width:2px;
+    style PB1 fill:#99ff99;
+    style PB2 fill:#99ff99;
+    style PB3 fill:#99ff99;
+    style PB4 fill:#99ff99;
+    style PB5 fill:#99ff99;
+    style PB6 fill:#99ff99;
+    style PB7 fill:#99ff99;
+    style PB8 fill:#99ff99;
+
+    style CODEQL fill:#cc99ff,stroke:#333,stroke-width:2px;
+    style CQ fill:#cc99ff;
