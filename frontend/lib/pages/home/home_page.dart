@@ -64,8 +64,12 @@ class _HomePageState extends State<HomePage> {
               ? await RestaurantService().getRestaurantsByCuisine(
                 cuisineId: _selectedCuisine!.id,
                 orderBy: 'rating',
+                take: 20,
               )
-              : await RestaurantService().getAllRestaurants(orderBy: 'rating');
+              : await RestaurantService().getAllRestaurants(
+                orderBy: 'rating',
+                take: 20,
+              );
 
       final filteredRestaurants =
           allRestaurants
