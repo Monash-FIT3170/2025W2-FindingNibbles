@@ -18,6 +18,183 @@ export class RestaurantMenuService {
     private geminiService: GeminiService,
   ) {}
 
+  async analyseAndStoreMenu(
+    menu: Express.Multer.File,
+    restaurantId: number,
+  ): Promise<any> {
+    try {
+      // Validate file upload
+      if (!menu?.buffer || !menu?.mimetype) {
+        return {
+          success: false,
+          error: 'INVALID_FILE',
+          message:
+            'Invalid menu file provided. Please upload a valid image file.',
+          restaurantId,
+        };
+      }
+
+      const mimeType = detectMimeType(menu);
+      const supportedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+      ];
+
+      if (!supportedTypes.includes(mimeType)) {
+        return {
+          success: false,
+          error: 'INVALID_FILE',
+          message: `Unsupported file type: ${mimeType}. Please upload a JPEG, PNG, WebP, or GIF image.`,
+          restaurantId,
+        };
+      }
+
+      // Get AI-classified menu items
+      let menuItems;
+      try {
+        menuItems = await this.analyseMenu(menu);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        return {
+          success: false,
+          error: 'AI_PROCESSING_FAILED',
+          message:
+            'Failed to analyze menu image. Please try with a clearer image.',
+          restaurantId,
+        };
+      }
+
+      // Store menu items in database with error handling
+      try {
+        const storedDishes = await this.storeMenuItems(menuItems, restaurantId);
+
+        // Calculate summary statistics
+        const categories = [
+          ...new Set(storedDishes.map((dish) => dish.category).filter(Boolean)),
+        ];
+        const itemsWithDietaryTags = storedDishes.filter(
+          (dish) => dish.dietaryTags.length > 0,
+        ).length;
+
+        return {
+          success: true,
+          restaurantId,
+          dishesStored: storedDishes.length,
+          summary: {
+            totalItems: storedDishes.length,
+            itemsWithDietaryTags,
+            categories,
+          },
+          dishes: storedDishes,
+        };
+      } catch (storageError) {
+        return {
+          success: false,
+          error: 'STORAGE_FAILED',
+          message: 'Failed to save menu items to database.',
+          restaurantId,
+          details: getErrorMessage(storageError),
+        };
+      }
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        error: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred while processing the menu.',
+        restaurantId,
+        details: errorMessage,
+      };
+    }
+  }
+
+  private async storeMenuItems(
+    menuItems: MenuItemDto[],
+    restaurantId: number,
+  ): Promise<any[]> {
+    const storedDishes: any[] = [];
+    const failedItems: string[] = [];
+
+    for (const item of menuItems) {
+      try {
+        // Create dish record
+        const dish = await this.db.dish.create({
+          data: {
+            name: item.name,
+            description: item.description || null,
+            price: item.price || null,
+            restaurantId: restaurantId,
+          } as any,
+        });
+
+        // Create dietary relationships
+        const dietaryTagsStored: string[] = [];
+        if (item.dietaryTags && item.dietaryTags.length > 0) {
+          try {
+            // Get dietary requirement IDs
+            const dietaryRequirements =
+              await this.db.dietaryRequirement.findMany({
+                where: {
+                  name: { in: item.dietaryTags },
+                },
+                select: { id: true, name: true },
+              });
+
+            // Create dish-dietary relationships
+            for (const dietary of dietaryRequirements) {
+              await this.db.dishDietary.create({
+                data: {
+                  dishId: dish.id,
+                  dietaryId: dietary.id,
+                },
+              });
+              dietaryTagsStored.push(dietary.name);
+            }
+          } catch (dietaryError) {
+            // Log dietary relationship errors but don't fail the whole item
+            console.warn(
+              `Failed to create dietary relationships for dish ${item.name}:`,
+              getErrorMessage(dietaryError),
+            );
+          }
+        }
+
+        storedDishes.push({
+          id: dish.id,
+          name: dish.name,
+          description: dish.description,
+          price: dish.price,
+          category: item.category,
+          dietaryTags: dietaryTagsStored,
+          createdAt: dish.createdAt,
+        });
+      } catch (itemError) {
+        // Log individual item errors and continue with other items
+        const errorMessage = getErrorMessage(itemError);
+        console.error(`Failed to store dish "${item.name}":`, errorMessage);
+        failedItems.push(`${item.name}: ${errorMessage}`);
+      }
+    }
+
+    // If we couldn't store any items, throw an error
+    if (storedDishes.length === 0 && failedItems.length > 0) {
+      throw new Error(
+        `Failed to store any menu items. Errors: ${failedItems.join(', ')}`,
+      );
+    }
+
+    // If we had partial failures, log them but continue
+    if (failedItems.length > 0) {
+      console.warn(
+        `Partial storage failure. Stored ${storedDishes.length}/${menuItems.length} items. Failed items: ${failedItems.join(', ')}`,
+      );
+    }
+
+    return storedDishes;
+  }
+
   async analyseMenu(menu: Express.Multer.File): Promise<MenuItemDto[]> {
     try {
       if (!menu.buffer || !menu.mimetype) {
