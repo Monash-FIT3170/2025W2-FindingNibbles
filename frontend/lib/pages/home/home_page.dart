@@ -261,7 +261,7 @@ class _HomePageState extends State<HomePage> {
                       leading: const Icon(Icons.info_outline),
                       title: const Text('Search Mode'),
                       subtitle: Text(
-                        'Cuisine filter disabled while searching for "${_searchQuery}"',
+                        'Cuisine filter disabled while searching for "$_searchQuery"',
                       ),
                     ),
                 ],
@@ -275,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     Navigator.pop(context);
                     await _fetchRestaurants();
-                    await _loadFavouriteCuisines(); 
+                    await _loadFavouriteCuisines();
                   },
                   child: const Text('Apply'),
                 ),
