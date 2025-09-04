@@ -109,7 +109,7 @@ class LoginPage extends StatelessWidget {
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         hintText: 'example@mail.com',
-                      ), 
+                      ),
                     ),
                     const SizedBox(height: 24),
 
@@ -118,9 +118,7 @@ class LoginPage extends StatelessWidget {
                       controller: passwordController,
                       obscureText: true,
                       autocorrect: false,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                      ),
+                      decoration: const InputDecoration(labelText: 'Password'),
                     ),
 
                     // Forgot password aligned right
