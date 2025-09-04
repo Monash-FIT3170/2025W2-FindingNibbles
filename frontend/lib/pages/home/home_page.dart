@@ -25,6 +25,9 @@ class _HomePageState extends State<HomePage> {
   List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearchMode = false;
 
   @override
   void initState() {
@@ -32,6 +35,12 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
     _fetchCuisines();
     _loadFavouriteCuisines(); // load favourite cuisines
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavouriteCuisines() async {
@@ -59,17 +68,27 @@ class _HomePageState extends State<HomePage> {
   Future<void> _fetchRestaurants() async {
     setState(() => _isLoading = true);
     try {
-      final allRestaurants =
-          _selectedCuisine != null
-              ? await RestaurantService().getRestaurantsByCuisine(
-                cuisineId: _selectedCuisine!.id,
-                orderBy: 'rating',
-                take: 20,
-              )
-              : await RestaurantService().getAllRestaurants(
-                orderBy: 'rating',
-                take: 20,
-              );
+      List<RestaurantDto> allRestaurants;
+
+      // If we're in search mode and have a search query, search by name
+      if (_isSearchMode && _searchQuery.isNotEmpty) {
+        allRestaurants = await RestaurantService().searchRestaurantsByName(
+          _searchQuery,
+        );
+      } else {
+        // Otherwise, use the existing filtering logic
+        allRestaurants =
+            _selectedCuisine != null
+                ? await RestaurantService().getRestaurantsByCuisine(
+                  cuisineId: _selectedCuisine!.id,
+                  orderBy: 'rating',
+                  take: 20,
+                )
+                : await RestaurantService().getAllRestaurants(
+                  orderBy: 'rating',
+                  take: 20,
+                );
+      }
 
       final filteredRestaurants =
           allRestaurants
@@ -88,6 +107,29 @@ class _HomePageState extends State<HomePage> {
       debugPrint('Error fetching restaurants: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query.trim();
+      _isSearchMode = _searchQuery.isNotEmpty;
+    });
+
+    // Debounce the search to avoid too many API calls
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (_searchQuery == query.trim()) {
+        _fetchRestaurants();
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+      _isSearchMode = false;
+    });
+    _fetchRestaurants();
   }
 
   void _showFilterDialog() {
@@ -128,91 +170,100 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.restaurant_menu),
-                    title: const Text('Cuisine'),
-                    subtitle: DropdownButton<CuisineDto?>(
-                      value: _selectedCuisine,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem<CuisineDto?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                        ..._availableCuisines.map(
-                          (cuisine) => DropdownMenuItem(
-                            value: cuisine,
-                            child: Text(cuisine.name),
+                  if (!_isSearchMode) // Only show cuisine filter when not searching
+                    ListTile(
+                      leading: const Icon(Icons.restaurant_menu),
+                      title: const Text('Cuisine'),
+                      subtitle: DropdownButton<CuisineDto?>(
+                        value: _selectedCuisine,
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem<CuisineDto?>(
+                            value: null,
+                            child: Text('All'),
                           ),
-                        ),
-                      ],
-                      onChanged: (value) async {
-                        setState(() => _selectedCuisine = value);
-                        if (value != null) {
-                          // ✅ check if already liked dynamically
-                          await _loadFavouriteCuisines();
-                          final alreadyLiked = _favoriteCuisines.any(
-                            (c) => c.id == value.id,
-                          );
-
-                          if (!alreadyLiked) {
-                            if (!context.mounted) return;
-                            final shouldAdd = await showDialog<bool>(
-                              context: context,
-                              builder:
-                                  (ctx) => AlertDialog(
-                                    title: Text("Add to favourites?"),
-                                    content: Text(
-                                      "Do you want to add ${value.name} to your liked cuisines?",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.pop(ctx, false),
-                                        child: const Text("No"),
-                                      ),
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.pop(ctx, true),
-                                        child: const Text("Yes"),
-                                      ),
-                                    ],
-                                  ),
+                          ..._availableCuisines.map(
+                            (cuisine) => DropdownMenuItem(
+                              value: cuisine,
+                              child: Text(cuisine.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) async {
+                          setState(() => _selectedCuisine = value);
+                          if (value != null) {
+                            // ✅ check if already liked dynamically
+                            await _loadFavouriteCuisines();
+                            final alreadyLiked = _favoriteCuisines.any(
+                              (c) => c.id == value.id,
                             );
 
-                            if (shouldAdd == true) {
-                              try {
-                                await _profileService.addCuisinePreference(
-                                  value.id,
-                                );
-                                setState(() {
-                                  _favoriteCuisines.add(value);
-                                });
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      "${value.name} added to favourites",
+                            if (!alreadyLiked) {
+                              if (!context.mounted) return;
+                              final shouldAdd = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (ctx) => AlertDialog(
+                                      title: const Text("Add to favourites?"),
+                                      content: Text(
+                                        "Do you want to add ${value.name} to your liked cuisines?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, false),
+                                          child: const Text("No"),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, true),
+                                          child: const Text("Yes"),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                );
-                              } catch (e) {
-                                debugPrint("Failed to add ${value.name}: $e");
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      "Could not add ${value.name}",
+                              );
+
+                              if (shouldAdd == true) {
+                                try {
+                                  await _profileService.addCuisinePreference(
+                                    value.id,
+                                  );
+                                  setState(() {
+                                    _favoriteCuisines.add(value);
+                                  });
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "${value.name} added to favourites",
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                } catch (e) {
+                                  debugPrint("Failed to add ${value.name}: $e");
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Could not add ${value.name}",
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                             }
                           }
-                        }
-                      },
+                        },
+                      ),
                     ),
-                  ),
+                  if (_isSearchMode)
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Search Mode'),
+                      subtitle: Text(
+                        'Cuisine filter disabled while searching for "${_searchQuery}"',
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -224,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     Navigator.pop(context);
                     await _fetchRestaurants();
-                    await _loadFavouriteCuisines(); // ✅ refresh favourites after search
+                    await _loadFavouriteCuisines(); 
                   },
                   child: const Text('Apply'),
                 ),
@@ -246,7 +297,11 @@ class _HomePageState extends State<HomePage> {
   Widget _buildActiveFiltersChip() {
     List<String> activeFilters = [];
 
-    if (_selectedCuisine != null) {
+    if (_isSearchMode && _searchQuery.isNotEmpty) {
+      activeFilters.add('Search: "$_searchQuery"');
+    }
+
+    if (!_isSearchMode && _selectedCuisine != null) {
       activeFilters.add(_selectedCuisine!.name);
     }
 
@@ -257,17 +312,28 @@ class _HomePageState extends State<HomePage> {
     if (activeFilters.isEmpty) return const SizedBox.shrink();
 
     return Positioned(
-      top: 0,
-      right: 0,
+      top: 16,
+      right: 16,
       child: Chip(
-        label: Text(activeFilters.join(' • ')),
-        deleteIcon: const Icon(Icons.close, size: 18),
+        label: Text(
+          activeFilters.join(' • '),
+          style: TextStyle(color: AppTheme.colorScheme.onPrimary),
+        ),
+        deleteIcon: Icon(
+          Icons.close,
+          size: 18,
+          color: AppTheme.colorScheme.onPrimary,
+        ),
         onDeleted: () {
-          setState(() {
-            _selectedCuisine = null;
-            _minimumRating = 1;
-          });
-          _fetchRestaurants();
+          if (_isSearchMode) {
+            _clearSearch();
+          } else {
+            setState(() {
+              _selectedCuisine = null;
+              _minimumRating = 1;
+            });
+            _fetchRestaurants();
+          }
         },
         backgroundColor: AppTheme.colorScheme.primary,
       ),
@@ -614,213 +680,273 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _restaurants.isEmpty
-                    ? const Center(child: Text('No restaurants found.'))
-                    : GridView.builder(
-                      itemCount: _restaurants.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                            childAspectRatio: 1,
-                          ),
-                      itemBuilder: (context, index) {
-                        final restaurant = _restaurants[index];
-                        return Card(
-                          child: InkWell(
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: Text(
-                                        restaurant.name,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.onSurface,
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search restaurants by name...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: _clearSearch,
+                        )
+                        : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ),
+          // Restaurant Grid
+          Expanded(
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child:
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _restaurants.isEmpty
+                          ? Center(
+                            child: Text(
+                              _isSearchMode && _searchQuery.isNotEmpty
+                                  ? 'No restaurants found for "$_searchQuery"'
+                                  : 'No restaurants found.',
+                            ),
+                          )
+                          : GridView.builder(
+                            itemCount: _restaurants.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 8,
+                                  crossAxisSpacing: 8,
+                                  childAspectRatio: 1,
+                                ),
+                            itemBuilder: (context, index) {
+                              final restaurant = _restaurants[index];
+                              return Card(
+                                child: InkWell(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: Text(
+                                              restaurant.name,
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme.onSurface,
+                                              ),
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        DefaultTextStyle.of(
+                                                          context,
+                                                        ).style,
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'Rating: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            restaurant.rating
+                                                                .toString(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        DefaultTextStyle.of(
+                                                          context,
+                                                        ).style,
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'Total reviews: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            restaurant
+                                                                .userRatingsTotal
+                                                                .toString(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        DefaultTextStyle.of(
+                                                          context,
+                                                        ).style,
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'PH: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            restaurant
+                                                                .formattedPhoneNum ??
+                                                            'Not available',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                RichText(
+                                                  text: TextSpan(
+                                                    style:
+                                                        DefaultTextStyle.of(
+                                                          context,
+                                                        ).style,
+                                                    children: [
+                                                      const TextSpan(
+                                                        text: 'Address: ',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      TextSpan(
+                                                        text:
+                                                            restaurant.address,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.pop(context),
+                                                child: const Text('Close'),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                restaurant.name,
+                                                style: theme
+                                                    .textTheme
+                                                    .titleSmall
+                                                    ?.copyWith(
+                                                      color:
+                                                          colorScheme.primary,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.qr_code_scanner,
+                                              ),
+                                              iconSize: 20,
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (context) =>
+                                                            MenuScannerPage(
+                                                              restaurantId:
+                                                                  restaurant.id,
+                                                              restaurantName:
+                                                                  restaurant
+                                                                      .name,
+                                                            ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          RichText(
-                                            text: TextSpan(
-                                              style:
-                                                  DefaultTextStyle.of(
-                                                    context,
-                                                  ).style,
-                                              children: [
-                                                const TextSpan(
-                                                  text: 'Rating: ',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                TextSpan(
-                                                  text:
-                                                      restaurant.rating
-                                                          .toString(),
-                                                ),
-                                              ],
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.star,
+                                              color: colorScheme.secondary,
+                                              size: 18,
                                             ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          RichText(
-                                            text: TextSpan(
-                                              style:
-                                                  DefaultTextStyle.of(
-                                                    context,
-                                                  ).style,
-                                              children: [
-                                                const TextSpan(
-                                                  text: 'Total reviews: ',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                TextSpan(
-                                                  text:
-                                                      restaurant
-                                                          .userRatingsTotal
-                                                          .toString(),
-                                                ),
-                                              ],
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              restaurant.rating
+                                                      ?.toStringAsFixed(1) ??
+                                                  '',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          formatPriceLevel(
+                                            restaurant.priceLevel,
                                           ),
-                                          const SizedBox(height: 8),
-                                          RichText(
-                                            text: TextSpan(
-                                              style:
-                                                  DefaultTextStyle.of(
-                                                    context,
-                                                  ).style,
-                                              children: [
-                                                const TextSpan(
-                                                  text: 'PH: ',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                TextSpan(
-                                                  text:
-                                                      restaurant
-                                                          .formattedPhoneNum ??
-                                                      'Not available',
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          RichText(
-                                            text: TextSpan(
-                                              style:
-                                                  DefaultTextStyle.of(
-                                                    context,
-                                                  ).style,
-                                              children: [
-                                                const TextSpan(
-                                                  text: 'Address: ',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                TextSpan(
-                                                  text: restaurant.address,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: const Text('Close'),
                                         ),
                                       ],
                                     ),
+                                  ),
+                                ),
                               );
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          restaurant.name,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                color: colorScheme.primary,
-                                              ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.qr_code_scanner),
-                                        iconSize: 20,
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) => MenuScannerPage(
-                                                    restaurantId: restaurant.id,
-                                                    restaurantName:
-                                                        restaurant.name,
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.star,
-                                        color: colorScheme.secondary,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        restaurant.rating?.toStringAsFixed(1) ??
-                                            '',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(formatPriceLevel(restaurant.priceLevel)),
-                                ],
-                              ),
-                            ),
                           ),
-                        );
-                      },
-                    ),
+                ),
+                _buildActiveFiltersChip(),
+              ],
+            ),
           ),
-          _buildActiveFiltersChip(),
         ],
       ),
     );
