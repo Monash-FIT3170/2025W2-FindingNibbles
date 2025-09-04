@@ -209,8 +209,10 @@ async function main(): Promise<void> {
 
     const restaurantsSubset = await prisma.restaurant.findMany({
       select: { id: true },
+      distinct: ['name'],
       take: 5,
     });
+
     await prisma.userFavouritedRestaurant.createMany({
       data: restaurantsSubset.map((restaurant) => ({
         userId: defaultUser.id,
