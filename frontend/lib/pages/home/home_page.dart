@@ -981,7 +981,6 @@ class _HomePageState extends State<HomePage> {
                                                           restaurant
                                                               .menuUrl!
                                                               .isNotEmpty) {
-                                                        // TODO: Navigate to menu viewer page when implemented
                                                         ScaffoldMessenger.of(
                                                           context,
                                                         ).showSnackBar(
