@@ -7,7 +7,10 @@ class RestaurantMenuService {
   final Dio _dio = DioClient().client;
 
   /// Upload a menu image and get analysis results
-  Future<List<dynamic>> uploadMenuImage(File imageFile, int restaurantId) async {
+  Future<List<dynamic>> uploadMenuImage(
+    File imageFile,
+    int restaurantId,
+  ) async {
     try {
       // Validate file size (max 20MB for Gemini API)
       final fileSize = await imageFile.length();
@@ -37,7 +40,7 @@ class RestaurantMenuService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = response.data;
-        
+
         // Handle new structured response format
         if (responseData is Map<String, dynamic>) {
           if (responseData['success'] == true) {
@@ -45,11 +48,12 @@ class RestaurantMenuService {
             return (responseData['dishes'] as List<dynamic>?) ?? [];
           } else {
             // Handle error response
-            final errorMessage = responseData['message'] ?? 'Unknown error occurred';
+            final errorMessage =
+                responseData['message'] ?? 'Unknown error occurred';
             throw Exception(errorMessage);
           }
         }
-        
+
         // Fallback for old response format (direct array)
         return responseData as List<dynamic>;
       } else {
@@ -76,13 +80,13 @@ class RestaurantMenuService {
   }
 
   /// Get a random dish based on user's dietary requirements
-  Future<Map<String, dynamic>> getRandomDishByDietaryRequirements(List<String> dietaryRequirements) async {
+  Future<Map<String, dynamic>> getRandomDishByDietaryRequirements(
+    List<String> dietaryRequirements,
+  ) async {
     try {
       final response = await _dio.post(
         'restaurant-menu/random-dish',
-        data: {
-          'dietaryRequirements': dietaryRequirements,
-        },
+        data: {'dietaryRequirements': dietaryRequirements},
         options: Options(
           headers: {'Content-Type': 'application/json'},
           sendTimeout: const Duration(seconds: 30),
@@ -92,11 +96,12 @@ class RestaurantMenuService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = response.data as Map<String, dynamic>;
-        
+
         if (responseData['success'] == true) {
           return responseData['dish'] as Map<String, dynamic>;
         } else {
-          final errorMessage = responseData['message'] ?? 'No matching dishes found';
+          final errorMessage =
+              responseData['message'] ?? 'No matching dishes found';
           throw Exception(errorMessage);
         }
       } else {
@@ -107,7 +112,8 @@ class RestaurantMenuService {
       debugPrint('Response data: ${e.response?.data}');
 
       if (e.response?.statusCode == 500) {
-        final errorMessage = e.response?.data['message'] ?? 'Internal server error';
+        final errorMessage =
+            e.response?.data['message'] ?? 'Internal server error';
         throw Exception('Server error while finding dish: $errorMessage');
       } else if (e.response?.statusCode == 400) {
         final errorMessage = e.response?.data['message'] ?? 'Bad request';

@@ -125,7 +125,10 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
     });
 
     try {
-      final result = await _menuService.uploadMenuImage(_imageFile!, widget.restaurantId!);
+      final result = await _menuService.uploadMenuImage(
+        _imageFile!,
+        widget.restaurantId!,
+      );
       setState(() {
         _analysisResult = result;
         _isUploading = false;
@@ -182,16 +185,20 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
       // For now, use some common dietary requirements as a test
       // In a real app, these would come from user preferences
       const testDietaryRequirements = ['VEGETARIAN', 'GLUTEN-FREE'];
-      
-      final randomDish = await _menuService.getRandomDishByDietaryRequirements(testDietaryRequirements);
-      
+
+      final randomDish = await _menuService.getRandomDishByDietaryRequirements(
+        testDietaryRequirements,
+      );
+
       if (mounted) {
         _showDishPopup(randomDish);
       }
     } catch (e) {
       if (mounted) {
         // Check if it's specifically a "no matching dishes" error
-        if (e.toString().contains('No dishes found that satisfy all dietary requirements') ||
+        if (e.toString().contains(
+              'No dishes found that satisfy all dietary requirements',
+            ) ||
             e.toString().contains('No matching dishes found')) {
           _showNoDishesFoundPopup();
         } else {
@@ -222,12 +229,18 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
           ),
           title: Row(
             children: [
-              Icon(Icons.sentiment_dissatisfied, color: colorScheme.error, size: 28),
+              Icon(
+                Icons.sentiment_dissatisfied,
+                color: colorScheme.error,
+                size: 28,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Oh no!',
-                  style: textTheme.titleLarge?.copyWith(color: colorScheme.error),
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.error,
+                  ),
                 ),
               ),
             ],
@@ -250,11 +263,17 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                   decoration: BoxDecoration(
                     color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.lightbulb_outline, color: colorScheme.primary, size: 20),
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: colorScheme.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -304,7 +323,9 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
               Expanded(
                 child: Text(
                   'Your Perfect Dish!',
-                  style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
             ],
@@ -374,27 +395,30 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
                         Wrap(
                           spacing: 4,
                           runSpacing: 4,
-                          children: (dish['dietaryTags'] as List<dynamic>)
-                              .map(
-                                (tag) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    tag.toString(),
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.w500,
+                          children:
+                              (dish['dietaryTags'] as List<dynamic>)
+                                  .map(
+                                    (tag) => Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        tag.toString(),
+                                        style: textTheme.bodySmall?.copyWith(
+                                          color: colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                                  )
+                                  .toList(),
                         ),
                       ],
                       const SizedBox(height: 8),
@@ -686,79 +710,86 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
             // Action buttons
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _isMenuAnalyzed
-                  ? // Show "Choose best dish for me!" button after analysis
-                  SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _chooseBestDish,
-                        icon: const Icon(Icons.restaurant_menu),
-                        label: const Text('Choose best dish for me!'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(28),
+              child:
+                  _isMenuAnalyzed
+                      ? // Show "Choose best dish for me!" button after analysis
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _chooseBestDish,
+                          icon: const Icon(Icons.restaurant_menu),
+                          label: const Text('Choose best dish for me!'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(28),
+                            ),
+                            elevation: 0,
+                            textStyle: textTheme.labelLarge,
                           ),
-                          elevation: 0,
-                          textStyle: textTheme.labelLarge,
                         ),
+                      )
+                      : // Show original upload buttons before analysis
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _showImageSourceDialog,
+                              icon: const Icon(Icons.add_a_photo),
+                              label: const Text('Select Image'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.secondary,
+                                foregroundColor: colorScheme.onSecondary,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                elevation: 0,
+                                textStyle: textTheme.labelLarge,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  _imageFile != null && !_isUploading
+                                      ? _uploadAndAnalyze
+                                      : null,
+                              icon:
+                                  _isUploading
+                                      ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: colorScheme.onPrimary,
+                                        ),
+                                      )
+                                      : const Icon(Icons.upload),
+                              label: Text(
+                                _isUploading ? 'Analysing...' : 'Analyse Menu',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: colorScheme.onPrimary,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                                elevation: 0,
+                                textStyle: textTheme.labelLarge,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    )
-                  : // Show original upload buttons before analysis
-                  Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _showImageSourceDialog,
-                            icon: const Icon(Icons.add_a_photo),
-                            label: const Text('Select Image'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.secondary,
-                              foregroundColor: colorScheme.onSecondary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              elevation: 0,
-                              textStyle: textTheme.labelLarge,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _imageFile != null && !_isUploading
-                                ? _uploadAndAnalyze
-                                : null,
-                            icon: _isUploading
-                                ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colorScheme.onPrimary,
-                                    ),
-                                  )
-                                : const Icon(Icons.upload),
-                            label: Text(
-                              _isUploading ? 'Analysing...' : 'Analyse Menu',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.primary,
-                              foregroundColor: colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(28),
-                              ),
-                              elevation: 0,
-                              textStyle: textTheme.labelLarge,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
             ),
 
             // Results display

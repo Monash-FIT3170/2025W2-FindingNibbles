@@ -386,12 +386,13 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
   ): Promise<GetRandomDishSuccessResponseDto | GetRandomDishErrorResponseDto> {
     try {
       // Validate that dietary requirements exist in the database
-      const validDietaryRequirements = await this.db.dietaryRequirement.findMany({
-        where: {
-          name: { in: dietaryRequirements },
-        },
-        select: { id: true, name: true },
-      });
+      const validDietaryRequirements =
+        await this.db.dietaryRequirement.findMany({
+          where: {
+            name: { in: dietaryRequirements },
+          },
+          select: { id: true, name: true },
+        });
 
       if (validDietaryRequirements.length === 0) {
         return {
@@ -475,7 +476,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       return {
         success: false,
         error: 'DATABASE_ERROR',
-        message: 'An error occurred while searching for dishes.',
+        message: errorMessage,
         requestedDietaryRequirements: dietaryRequirements,
       };
     }
