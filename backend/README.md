@@ -1,8 +1,8 @@
 ## Project setup
 
 ```bash
-npm install
 cd backend
+npm install
 docker compose down --volumes
 docker compose up -d
 npm run db:push
