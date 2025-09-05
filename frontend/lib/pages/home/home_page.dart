@@ -723,7 +723,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nearby Restaurants'),
+        title: const Text('All Restaurants'),
         automaticallyImplyLeading: false,
         actions: [
           DiceRollWidget(
