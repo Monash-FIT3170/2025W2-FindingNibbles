@@ -49,7 +49,6 @@ export class RestaurantMenuController {
 
   @Post('random-dish')
   async getRandomDish(@Body() getRandomDishDto: GetRandomDishDto) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const result =
       await this.restaurantMenuService.getRandomDishByDietaryRequirements(
         getRandomDishDto.dietaryRequirements,
