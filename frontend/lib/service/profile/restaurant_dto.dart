@@ -14,6 +14,7 @@ class RestaurantDto {
   final String? address;
   final String? formattedPhoneNum;
   final String? website;
+  final String? menuUrl;
   final bool? dineIn;
   final bool? takeout;
   final bool? delivery;
@@ -41,6 +42,7 @@ class RestaurantDto {
     this.address,
     this.formattedPhoneNum,
     this.website,
+    this.menuUrl,
     this.dineIn,
     this.takeout,
     this.delivery,
@@ -73,6 +75,7 @@ class RestaurantDto {
       address: json['address'] as String?, // Support both field names
       formattedPhoneNum: json['formattedPhoneNum'] as String?,
       website: json['website'] as String?,
+      menuUrl: json['menuUrl'] as String?,
       dineIn: json['dineIn'] as bool?,
       takeout: json['takeout'] as bool?,
       delivery: json['delivery'] as bool?,
@@ -109,6 +112,7 @@ class RestaurantDto {
       'address': address,
       'formattedPhoneNum': formattedPhoneNum,
       'website': website,
+      'menuUrl': menuUrl,
       'dineIn': dineIn,
       'takeout': takeout,
       'delivery': delivery,

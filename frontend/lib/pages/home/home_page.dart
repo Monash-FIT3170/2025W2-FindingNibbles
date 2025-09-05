@@ -731,18 +731,6 @@ class _HomePageState extends State<HomePage> {
             isEnabled: !_isLoading && _availableCuisines.isNotEmpty,
           ),
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuScannerPage(),
-                ),
-              );
-            },
-            tooltip: 'Scan Menu',
-          ),
-          IconButton(
             icon: const Icon(Icons.filter_alt_rounded),
             onPressed: _showFilterDialog,
           ),
@@ -972,30 +960,59 @@ class _HomePageState extends State<HomePage> {
                                                     ),
                                                   ),
                                                   IconButton(
-                                                    icon: const Icon(
-                                                      Icons.qr_code_scanner,
+                                                    icon: Icon(
+                                                      restaurant.menuUrl !=
+                                                                  null &&
+                                                              restaurant
+                                                                  .menuUrl!
+                                                                  .isNotEmpty
+                                                          ? Icons
+                                                              .restaurant_menu
+                                                          : Icons
+                                                              .qr_code_scanner,
                                                     ),
                                                     iconSize: 20,
                                                     padding: EdgeInsets.zero,
                                                     constraints:
                                                         const BoxConstraints(),
                                                     onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                context,
-                                                              ) => MenuScannerPage(
-                                                                restaurantId:
-                                                                    restaurant
-                                                                        .id,
-                                                                restaurantName:
-                                                                    restaurant
-                                                                        .name,
-                                                              ),
-                                                        ),
-                                                      );
+                                                      if (restaurant.menuUrl !=
+                                                              null &&
+                                                          restaurant
+                                                              .menuUrl!
+                                                              .isNotEmpty) {
+                                                        // TODO: Navigate to menu viewer page when implemented
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              'Menu available at: ${restaurant.menuUrl}',
+                                                            ),
+                                                            duration:
+                                                                const Duration(
+                                                                  seconds: 3,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                ) => MenuScannerPage(
+                                                                  restaurantId:
+                                                                      restaurant
+                                                                          .id,
+                                                                  restaurantName:
+                                                                      restaurant
+                                                                          .name,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      }
                                                     },
                                                   ),
                                                 ],

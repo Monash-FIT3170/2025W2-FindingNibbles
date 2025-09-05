@@ -77,6 +77,12 @@ export class RestaurantMenuService {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const storedDishes = await this.storeMenuItems(menuItems, restaurantId);
 
+        // Update restaurant menuUrl to indicate menu has been analyzed
+        await this.db.restaurant.update({
+          where: { id: restaurantId },
+          data: { menuUrl: 'menu-analysed' },
+        });
+
         // Calculate summary statistics
         const categories = [
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
