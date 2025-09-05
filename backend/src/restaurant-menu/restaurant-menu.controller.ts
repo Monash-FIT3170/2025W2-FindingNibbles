@@ -6,9 +6,11 @@ import {
   UseInterceptors,
   UploadedFile,
   Param,
+  Body,
 } from '@nestjs/common';
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { GetRandomDishDto } from './dto/random-dish.dto';
 
 /**
  * CONTROLLER UPDATES NEEDED:
@@ -36,7 +38,21 @@ export class RestaurantMenuController {
     @UploadedFile() menu: Express.Multer.File,
   ) {
     const restaurantIdNum = parseInt(restaurantId, 10);
-    await this.restaurantMenuService.analyseAndStoreMenu(menu, restaurantIdNum);
-    return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const result = await this.restaurantMenuService.analyseAndStoreMenu(
+      menu,
+      restaurantIdNum,
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return result;
+  }
+
+  @Post('random-dish')
+  async getRandomDish(@Body() getRandomDishDto: GetRandomDishDto) {
+    const result =
+      await this.restaurantMenuService.getRandomDishByDietaryRequirements(
+        getRandomDishDto.dietaryRequirements,
+      );
+    return result;
   }
 }
