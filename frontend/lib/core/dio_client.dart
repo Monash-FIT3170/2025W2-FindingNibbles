@@ -16,8 +16,8 @@ class DioClient {
               : kIsWeb || defaultTargetPlatform != TargetPlatform.android
               ? 'http://localhost:3000/api/'
               : 'http://10.0.2.2:3000/api/',
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
       validateStatus: (status) => status != null && status < 400,
     ),
   );

@@ -87,11 +87,7 @@ class RestaurantMenuService {
       final response = await _dio.post(
         'restaurant-menu/random-dish',
         data: {'dietaryRequirements': dietaryRequirements},
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-          sendTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-        ),
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
