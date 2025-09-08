@@ -7,6 +7,10 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 
+export type BestDishErrorType =
+  | 'NO_SUITABLE_DISHES'
+  | 'DATABASE_ERROR';
+
 export class GetBestDishDto {
   @IsArray()
   @ArrayNotEmpty()
