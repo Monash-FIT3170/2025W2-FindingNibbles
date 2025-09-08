@@ -393,33 +393,13 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
     dietaryRequirements: string[],
   ): Promise<GetBestDishSuccessResponseDto | GetBestDishErrorResponseDto> {
     try {
-      // Validate that the restaurant exists and has a menu
+      // Get restaurant name for response messages
       const restaurant = await this.db.restaurant.findUnique({
         where: { id: restaurantId },
-        select: { id: true, name: true, menuUrl: true },
+        select: { name: true },
       });
 
-      if (!restaurant) {
-        return {
-          success: false,
-          error: 'RESTAURANT_NOT_FOUND',
-          message: 'Restaurant not found.',
-          requestedDietaryRequirements: dietaryRequirements,
-          restaurantId,
-        };
-      }
-
-      if (!restaurant.menuUrl || restaurant.menuUrl !== 'menu-analysed') {
-        return {
-          success: false,
-          error: 'NO_MENU_AVAILABLE',
-          message: 'This restaurant does not have a scanned menu available.',
-          requestedDietaryRequirements: dietaryRequirements,
-          restaurantId,
-        };
-      }
-
-      // Validate that dietary requirements exist in the database
+      // Get valid dietary requirement IDs from the provided names
       const validDietaryRequirements =
         await this.db.dietaryRequirement.findMany({
           where: {
@@ -428,35 +408,22 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
           select: { id: true, name: true },
         });
 
-      if (validDietaryRequirements.length === 0) {
-        return {
-          success: false,
-          error: 'INVALID_DIETARY_REQUIREMENTS',
-          message: 'None of the provided dietary requirements are valid.',
-          requestedDietaryRequirements: dietaryRequirements,
-          restaurantId,
-        };
-      }
-
       const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
 
-      // Find dishes from this restaurant that match ALL the provided dietary requirements
-      const matchingDishes = await this.db.dish.findMany({
+      // Find dishes from this restaurant that match the dietary requirements
+      // If no valid dietary requirements provided, get all dishes from the restaurant
+      const dishQuery = {
         where: {
           restaurantId: restaurantId,
-          dishDietaries: {
-            every: {
-              dietaryId: { in: validDietaryIds },
-            },
-          },
-          // Ensure the dish has dietary relationships for ALL required dietaries
-          AND: validDietaryIds.map((dietaryId) => ({
-            dishDietaries: {
-              some: {
-                dietaryId: dietaryId,
+          ...(validDietaryIds.length > 0 && {
+            AND: validDietaryIds.map((dietaryId) => ({
+              dishDietaries: {
+                some: {
+                  dietaryId: dietaryId,
+                },
               },
-            },
-          })),
+            })),
+          }),
         },
         include: {
           restaurant: {
@@ -475,13 +442,15 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
             },
           },
         },
-      });
+      };
+
+      const matchingDishes = await this.db.dish.findMany(dishQuery);
 
       if (matchingDishes.length === 0) {
         return {
           success: false,
-          error: 'NO_MATCHING_DISHES',
-          message: `No dishes found in this restaurant that satisfy all dietary requirements: ${dietaryRequirements.join(', ')}.`,
+          error: 'NO_SUITABLE_DISHES',
+          message: 'Unfortunately no items on the menu meet your dietary requirements',
           requestedDietaryRequirements: dietaryRequirements,
           restaurantId,
         };
@@ -506,7 +475,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       return {
         success: true,
         dish: dishResponse,
-        message: `Found a perfect dish for you at ${restaurant.name}!`,
+        message: `Found a perfect dish for you at ${restaurant?.name || 'this restaurant'}!`,
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
