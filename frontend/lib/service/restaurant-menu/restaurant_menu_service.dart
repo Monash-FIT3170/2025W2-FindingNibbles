@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/dio_client.dart';
+import 'best_dish_dto.dart';
 
 class RestaurantMenuService {
   final Dio _dio = DioClient().client;
@@ -75,6 +76,58 @@ class RestaurantMenuService {
       }
     } catch (e) {
       debugPrint('Error uploading menu image: $e');
+      rethrow;
+    }
+  }
+
+  /// Get the best dish recommendation for a restaurant based on dietary requirements
+  Future<GetBestDishResponseDto> getBestDish(
+    int restaurantId,
+    List<String> dietaryRequirements,
+  ) async {
+    try {
+      final requestDto = GetBestDishRequestDto(
+        dietaryRequirements: dietaryRequirements,
+      );
+
+      final response = await _dio.post(
+        'restaurant-menu/$restaurantId/best-dish',
+        data: requestDto.toJson(),
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return GetBestDishResponseDto.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+      } else {
+        throw Exception(
+          'Failed to get best dish recommendation: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      debugPrint('DioException: ${e.message}');
+      debugPrint('Response data: ${e.response?.data}');
+
+      if (e.response?.statusCode == 400) {
+        // Handle bad request (likely validation errors)
+        final errorData = e.response?.data as Map<String, dynamic>?;
+        if (errorData != null) {
+          return GetBestDishResponseDto.fromJson(errorData);
+        }
+      } else if (e.response?.statusCode == 500) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Internal server error';
+        throw Exception('Server error while getting best dish: $errorMessage');
+      }
+
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      debugPrint('Error getting best dish: $e');
       rethrow;
     }
   }
