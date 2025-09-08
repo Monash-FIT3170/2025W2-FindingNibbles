@@ -13,7 +13,6 @@ export type BestDishErrorType =
 
 export class GetBestDishDto {
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   dietaryRequirements: string[];
 }
