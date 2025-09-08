@@ -5,6 +5,8 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
+import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant-menu/best_dish_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'dart:math';
@@ -18,6 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ProfileService _profileService = ProfileService();
+  final RestaurantMenuService _restaurantMenuService = RestaurantMenuService();
   final Random _random = Random();
   final ScrollController _scrollController = ScrollController();
   List<RestaurantDto> _restaurants = [];
@@ -716,6 +719,224 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _showBestDishModal(RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.restaurant,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  restaurant.name,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: const Text(
+            'Do you want me to choose the best dish for you?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('No, thanks'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the initial modal
+                await _chooseBestDish(restaurant);
+              },
+              child: const Text('Yes, please!'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _chooseBestDish(RestaurantDto restaurant) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => const AlertDialog(
+              content: Row(
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text('Finding the perfect dish for you...'),
+                ],
+              ),
+            ),
+      );
+
+      // TODO: Get user's dietary requirements from profile
+      // For now, using empty list - this should be replaced with actual user preferences
+      final dietaryRequirements = <String>[];
+
+      final response = await _restaurantMenuService.getBestDish(
+        restaurant.id,
+        dietaryRequirements,
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (response.isSuccess) {
+        final dish = response.success!.dish;
+        _showDishResultModal(dish, restaurant);
+      } else {
+        final error = response.error!;
+        _showErrorModal(error.message, restaurant);
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) Navigator.of(context).pop();
+
+      debugPrint('Error getting best dish: $e');
+      _showErrorModal(
+        'Sorry, we encountered an error while finding the best dish. Please try again.',
+        restaurant,
+      );
+    }
+  }
+
+  void _showDishResultModal(BestDishDto dish, RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.restaurant_menu,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Perfect Dish Found!')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                dish.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (dish.description != null) ...[
+                Text(dish.description!),
+                const SizedBox(height: 8),
+              ],
+              if (dish.price != null) ...[
+                Text(
+                  'Price: \$${dish.price!.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (dish.dietaryTags.isNotEmpty) ...[
+                Text(
+                  'Dietary: ${dish.dietaryTags.join(', ')}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                'At ${dish.restaurantName}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _chooseBestDish(restaurant); // Try again
+              },
+              child: const Text('Choose another dish'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Perfect!'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorModal(String message, RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('No Suitable Dishes')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _chooseBestDish(restaurant); // Try again
+              },
+              child: const Text('Try again'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -938,13 +1159,9 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   IconButton(
                                                     icon: Icon(
-                                                      restaurant.menuUrl !=
-                                                                  null &&
-                                                              restaurant
-                                                                  .menuUrl!
-                                                                  .isNotEmpty
-                                                          ? Icons
-                                                              .restaurant_menu
+                                                      restaurant.menuUrl ==
+                                                              'menu-analysed'
+                                                          ? Icons.restaurant
                                                           : Icons
                                                               .qr_code_scanner,
                                                     ),
@@ -953,23 +1170,10 @@ class _HomePageState extends State<HomePage> {
                                                     constraints:
                                                         const BoxConstraints(),
                                                     onPressed: () {
-                                                      if (restaurant.menuUrl !=
-                                                              null &&
-                                                          restaurant
-                                                              .menuUrl!
-                                                              .isNotEmpty) {
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              'Menu available at: ${restaurant.menuUrl}',
-                                                            ),
-                                                            duration:
-                                                                const Duration(
-                                                                  seconds: 3,
-                                                                ),
-                                                          ),
+                                                      if (restaurant.menuUrl ==
+                                                          'menu-analysed') {
+                                                        _showBestDishModal(
+                                                          restaurant,
                                                         );
                                                       } else {
                                                         Navigator.push(
