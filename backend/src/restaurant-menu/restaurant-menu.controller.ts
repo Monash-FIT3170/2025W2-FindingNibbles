@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { GetRandomDishDto } from './dto/random-dish.dto';
+
 
 /**
  * CONTROLLER UPDATES NEEDED:
@@ -44,15 +44,6 @@ export class RestaurantMenuController {
       restaurantIdNum,
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return result;
-  }
-
-  @Post('random-dish')
-  async getRandomDish(@Body() getRandomDishDto: GetRandomDishDto) {
-    const result =
-      await this.restaurantMenuService.getRandomDishByDietaryRequirements(
-        getRandomDishDto.dietaryRequirements,
-      );
     return result;
   }
 }
