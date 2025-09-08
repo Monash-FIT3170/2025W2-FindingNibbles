@@ -3,6 +3,7 @@ import 'multer';
 import {
   Controller,
   Post,
+  Get,
   UseInterceptors,
   UploadedFile,
   Param,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { GetBestDishDto } from './dto/get-best-dish.dto';
 
 
 /**
@@ -44,6 +46,19 @@ export class RestaurantMenuController {
       restaurantIdNum,
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return result;
+  }
+
+  @Post(':restaurantId/best-dish')
+  async getBestDish(
+    @Param('restaurantId') restaurantId: string,
+    @Body() getBestDishDto: GetBestDishDto,
+  ) {
+    const restaurantIdNum = parseInt(restaurantId, 10);
+    const result = await this.restaurantMenuService.getBestDishForRestaurant(
+      restaurantIdNum,
+      getBestDishDto.dietaryRequirements,
+    );
     return result;
   }
 }
