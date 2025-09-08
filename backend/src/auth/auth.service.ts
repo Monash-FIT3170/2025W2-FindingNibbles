@@ -139,7 +139,7 @@ export class AuthService {
       const { sub, email, firstName, lastName } =
         this.jwtService.verify<JwtPayload>(token, {
           ignoreExpiration: false,
-          secret: this.configService.get<string>('REFRESH_SECRET'),
+          secret: this.configService.get<string>('AUTH_SECRET'),
         });
       const access_token = this.jwtService.sign(
         { sub, email, firstName, lastName },
