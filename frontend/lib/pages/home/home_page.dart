@@ -785,9 +785,17 @@ class _HomePageState extends State<HomePage> {
             ),
       );
 
-      // TODO: Get user's dietary requirements from profile
-      // For now, using empty list - this should be replaced with actual user preferences
-      final dietaryRequirements = <String>[];
+      // Get user's dietary requirements from profile
+      List<String> dietaryRequirements = [];
+      try {
+        final userDietaryRequirements =
+            await _profileService.getDietaryRequirements();
+        dietaryRequirements =
+            userDietaryRequirements.map((dietary) => dietary.name).toList();
+      } catch (e) {
+        debugPrint('Error getting user dietary requirements: $e');
+        // Continue with empty list if we can't get user preferences
+      }
 
       final response = await _restaurantMenuService.getBestDish(
         restaurant.id,
