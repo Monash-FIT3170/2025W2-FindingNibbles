@@ -10,6 +10,11 @@ import {
   AnalyseRestaurantMenuResponseDto,
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
+import {
+  GetBestDishSuccessResponseDto,
+  GetBestDishErrorResponseDto,
+  BestDishResponseDto,
+} from './dto/get-best-dish.dto';
 
 import { basicMenuSchema, menuAnalysisSchema } from './schemas';
 
@@ -381,5 +386,137 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
     }
 
     return menuResponse.menu_items;
+  }
+
+  async getBestDishForRestaurant(
+    restaurantId: number,
+    dietaryRequirements: string[],
+  ): Promise<GetBestDishSuccessResponseDto | GetBestDishErrorResponseDto> {
+    try {
+      // Validate that the restaurant exists and has a menu
+      const restaurant = await this.db.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { id: true, name: true, menuUrl: true },
+      });
+
+      if (!restaurant) {
+        return {
+          success: false,
+          error: 'RESTAURANT_NOT_FOUND',
+          message: 'Restaurant not found.',
+          requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
+        };
+      }
+
+      if (!restaurant.menuUrl || restaurant.menuUrl !== 'menu-analysed') {
+        return {
+          success: false,
+          error: 'NO_MENU_AVAILABLE',
+          message: 'This restaurant does not have a scanned menu available.',
+          requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
+        };
+      }
+
+      // Validate that dietary requirements exist in the database
+      const validDietaryRequirements =
+        await this.db.dietaryRequirement.findMany({
+          where: {
+            name: { in: dietaryRequirements },
+          },
+          select: { id: true, name: true },
+        });
+
+      if (validDietaryRequirements.length === 0) {
+        return {
+          success: false,
+          error: 'INVALID_DIETARY_REQUIREMENTS',
+          message: 'None of the provided dietary requirements are valid.',
+          requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
+        };
+      }
+
+      const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
+
+      // Find dishes from this restaurant that match ALL the provided dietary requirements
+      const matchingDishes = await this.db.dish.findMany({
+        where: {
+          restaurantId: restaurantId,
+          dishDietaries: {
+            every: {
+              dietaryId: { in: validDietaryIds },
+            },
+          },
+          // Ensure the dish has dietary relationships for ALL required dietaries
+          AND: validDietaryIds.map((dietaryId) => ({
+            dishDietaries: {
+              some: {
+                dietaryId: dietaryId,
+              },
+            },
+          })),
+        },
+        include: {
+          restaurant: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          dishDietaries: {
+            include: {
+              dietary: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (matchingDishes.length === 0) {
+        return {
+          success: false,
+          error: 'NO_MATCHING_DISHES',
+          message: `No dishes found in this restaurant that satisfy all dietary requirements: ${dietaryRequirements.join(', ')}.`,
+          requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
+        };
+      }
+
+      // Randomly select one dish from the matching dishes
+      const randomIndex = Math.floor(Math.random() * matchingDishes.length);
+      const selectedDish = matchingDishes[randomIndex];
+
+      // Format the response
+      const dishResponse: BestDishResponseDto = {
+        id: selectedDish.id,
+        name: selectedDish.name,
+        description: selectedDish.description || undefined,
+        price: selectedDish.price || undefined,
+        category: selectedDish.category || undefined,
+        dietaryTags: selectedDish.dishDietaries.map((dd) => dd.dietary.name),
+        restaurantId: selectedDish.restaurant.id,
+        restaurantName: selectedDish.restaurant.name,
+      };
+
+      return {
+        success: true,
+        dish: dishResponse,
+        message: `Found a perfect dish for you at ${restaurant.name}!`,
+      };
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      return {
+        success: false,
+        error: 'DATABASE_ERROR',
+        message: errorMessage,
+        requestedDietaryRequirements: dietaryRequirements,
+        restaurantId,
+      };
+    }
   }
 }
