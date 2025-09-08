@@ -774,12 +774,17 @@ class _HomePageState extends State<HomePage> {
         context: context,
         barrierDismissible: false,
         builder:
-            (context) => const AlertDialog(
-              content: Row(
+            (context) => AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text('Finding the perfect dish for you...'),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Finding the perfect dish for you...',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -1177,14 +1182,14 @@ class _HomePageState extends State<HomePage> {
                                                     padding: EdgeInsets.zero,
                                                     constraints:
                                                         const BoxConstraints(),
-                                                    onPressed: () {
+                                                    onPressed: () async {
                                                       if (restaurant.menuUrl ==
                                                           'menu-analysed') {
                                                         _showBestDishModal(
                                                           restaurant,
                                                         );
                                                       } else {
-                                                        Navigator.push(
+                                                        final result = await Navigator.push(
                                                           context,
                                                           MaterialPageRoute(
                                                             builder:
@@ -1200,6 +1205,11 @@ class _HomePageState extends State<HomePage> {
                                                                 ),
                                                           ),
                                                         );
+
+                                                        // Refresh restaurant list if menu was successfully analyzed
+                                                        if (result == true) {
+                                                          _fetchRestaurants();
+                                                        }
                                                       }
                                                     },
                                                   ),

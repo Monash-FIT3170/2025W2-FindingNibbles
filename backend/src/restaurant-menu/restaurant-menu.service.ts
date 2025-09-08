@@ -400,13 +400,14 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       });
 
       // Get valid dietary requirement IDs from the provided names
-      const validDietaryRequirements =
-        await this.db.dietaryRequirement.findMany({
-          where: {
-            name: { in: dietaryRequirements },
-          },
-          select: { id: true, name: true },
-        });
+      const validDietaryRequirements = dietaryRequirements.length > 0
+        ? await this.db.dietaryRequirement.findMany({
+            where: {
+              name: { in: dietaryRequirements },
+            },
+            select: { id: true, name: true },
+          })
+        : []; // Return empty array if no dietary requirements provided
 
       const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
 
@@ -447,10 +448,14 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       const matchingDishes = await this.db.dish.findMany(dishQuery);
 
       if (matchingDishes.length === 0) {
+        const message = dietaryRequirements.length > 0
+          ? 'Unfortunately no items on the menu meet your dietary requirements'
+          : 'Unfortunately no items were found on this menu';
+          
         return {
           success: false,
           error: 'NO_SUITABLE_DISHES',
-          message: 'Unfortunately no items on the menu meet your dietary requirements',
+          message: message,
           requestedDietaryRequirements: dietaryRequirements,
           restaurantId,
         };

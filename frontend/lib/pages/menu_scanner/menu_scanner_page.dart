@@ -134,6 +134,32 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
         _isUploading = false;
         _isMenuAnalyzed = true; // Mark menu as successfully analyzed
       });
+
+      // Show success message and navigate back after a short delay
+      if (mounted) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Menu successfully analyzed! Found ${result.length} items.',
+              style: TextStyle(color: colorScheme.onPrimary),
+            ),
+            backgroundColor: colorScheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate back to previous page after 2 seconds
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(
+              context,
+            ).pop(true); // Return true to indicate successful analysis
+          }
+        });
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to analyze menu: $e';
