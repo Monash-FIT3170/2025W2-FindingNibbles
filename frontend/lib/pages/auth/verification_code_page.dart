@@ -78,7 +78,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
                     'We sent a code to ${widget.email}',
-                    style: AppTheme.textTheme.bodyLarge,
+                    style: AppTheme.textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
                 ),
