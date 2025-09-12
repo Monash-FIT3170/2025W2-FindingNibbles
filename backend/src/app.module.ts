@@ -33,10 +33,8 @@ import { DirectionsModule } from './directions/directions.module';
         GOOGLE_CLIENT_ID_IOS: Joi.string().required(),
         GOOGLE_GEMINI_API_MODEL: Joi.string().required(),
         GOOGLE_GEMINI_API_KEY: Joi.string().required(),
-        MAIL_USER: Joi.string().email().required(),
-        MAIL_PASS: Joi.string().required(),
-        MAIL_HOST: Joi.string().required(),
-        MAIL_PORT: Joi.number().port().default(587),
+        GOOGLE_MAIL_USER: Joi.string().email().required(),
+        GOOGLE_MAIL_PASS: Joi.string().required(),
         LOCATIONIQ_API_KEY: Joi.string().required(),
       }),
       validationOptions: {
