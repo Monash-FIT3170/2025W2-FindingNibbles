@@ -107,28 +107,6 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Future<void> _generateRecipes() async {
-    // Check if at least one appliance is selected
-    if (selectedAppliances.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Missing Kitchen Appliances'),
-            content: const Text(
-              'Please select at least one kitchen appliance to generate recipes.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-      return;
-    }
-
     // Show loading dialog
     showDialog(
       context: context,
@@ -433,19 +411,10 @@ class _RecipesPageState extends State<RecipesPage> {
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed:
-                                selectedAppliances.isNotEmpty
-                                    ? _generateRecipes
-                                    : null,
+                            onPressed: _generateRecipes,
                             icon: Icon(Icons.restaurant_menu),
                             label: Text('Generate Recipes'),
-                            style:
-                                selectedAppliances.isEmpty
-                                    ? ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey.shade300,
-                                      foregroundColor: Colors.grey.shade600,
-                                    )
-                                    : null,
+                            style: null,
                           ),
                         ),
                       ),

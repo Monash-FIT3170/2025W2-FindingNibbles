@@ -97,6 +97,11 @@ export class RecipeService {
       });
       const kitchenAppliances = appliances.map((app) => app.appliance.name);
 
+      const applianceLine =
+        kitchenAppliances.length > 0
+          ? `- Must be cookable using: ${kitchenAppliances.join(', ')}.`
+          : '';
+
       const requestedDifficulty = recipe.difficultyLevel;
       const difficultyLine =
         requestedDifficulty === RecipeDifficulty.ANY
@@ -113,7 +118,7 @@ export class RecipeService {
         - Use British English and the metric system.
         - Dietary restrictions: ${dietaryRequirements.join(', ') || 'none'}.
         - Use the following ingredients: ${recipe.ingredients.join(', ') || 'none'}.
-        - Must be cookable using: ${kitchenAppliances.join(', ') || 'any tools'}.
+        ${applianceLine}
         ${difficultyLine}
         ${calorieLine}
         Return the recipes in a JSON object with a 'recipes' key containing a list of three recipes.
