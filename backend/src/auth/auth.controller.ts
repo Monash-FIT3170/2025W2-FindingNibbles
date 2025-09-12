@@ -31,8 +31,6 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    // We might want to add some error handling to this endpoint for duplicate emails
-    console.log('📩 Incoming registration:', registerDto);
     const user = await this.authService.register(registerDto);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...userWithoutPassword } = user;
