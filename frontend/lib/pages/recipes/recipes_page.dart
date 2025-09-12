@@ -218,9 +218,13 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   void _addIngredient(String ingredient) {
-    if (ingredient.isNotEmpty) {
+    final trimmedIngredient = ingredient.trim();
+    if (trimmedIngredient.isNotEmpty &&
+        !ingredients.any(
+          (ing) => ing.toLowerCase() == trimmedIngredient.toLowerCase(),
+        )) {
       setState(() {
-        ingredients.add(ingredient);
+        ingredients.add(trimmedIngredient);
         _ingredientInputController.clear();
       });
     }
