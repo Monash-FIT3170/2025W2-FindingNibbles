@@ -3,7 +3,6 @@ import 'multer';
 import {
   Controller,
   Post,
-  Get,
   UseInterceptors,
   UploadedFile,
   Param,
@@ -12,22 +11,6 @@ import {
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GetBestDishDto } from './dto/get-best-dish.dto';
-
-
-/**
- * CONTROLLER UPDATES NEEDED:
- *
- * Input Changes:
- * - Add restaurant ID parameter to menu upload endpoint
- * - Validate restaurant exists before processing menu
- * - Enhanced error responses for missing/invalid restaurant
- *
- * Response Format:
- * - Return saved dish records with database IDs
- * - Include dietary classifications and timestamps
- * - Provide summary of stored vs skipped items
- * - Clear error messages for validation failures
- */
 
 @Controller('restaurant-menu')
 export class RestaurantMenuController {
