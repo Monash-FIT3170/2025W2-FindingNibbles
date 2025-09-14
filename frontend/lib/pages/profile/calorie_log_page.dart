@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
+import 'package:nibbles/service/profile/calorie_log_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
@@ -14,7 +15,7 @@ class CalorieLogPage extends StatefulWidget {
 
 class _CalorieLogPageState extends State<CalorieLogPage> {
   final ProfileService _profileService = ProfileService();
-  List<RecipeDto> loggedRecipes = [];
+  List<CalorieLogDto> loggedRecipes = [];
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
 
@@ -235,46 +236,91 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         backgroundColor: AppTheme.colorScheme.onPrimary,
         child: Icon(Icons.add, color: AppTheme.colorScheme.primary, size: 36),
         onPressed: () async {
-          await showDialog(
-            context: context,
-            builder:
-                (ctx) => AlertDialog(
-                  content: const Text(
-                    'Please generate a recipe first in order to log calories',
-                    style: TextStyle(fontSize: 16, color: AppTheme.textPrimary),
-                  ),
-                  actions: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.colorScheme.primary,
-                        foregroundColor: AppTheme.colorScheme.onPrimary,
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.colorScheme.primary,
-                        foregroundColor: AppTheme.colorScheme.onPrimary,
-                      ),
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const AppNavigation(initialPageIndex: 2),
-                          ),
-                        );
-                      },
-                      child: const Text('Go to Recipes'),
-                    ),
-                  ],
-                ),
-          );
+          await _showAddCalorieDialog();
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Future<void> _showAddCalorieDialog() async {
+    final mealNameController = TextEditingController();
+    final caloriesController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Log Calories'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: mealNameController,
+                    decoration: const InputDecoration(labelText: 'Meal Name'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a meal name';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: caloriesController,
+                    decoration: const InputDecoration(labelText: 'Calories'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter calories';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => const AppNavigation(initialPageIndex: 2),
+                    ),
+                  );
+                },
+                child: const Text('Log from Recipe'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final mealName = mealNameController.text;
+                    final calories = int.parse(caloriesController.text);
+                    try {
+                      await _profileService.logCustomCalorie(
+                        mealName,
+                        calories,
+                        _selectedDay,
+                      );
+                      Navigator.of(ctx).pop();
+                      _loadCaloriesForDay(_selectedDay);
+                      _loadLoggedRecipes(_selectedDay);
+                    } catch (e) {
+                      // Handle error
+                    }
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -293,7 +339,6 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
     );
   }
 
-  // ...existing code...
   Widget _buildEntriesList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,8 +379,8 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                     itemCount: loggedRecipes.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final recipe = loggedRecipes[index];
-                      return _buildEntryCardFromRecipe(recipe);
+                      final log = loggedRecipes[index];
+                      return _buildEntryCard(log);
                     },
                   ),
         ),
@@ -343,7 +388,97 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
     );
   }
 
-  Widget _buildEntryCardFromRecipe(RecipeDto recipe) {
+  Widget _buildEntryCard(CalorieLogDto log) {
+    if (log.recipe != null) {
+      return _buildEntryCardFromRecipe(log.recipe!, log.id);
+    } else {
+      return _buildCustomEntryCard(log);
+    }
+  }
+
+  Widget _buildCustomEntryCard(CalorieLogDto log) {
+    return Stack(
+      children: [
+        Container(
+          height: 95,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.tertiaryColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      log.mealName ?? 'Custom Meal',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.textOnPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${log.calories} kcal',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          right: 8,
+          top: 8,
+          child: GestureDetector(
+            onTap: () async {
+              final int logId = log.id;
+              try {
+                // optimistically remove from UI
+                setState(() {
+                  loggedRecipes.removeWhere((r) => r.id == logId);
+                });
+                // call backend
+                await _profileService.removeCalorieLog(logId);
+                // refresh totals
+                await _loadCaloriesForDay(_selectedDay);
+              } catch (e) {
+                // revert UI if failure
+                await _loadLoggedRecipes(_selectedDay);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(Icons.delete, color: AppTheme.errorColor),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEntryCardFromRecipe(RecipeDto recipe, int logId) {
     final title = recipe.title;
     final image = recipe.imageURL ?? 'assets/images/default_recipe.jpg';
     String subtitle = recipe.nutritionalInfo.first;
@@ -405,14 +540,10 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
           top: 8,
           child: GestureDetector(
             onTap: () async {
-              if (recipe.logId == null) {
-                return;
-              }
-              final int logId = recipe.logId!;
               try {
                 // optimistically remove from UI
                 setState(() {
-                  loggedRecipes.removeWhere((r) => r.logId == logId);
+                  loggedRecipes.removeWhere((r) => r.id == logId);
                 });
                 // call backend
                 await _profileService.removeCalorieLog(logId);
