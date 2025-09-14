@@ -38,7 +38,8 @@ export class UserController {
     @Req() req: RequestUser,
     @Body('calories') calories: number,
     @Body('date') dateStr: string,
-    @Body('recipeId') recipeId: number,
+    @Body('recipeId') recipeId?: number,
+    @Body('mealName') mealName?: string,
   ) {
     let date: Date;
     if (dateStr) {
@@ -50,7 +51,13 @@ export class UserController {
     } else {
       date = new Date();
     }
-    return this.userService.logCalorie(req.user.sub, calories, date, recipeId);
+    return this.userService.logCalorie(
+      req.user.sub,
+      calories,
+      date,
+      recipeId,
+      mealName,
+    );
   }
 
   @Get('calorie-log')
