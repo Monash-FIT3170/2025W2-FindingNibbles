@@ -70,6 +70,23 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
         title: const Text('Calorie Log'),
         backgroundColor: AppTheme.colorScheme.primary,
         elevation: 0,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder:
+                      (context) => const AppNavigation(initialPageIndex: 2),
+                ),
+              );
+            },
+            child: Text(
+              'Log from Recipe',
+              style: TextStyle(color: AppTheme.colorScheme.onPrimary),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Container(
@@ -252,7 +269,16 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
       context: context,
       builder:
           (ctx) => AlertDialog(
-            title: const Text('Log Calories'),
+            contentPadding: const EdgeInsets.all(24),
+            title: const Center(
+              child: Text(
+                'Log Details',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
             content: Form(
               key: formKey,
               child: Column(
@@ -268,6 +294,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: caloriesController,
                     decoration: const InputDecoration(labelText: 'Calories'),
@@ -279,6 +306,9 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                       if (int.tryParse(value) == null) {
                         return 'Please enter a valid number';
                       }
+                      if (int.parse(value) <= 0) {
+                        return 'Calories must be greater than zero';
+                      }
                       return null;
                     },
                   ),
@@ -289,14 +319,8 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => const AppNavigation(initialPageIndex: 2),
-                    ),
-                  );
                 },
-                child: const Text('Log from Recipe'),
+                child: const Text('Cancel'),
               ),
               ElevatedButton(
                 onPressed: () async {
