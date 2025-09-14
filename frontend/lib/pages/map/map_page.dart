@@ -10,6 +10,8 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -798,126 +800,6 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // Show filter dialog
-  void _showFilterDialog() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Filter Restaurants'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Min Rating'),
-                    subtitle: DropdownButton<int>(
-                      value: _minimumRating,
-                      isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('$rating'),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.star,
-                                        size: 16,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _minimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  if (!_isSearchMode) // Only show cuisine filter when not searching
-                    ListTile(
-                      leading: const Icon(Icons.restaurant_menu),
-                      title: const Text('Cuisine'),
-                      subtitle: DropdownButton<CuisineDto?>(
-                        value: _selectedCuisine,
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem<CuisineDto?>(
-                            value: null,
-                            child: Text('All'),
-                          ),
-                          ..._availableCuisines.map(
-                            (cuisine) => DropdownMenuItem(
-                              value: cuisine,
-                              child: Text(cuisine.name),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCuisine = value;
-                          });
-                        },
-                      ),
-                    ),
-                  if (_isSearchMode)
-                    ListTile(
-                      leading: const Icon(Icons.info_outline),
-                      title: const Text('Search Mode'),
-                      subtitle: Text(
-                        'Cuisine filter disabled while searching for "$_searchQuery"',
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Re-apply filters to currently loaded restaurants
-                    if (_restaurants.isNotEmpty) {
-                      _refreshFilters();
-                    } else {
-                      // If no restaurants loaded, fetch fresh data
-                      _forceFetchRestaurants();
-                    }
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Refresh filters and re-fetch restaurants
-  void _refreshFilters() {
-    // Clear cache when filters change
-    _restaurantCache.clear();
-    _lastFetchedBounds = null;
-    _lastFetchedZoom = null;
-
-    // Re-fetch from API (for cuisine filter) and apply rating filter
-    _forceFetchRestaurants();
-  }
-
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
@@ -1043,7 +925,47 @@ class _MapPageState extends State<MapPage> {
           IconButton(
             icon: const Icon(Icons.filter_alt_rounded),
             tooltip: 'Filter',
-            onPressed: _showFilterDialog,
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder:
+                    (context) => RestaurantFilterDialog(
+                      initialMinimumRating: _minimumRating,
+                      initialSelectedCuisine: _selectedCuisine,
+                      availableCuisines: _availableCuisines,
+                      isSearchMode: _isSearchMode,
+                      searchQuery: _searchQuery,
+                      onApply: (minimumRating, selectedCuisine) {
+                        setState(() {
+                          _minimumRating = minimumRating;
+                          _selectedCuisine = selectedCuisine;
+                          _forceFetchRestaurants();
+                        });
+                      },
+                      showCuisineSelectionDialog: ({
+                        bool skipApplyLogic = false,
+                      }) async {
+                        return await showDialog<CuisineDto>(
+                          context: context,
+                          builder:
+                              (context) => CuisineSelectionDialog(
+                                availableCuisines: _availableCuisines,
+                                skipApplyLogic: skipApplyLogic,
+                                onCuisineSelected:
+                                    !skipApplyLogic
+                                        ? (cuisine) {
+                                          setState(() {
+                                            _selectedCuisine = cuisine;
+                                            _forceFetchRestaurants();
+                                          });
+                                        }
+                                        : null,
+                              ),
+                        );
+                      },
+                    ),
+              );
+            },
           ),
         ],
       ),
