@@ -95,38 +95,105 @@ class _LikedPageState extends State<LikedPage> {
 
     final selectedCuisine = await showDialog<CuisineDto>(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Cuisine Preference'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: ListView.builder(
-              itemCount: availableCuisines.length,
-              itemBuilder: (context, index) {
-                final cuisine = availableCuisines[index];
-                return ListTile(
-                  title: Text(cuisine.name),
-                  subtitle:
-                      cuisine.description != null &&
-                              cuisine.description!.isNotEmpty
-                          ? Text(
-                            cuisine.description!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                          : null,
-                  onTap: () => Navigator.of(context).pop(cuisine),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
+      builder: (BuildContext dialogContext) {
+        String localSearchTerm = '';
+        List<CuisineDto> localFiltered = [...availableCuisines];
+
+        return StatefulBuilder(
+          builder: (dialogContext, setState) {
+            return AlertDialog(
+              scrollable: true,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Add Cuisine Preference',
+                style: TextStyle(
+                  color: AppTheme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 300,
+                child: Column(
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Search',
+                        labelStyle: TextStyle(
+                          color: AppTheme.colorScheme.primary,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: AppTheme.colorScheme.primary,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          localSearchTerm = value.toLowerCase();
+                          localFiltered =
+                              availableCuisines
+                                  .where(
+                                    (cuisine) => cuisine.name
+                                        .toLowerCase()
+                                        .contains(localSearchTerm),
+                                  )
+                                  .toList();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child:
+                          localFiltered.isEmpty
+                              ? Center(
+                                child: Text(
+                                  'No matches',
+                                  style: AppTheme.textTheme.displayMedium,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: localFiltered.length,
+                                itemBuilder: (context, index) {
+                                  final cuisine = localFiltered[index];
+                                  return ListTile(
+                                    title: Text(cuisine.name),
+                                    subtitle:
+                                        cuisine.description != null &&
+                                                cuisine.description!.isNotEmpty
+                                            ? Text(
+                                              cuisine.description!,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            )
+                                            : null,
+                                    tileColor:
+                                        index % 2 == 0
+                                            ? Colors.grey.shade50
+                                            : null,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    onTap:
+                                        () => Navigator.of(
+                                          dialogContext,
+                                        ).pop(cuisine),
+                                  );
+                                },
+                              ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
