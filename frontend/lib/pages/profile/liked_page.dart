@@ -9,6 +9,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -93,115 +94,16 @@ class _LikedPageState extends State<LikedPage> {
       return;
     }
 
-    final selectedCuisine = await showDialog<CuisineDto>(
+    await showDialog<CuisineDto>(
       context: context,
-      builder: (BuildContext dialogContext) {
-        String localSearchTerm = '';
-        List<CuisineDto> localFiltered = [...availableCuisines];
-
-        return StatefulBuilder(
-          builder: (dialogContext, setState) {
-            return AlertDialog(
-              scrollable: true,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Text(
-                'Add Cuisine Preference',
-                style: TextStyle(
-                  color: AppTheme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 300,
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          localSearchTerm = value.toLowerCase();
-                          localFiltered =
-                              availableCuisines
-                                  .where(
-                                    (cuisine) => cuisine.name
-                                        .toLowerCase()
-                                        .contains(localSearchTerm),
-                                  )
-                                  .toList();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child:
-                          localFiltered.isEmpty
-                              ? Center(
-                                child: Text(
-                                  'No matches',
-                                  style: AppTheme.textTheme.displayMedium,
-                                ),
-                              )
-                              : ListView.builder(
-                                itemCount: localFiltered.length,
-                                itemBuilder: (context, index) {
-                                  final cuisine = localFiltered[index];
-                                  return ListTile(
-                                    title: Text(cuisine.name),
-                                    subtitle:
-                                        cuisine.description != null &&
-                                                cuisine.description!.isNotEmpty
-                                            ? Text(
-                                              cuisine.description!,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            )
-                                            : null,
-                                    tileColor:
-                                        index % 2 == 0
-                                            ? Colors.grey.shade50
-                                            : null,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    onTap:
-                                        () => Navigator.of(
-                                          dialogContext,
-                                        ).pop(cuisine),
-                                  );
-                                },
-                              ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder:
+          (context) => CuisineSelectionDialog(
+            availableCuisines: availableCuisines,
+            onCuisineSelected: (cuisine) async {
+              await _addCuisinePreference(cuisine);
+            },
+          ),
     );
-
-    // If user selected a cuisine, add it to their preferences
-    if (selectedCuisine != null) {
-      await _addCuisinePreference(selectedCuisine);
-    }
   }
 
   Future<void> _addCuisinePreference(CuisineDto cuisine) async {
