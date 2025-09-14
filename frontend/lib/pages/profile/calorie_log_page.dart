@@ -333,6 +333,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                         calories,
                         _selectedDay,
                       );
+                      if (!ctx.mounted) return;
                       Navigator.of(ctx).pop();
                       _loadCaloriesForDay(_selectedDay);
                       _loadLoggedRecipes(_selectedDay);
