@@ -7,6 +7,8 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'dart:math';
 
 class HomePage extends StatefulWidget {
@@ -199,333 +201,106 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showFilterDialog() {
-    // Create temporary variables to hold filter state during dialog
-    CuisineDto? tempSelectedCuisine = _selectedCuisine;
-    int tempMinimumRating = _minimumRating;
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Filter Restaurants'),
-              contentPadding: const EdgeInsets.fromLTRB(
-                24,
-                12,
-                24,
-                24,
-              ), // Reduced top padding from 20 to 12
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.fromLTRB(
-                      28,
-                      0,
-                      28,
-                      18,
-                    ), // Remove extra padding from ListTile
-                    title: const Text('Min Rating'),
-                    subtitle: DropdownButton<int>(
-                      value: tempMinimumRating,
-                      isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    children: [
-                                      Text('$rating'),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.star,
-                                        color:
-                                            AppTheme
-                                                .colorScheme
-                                                .primary, // Use app's maroon color
-                                        size: 18,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          tempMinimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  if (!_isSearchMode) // Only show cuisine filter when not searching
-                    ListTile(
-                      contentPadding: EdgeInsets.fromLTRB(
-                        28,
-                        0,
-                        28,
-                        18,
-                      ), // Remove extra padding from ListTile
-                      title: const Text('Cuisine'),
-                      subtitle: InkWell(
-                        onTap: () async {
-                          final selected = await _showCuisineSelectionDialog(
-                            skipApplyLogic: true,
-                          );
-                          setState(() {
-                            tempSelectedCuisine = selected;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                tempSelectedCuisine?.name ?? 'All',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              const Icon(Icons.arrow_drop_down),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (_isSearchMode)
-                    ListTile(
-                      contentPadding: EdgeInsets.fromLTRB(
-                        28,
-                        0,
-                        28,
-                        18,
-                      ), // Remove extra padding from ListTile
-                      leading: const Icon(Icons.info_outline),
-                      title: const Text('Search Mode'),
-                      subtitle: Text(
-                        'Cuisine filter disabled while searching for "$_searchQuery"',
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-
-                    // Apply the temporary filter values
-                    setState(() {
-                      _selectedCuisine = tempSelectedCuisine;
-                      _minimumRating = tempMinimumRating;
-                    });
-
-                    await _fetchRestaurants();
-                    await _loadFavouriteCuisines();
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<CuisineDto?> _showCuisineSelectionDialog({
-    bool skipApplyLogic = false,
-  }) async {
-    final selectedCuisine = await showDialog<CuisineDto>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        String localSearchTerm = '';
-        List<CuisineDto> localFiltered = [..._availableCuisines];
-
-        return StatefulBuilder(
-          builder: (dialogContext, setState) {
-            return AlertDialog(
-              scrollable: true,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Text(
-                'Select Cuisine',
-                style: TextStyle(
-                  color: AppTheme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: SizedBox(
-                width: double.maxFinite,
-                height: 300,
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          localSearchTerm = value.toLowerCase();
-                          localFiltered =
-                              _availableCuisines
-                                  .where(
-                                    (cuisine) => cuisine.name
-                                        .toLowerCase()
-                                        .contains(localSearchTerm),
-                                  )
-                                  .toList();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child:
-                          localFiltered.isEmpty
-                              ? Center(
-                                child: Text(
-                                  'No matches',
-                                  style: AppTheme.textTheme.displayMedium,
-                                ),
-                              )
-                              : ListView.builder(
-                                itemCount:
-                                    localFiltered.length +
-                                    1, // +1 for "All" option
-                                itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    // "All" option
-                                    return ListTile(
-                                      title: const Text('All'),
-                                      subtitle: const Text('Show all cuisines'),
-                                      tileColor: Colors.grey.shade50,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      onTap:
-                                          () => Navigator.of(
-                                            dialogContext,
-                                          ).pop(null),
-                                    );
-                                  }
-                                  final cuisine = localFiltered[index - 1];
-                                  return ListTile(
-                                    title: Text(cuisine.name),
-                                    subtitle:
-                                        cuisine.description != null &&
-                                                cuisine.description!.isNotEmpty
-                                            ? Text(
-                                              cuisine.description!,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            )
-                                            : null,
-                                    tileColor:
-                                        index % 2 == 1
-                                            ? Colors.grey.shade50
-                                            : null,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    onTap:
-                                        () => Navigator.of(
-                                          dialogContext,
-                                        ).pop(cuisine),
-                                  );
-                                },
-                              ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    // If skipApplyLogic is true, just return the selected cuisine without applying any side effects
-    if (skipApplyLogic) {
-      return selectedCuisine;
-    }
-
-    // Original logic for adding to favorites and applying the filter
-    if (selectedCuisine != null) {
-      // Check if already liked dynamically
-      await _loadFavouriteCuisines();
-      final alreadyLiked = _favoriteCuisines.any(
-        (c) => c.id == selectedCuisine.id,
-      );
-
-      if (!alreadyLiked) {
-        if (!context.mounted) return selectedCuisine;
-        final shouldAdd = await showDialog<bool>(
-          context: context,
-          builder:
-              (ctx) => AlertDialog(
-                title: const Text("Add to favourites?"),
-                content: Text(
-                  "Do you want to add ${selectedCuisine.name} to your liked cuisines?",
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text("No"),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text("Yes"),
-                  ),
-                ],
-              ),
-        );
-
-        if (shouldAdd == true) {
-          try {
-            await _profileService.addCuisinePreference(selectedCuisine.id);
+        return RestaurantFilterDialog(
+          initialMinimumRating: _minimumRating,
+          initialSelectedCuisine: _selectedCuisine,
+          availableCuisines: _availableCuisines,
+          isSearchMode: _isSearchMode,
+          searchQuery: _searchQuery,
+          onApply: (minimumRating, selectedCuisine) async {
+            // Apply the filter values
             setState(() {
-              _favoriteCuisines.add(selectedCuisine);
+              _selectedCuisine = selectedCuisine;
+              _minimumRating = minimumRating;
             });
-            if (!context.mounted) return selectedCuisine;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("${selectedCuisine.name} added to favourites"),
-              ),
-            );
-          } catch (e) {
-            debugPrint("Failed to add ${selectedCuisine.name}: $e");
-            if (!context.mounted) return selectedCuisine;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Could not add ${selectedCuisine.name}")),
-            );
-          }
-        }
-      }
-    }
 
-    // Update the selected cuisine (null for "All", or the selected cuisine)
-    setState(() {
-      _selectedCuisine = selectedCuisine;
-    });
+            await _fetchRestaurants();
+            await _loadFavouriteCuisines();
+          },
+          showCuisineSelectionDialog: ({bool skipApplyLogic = false}) async {
+            return await showDialog<CuisineDto>(
+              context: context,
+              builder: (BuildContext context) {
+                return CuisineSelectionDialog(
+                  availableCuisines: _availableCuisines,
+                  skipApplyLogic: skipApplyLogic,
+                  onCuisineSelected:
+                      skipApplyLogic
+                          ? null
+                          : (cuisine) async {
+                            // Handle the add to favorites logic here if not skipping
+                            await _loadFavouriteCuisines();
+                            final alreadyLiked = _favoriteCuisines.any(
+                              (c) => c.id == cuisine.id,
+                            );
 
-    return selectedCuisine;
+                            if (!alreadyLiked) {
+                              if (!context.mounted) return;
+                              final shouldAdd = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (ctx) => AlertDialog(
+                                      title: const Text("Add to favourites?"),
+                                      content: Text(
+                                        "Do you want to add ${cuisine.name} to your liked cuisines?",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, false),
+                                          child: const Text("No"),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, true),
+                                          child: const Text("Yes"),
+                                        ),
+                                      ],
+                                    ),
+                              );
+
+                              if (shouldAdd == true) {
+                                try {
+                                  await _profileService.addCuisinePreference(
+                                    cuisine.id,
+                                  );
+                                  setState(() {
+                                    _favoriteCuisines.add(cuisine);
+                                  });
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "${cuisine.name} added to favourites",
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  debugPrint(
+                                    "Failed to add ${cuisine.name}: $e",
+                                  );
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Could not add ${cuisine.name}",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   String formatPriceLevel(int? level) {
