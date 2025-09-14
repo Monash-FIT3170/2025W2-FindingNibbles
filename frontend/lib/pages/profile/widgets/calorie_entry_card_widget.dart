@@ -63,16 +63,16 @@ class CalorieEntryCard extends StatelessWidget {
             ],
           ),
         ),
-        Positioned(
-          right: 8,
-          top: 8,
-          child: _buildDeleteButton(),
-        ),
+        Positioned(right: 8, top: 8, child: _buildDeleteButton()),
       ],
     );
   }
 
-  Widget _buildEntryCardFromRecipe(BuildContext context, RecipeDto recipe, int logId) {
+  Widget _buildEntryCardFromRecipe(
+    BuildContext context,
+    RecipeDto recipe,
+    int logId,
+  ) {
     final title = recipe.title;
     final image = recipe.imageURL ?? 'assets/images/default_recipe.jpg';
     String subtitle = recipe.nutritionalInfo.first;
@@ -104,7 +104,9 @@ class CalorieEntryCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleMedium?.copyWith(
                             color: AppTheme.textOnPrimary,
                             fontWeight: FontWeight.bold,
                           ),
@@ -114,9 +116,8 @@ class CalorieEntryCard extends StatelessWidget {
                         const Spacer(),
                         Text(
                           subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.textSecondary),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -128,11 +129,7 @@ class CalorieEntryCard extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(
-          right: 8,
-          top: 8,
-          child: _buildDeleteButton(),
-        ),
+        Positioned(right: 8, top: 8, child: _buildDeleteButton()),
       ],
     );
   }

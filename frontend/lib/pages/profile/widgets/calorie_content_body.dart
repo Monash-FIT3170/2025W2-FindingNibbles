@@ -24,9 +24,12 @@ class CalorieContentBody extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(16),
-      child: dailyCalories == null
-          ? const Center(child: CircularProgressIndicator())
-          : (dailyCalories != 0 ? _buildEntriesList(context) : _buildEmptyState(context)),
+      child:
+          dailyCalories == null
+              ? const Center(child: CircularProgressIndicator())
+              : (dailyCalories != 0
+                  ? _buildEntriesList(context)
+                  : _buildEmptyState(context)),
     );
   }
 
@@ -69,27 +72,28 @@ class CalorieContentBody extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'kcal',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
             ),
           ],
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: loggedRecipes.isEmpty
-              ? _buildEmptyState(context)
-              : ListView.separated(
-                  itemCount: loggedRecipes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final log = loggedRecipes[index];
-                    return CalorieEntryCard(
-                      log: log,
-                      onDelete: () => onDeleteEntry(log.id),
-                    );
-                  },
-                ),
+          child:
+              loggedRecipes.isEmpty
+                  ? _buildEmptyState(context)
+                  : ListView.separated(
+                    itemCount: loggedRecipes.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final log = loggedRecipes[index];
+                      return CalorieEntryCard(
+                        log: log,
+                        onDelete: () => onDeleteEntry(log.id),
+                      );
+                    },
+                  ),
         ),
       ],
     );
