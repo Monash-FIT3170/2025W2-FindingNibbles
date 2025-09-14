@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/recipe_model.dart';
+import 'package:nibbles/service/profile/calorie_log_dto.dart';
 import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
@@ -42,7 +43,7 @@ class ProfileService {
     }
   }
 
-  Future<List<RecipeDto>> getLoggedRecipes(DateTime date) async {
+  Future<List<CalorieLogDto>> getLoggedRecipes(DateTime date) async {
     final dateStr = date.toIso8601String().split('T').first;
     try {
       final response = await _dio.get(
@@ -50,8 +51,10 @@ class ProfileService {
         queryParameters: {'date': dateStr},
       );
       if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-        return data.map((item) => RecipeDto.fromJson(item)).toList();
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data
+            .map((item) => CalorieLogDto.fromJson(item as Map<String, dynamic>))
+            .toList();
       } else {
         throw Exception('Failed to load calorie log recipes');
       }
@@ -73,6 +76,28 @@ class ProfileService {
       }
     } catch (e) {
       throw Exception('Failed to delete calorie log: $e');
+    }
+  }
+
+  Future<void> logCustomCalorie(
+    String mealName,
+    int calories,
+    DateTime date,
+  ) async {
+    try {
+      final response = await _dio.post(
+        'user/calorie-log',
+        data: {
+          'mealName': mealName,
+          'calories': calories,
+          'date': date.toIso8601String(),
+        },
+      );
+      if (response.statusCode != 201) {
+        throw Exception('Failed to log custom calories');
+      }
+    } catch (e) {
+      throw Exception('Failed to log custom calories: $e');
     }
   }
 
