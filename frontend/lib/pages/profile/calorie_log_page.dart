@@ -6,7 +6,6 @@ import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/pages/profile/widgets/calorie_calendar_header_widget.dart';
 import 'package:nibbles/pages/profile/widgets/calorie_content_body.dart';
 
-
 class CalorieLogPage extends StatefulWidget {
   const CalorieLogPage({super.key});
 
@@ -105,7 +104,8 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
               Navigator.of(context).pop();
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => const AppNavigation(initialPageIndex: 2),
+                  builder:
+                      (context) => const AppNavigation(initialPageIndex: 2),
                 ),
               );
             },
@@ -167,82 +167,83 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
 
     return showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        contentPadding: const EdgeInsets.all(24),
-        title: const Center(
-          child: Text(
-            'Log Details',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
-            ),
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: mealNameController,
-                decoration: const InputDecoration(labelText: 'Meal Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a meal name';
-                  }
-                  return null;
-                },
+      builder:
+          (ctx) => AlertDialog(
+            contentPadding: const EdgeInsets.all(24),
+            title: const Center(
+              child: Text(
+                'Log Details',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: caloriesController,
-                decoration: const InputDecoration(labelText: 'Calories'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter calories';
+            ),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: mealNameController,
+                    decoration: const InputDecoration(labelText: 'Meal Name'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a meal name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: caloriesController,
+                    decoration: const InputDecoration(labelText: 'Calories'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter calories';
+                      }
+                      if (int.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (int.parse(value) <= 0) {
+                        return 'Calories must be greater than zero';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final mealName = mealNameController.text;
+                    final calories = int.parse(caloriesController.text);
+                    try {
+                      await _profileService.logCustomCalorie(
+                        mealName,
+                        calories,
+                        _selectedDay,
+                      );
+                      if (!ctx.mounted) return;
+                      Navigator.of(ctx).pop();
+                      _loadCaloriesForDay(_selectedDay);
+                      _loadLoggedRecipes(_selectedDay);
+                    } catch (e) {
+                      // Handle error
+                    }
                   }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  if (int.parse(value) <= 0) {
-                    return 'Calories must be greater than zero';
-                  }
-                  return null;
                 },
+                child: const Text('Save'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final mealName = mealNameController.text;
-                final calories = int.parse(caloriesController.text);
-                try {
-                  await _profileService.logCustomCalorie(
-                    mealName,
-                    calories,
-                    _selectedDay,
-                  );
-                  if (!ctx.mounted) return;
-                  Navigator.of(ctx).pop();
-                  _loadCaloriesForDay(_selectedDay);
-                  _loadLoggedRecipes(_selectedDay);
-                } catch (e) {
-                  // Handle error
-                }
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
   }
 }

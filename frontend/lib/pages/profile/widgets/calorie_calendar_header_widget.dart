@@ -10,8 +10,18 @@ class CalorieCalendarHeader extends StatelessWidget {
   final VoidCallback onCalendarTap;
 
   static const List<String> _monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   const CalorieCalendarHeader({
@@ -74,12 +84,15 @@ class CalorieCalendarHeader extends StatelessWidget {
                         color: Colors.transparent,
                       ),
                       todayTextStyle: TextStyle(
-                        color: _isTodaySelected
-                            ? AppTheme.colorScheme.onPrimary
-                            : AppTheme.textPrimary,
+                        color:
+                            _isTodaySelected
+                                ? AppTheme.colorScheme.onPrimary
+                                : AppTheme.textPrimary,
                       ),
                       defaultTextStyle: TextStyle(color: AppTheme.textPrimary),
-                      weekendTextStyle: TextStyle(color: AppTheme.textSecondary),
+                      weekendTextStyle: TextStyle(
+                        color: AppTheme.textSecondary,
+                      ),
                       outsideDaysVisible: false,
                     ),
                     daysOfWeekStyle: DaysOfWeekStyle(
