@@ -98,7 +98,12 @@ class _LikedPageState extends State<LikedPage> {
       context: context,
       builder:
           (context) => CuisineSelectionDialog(
-            availableCuisines: availableCuisines,
+            availableCuisines:
+                _allCuisines, // Show all cuisines, not just available
+            favoriteCuisines:
+                _favoriteCuisines, // Pass favorite cuisines for star icons
+            allowSelectingFavorited:
+                false, // Prevent selecting already favorited cuisines
             onCuisineSelected: (cuisine) async {
               await _addCuisinePreference(cuisine);
             },

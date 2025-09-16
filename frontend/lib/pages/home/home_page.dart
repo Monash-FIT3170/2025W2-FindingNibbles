@@ -229,6 +229,8 @@ class _HomePageState extends State<HomePage> {
               builder: (BuildContext context) {
                 return CuisineSelectionDialog(
                   availableCuisines: _availableCuisines,
+                  favoriteCuisines: _favoriteCuisines,
+                  allowSelectingFavorited: true,
                   skipApplyLogic: skipApplyLogic,
                   onCuisineSelected:
                       skipApplyLogic
