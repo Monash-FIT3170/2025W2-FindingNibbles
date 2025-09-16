@@ -398,78 +398,89 @@ class _RecipesPageState extends State<RecipesPage> {
                       ],
                     ),
                   )
-                  : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Ingredients section (no longer expanded)
-                        IngredientsInput(
-                          ingredients: ingredients,
-                          controller: _ingredientInputController,
-                          onAddIngredient: _addIngredient,
-                          onRemoveIngredient: _removeIngredient,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Calorie Count (Optional)',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                  : Column(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Text(
+                                'Ingredients',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
                             ),
-                          ),
-                          keyboardType: TextInputType.number,
-                          inputFormatters: <TextInputFormatter>[
-                            FilteringTextInputFormatter.digitsOnly,
+                            Expanded(
+                              child: IngredientsInput(
+                                ingredients: ingredients,
+                                controller: _ingredientInputController,
+                                onAddIngredient: _addIngredient,
+                                onRemoveIngredient: _removeIngredient,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Calorie Count (Optional)',
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  calorieCount = int.tryParse(value);
+                                });
+                              },
+                            ),
                           ],
-                          onChanged: (value) {
-                            setState(() {
-                              calorieCount = int.tryParse(value);
-                            });
-                          },
                         ),
-                        const SizedBox(height: 16),
-                        DietaryRequirements(
-                          useDietaryRequirements: useDietaryRequirements,
-                          availableDietaries: availableDietaries,
-                          selectedDietaries: selectedDietaries,
-                          onToggleDietaryRequirements:
-                              _toggleDietaryRequirements,
-                          onToggleDietary: _toggleDietary,
-                          onToggleAll: _toggleAllDietaries,
-                          isDietarySelected: _isDietarySelected,
-                          areAllDietariesSelected: _areAllDietariesSelected,
-                        ),
-                        SizedBox(height: 8),
-                        RecipeDifficultySelector(
-                          selectedDifficulty: selectedDifficulty,
-                          onDifficultySelected: _setDifficulty,
-                        ),
-                        SizedBox(height: 8),
-                        AppliancesSelection(
-                          availableAppliances: availableAppliances,
-                          selectedAppliances: selectedAppliances,
-                          onToggleAppliance: _toggleAppliance,
-                          isApplianceSelected: _isApplianceSelected,
-                          areAllAppliancesSelected: _areAllAppliancesSelected,
-                          onToggleAll: _toggleAllAppliances,
-                        ),
-                        SizedBox(height: 16),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: _generateRecipes,
-                              icon: Icon(Icons.restaurant_menu),
-                              label: Text('Generate Recipes'),
-                              style: null,
-                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      DietaryRequirements(
+                        useDietaryRequirements: useDietaryRequirements,
+                        availableDietaries: availableDietaries,
+                        selectedDietaries: selectedDietaries,
+                        onToggleDietaryRequirements: _toggleDietaryRequirements,
+                        onToggleDietary: _toggleDietary,
+                        onToggleAll: _toggleAllDietaries,
+                        isDietarySelected: _isDietarySelected,
+                        areAllDietariesSelected: _areAllDietariesSelected,
+                      ),
+                      SizedBox(height: 8),
+                      RecipeDifficultySelector(
+                        selectedDifficulty: selectedDifficulty,
+                        onDifficultySelected: _setDifficulty,
+                      ),
+                      SizedBox(height: 8),
+                      AppliancesSelection(
+                        availableAppliances: availableAppliances,
+                        selectedAppliances: selectedAppliances,
+                        onToggleAppliance: _toggleAppliance,
+                        isApplianceSelected: _isApplianceSelected,
+                        areAllAppliancesSelected: _areAllAppliancesSelected,
+                        onToggleAll: _toggleAllAppliances,
+                      ),
+                      SizedBox(height: 16),
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _generateRecipes,
+                            icon: Icon(Icons.restaurant_menu),
+                            label: Text('Generate Recipes'),
+                            style: null,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
         ),
       ),
