@@ -10,6 +10,7 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
 import 'package:nibbles/pages/recipes/recipe_recommendations_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -41,8 +42,8 @@ class _RecipesPageState extends State<RecipesPage> {
     super.initState();
     isLoading = true;
 
-    // Use Future.wait to wait for both async operations to complete
-    Future.wait([_fetchDietaries(), _fetchAppliances()])
+    // Use Future.wait to wait for all async operations to complete
+    Future.wait([_fetchDietaries(), _fetchAppliances(), _loadIngredients()])
         .then((_) {
           if (mounted) {
             setState(() {
@@ -103,6 +104,32 @@ class _RecipesPageState extends State<RecipesPage> {
           SnackBar(content: Text('Failed to load appliances: ${e.toString()}')),
         );
       }
+    }
+  }
+
+  // Load ingredients from local storage
+  Future<void> _loadIngredients() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedIngredients = prefs.getStringList('saved_ingredients') ?? [];
+      if (mounted) {
+        setState(() {
+          ingredients.clear();
+          ingredients.addAll(savedIngredients);
+        });
+      }
+    } catch (e) {
+      _logger.e('Failed to load ingredients from storage: ${e.toString()}');
+    }
+  }
+
+  // Save ingredients to local storage
+  Future<void> _saveIngredients() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('saved_ingredients', ingredients);
+    } catch (e) {
+      _logger.e('Failed to save ingredients to storage: ${e.toString()}');
     }
   }
 
@@ -242,6 +269,7 @@ class _RecipesPageState extends State<RecipesPage> {
         ingredients.add(trimmedIngredient);
         _ingredientInputController.clear();
       });
+      _saveIngredients(); // Save to local storage
     }
   }
 
@@ -249,6 +277,7 @@ class _RecipesPageState extends State<RecipesPage> {
     setState(() {
       ingredients.remove(ingredient);
     });
+    _saveIngredients(); // Save to local storage
   }
 
   void _toggleAppliance(Appliance appliance) {
