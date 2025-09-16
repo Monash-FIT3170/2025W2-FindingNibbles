@@ -20,23 +20,28 @@ class IngredientsInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min, // Don't expand unnecessarily
       children: [
-        const SizedBox(height: 16), // Add spacing from top
-        // Heading
-        Text('Ingredients', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        // Input field with inline add functionality
-        TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Add an ingredient',
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          ),
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              onAddIngredient(value);
-            }
-          },
+        // Input field row
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Add an ingredient',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                onFieldSubmitted: onAddIngredient,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => onAddIngredient(controller.text),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         // Display added ingredients as chips (matching appliances/dietary style)
