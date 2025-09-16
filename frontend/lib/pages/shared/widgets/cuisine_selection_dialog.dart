@@ -4,12 +4,18 @@ import 'package:nibbles/theme/app_theme.dart';
 
 class CuisineSelectionDialog extends StatefulWidget {
   final List<CuisineDto> availableCuisines;
+  final List<CuisineDto>? favoriteCuisines; // List of favorited cuisines
+  final bool
+  allowSelectingFavorited; // Whether user can select already favorited cuisines
   final bool skipApplyLogic;
   final Function(CuisineDto cuisine)? onCuisineSelected; // For apply logic
 
   const CuisineSelectionDialog({
     super.key,
     required this.availableCuisines,
+    this.favoriteCuisines,
+    this.allowSelectingFavorited =
+        true, // Default to true for backward compatibility
     this.skipApplyLogic = false,
     this.onCuisineSelected,
   });
@@ -26,6 +32,10 @@ class _CuisineSelectionDialogState extends State<CuisineSelectionDialog> {
   void initState() {
     super.initState();
     localFiltered = [...widget.availableCuisines];
+  }
+
+  bool _isFavorited(CuisineDto cuisine) {
+    return widget.favoriteCuisines?.any((fav) => fav.id == cuisine.id) ?? false;
   }
 
   @override
@@ -95,8 +105,19 @@ class _CuisineSelectionDialogState extends State<CuisineSelectionDialog> {
                             );
                           }
                           final cuisine = localFiltered[index - 1];
+                          final isFavorited = _isFavorited(cuisine);
+                          final canSelect =
+                              widget.allowSelectingFavorited || !isFavorited;
+
                           return ListTile(
-                            title: Text(cuisine.name),
+                            enabled: canSelect,
+                            title: Text(
+                              cuisine.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: canSelect ? null : Colors.grey,
+                              ),
+                            ),
                             subtitle:
                                 cuisine.description != null &&
                                         cuisine.description!.isNotEmpty
@@ -104,6 +125,17 @@ class _CuisineSelectionDialogState extends State<CuisineSelectionDialog> {
                                       cuisine.description!,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: canSelect ? null : Colors.grey,
+                                      ),
+                                    )
+                                    : null,
+                            trailing:
+                                isFavorited
+                                    ? const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 20,
                                     )
                                     : null,
                             tileColor:
@@ -111,13 +143,16 @@ class _CuisineSelectionDialogState extends State<CuisineSelectionDialog> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            onTap: () {
-                              if (!widget.skipApplyLogic &&
-                                  widget.onCuisineSelected != null) {
-                                widget.onCuisineSelected!(cuisine);
-                              }
-                              Navigator.of(context).pop(cuisine);
-                            },
+                            onTap:
+                                canSelect
+                                    ? () {
+                                      if (!widget.skipApplyLogic &&
+                                          widget.onCuisineSelected != null) {
+                                        widget.onCuisineSelected!(cuisine);
+                                      }
+                                      Navigator.of(context).pop(cuisine);
+                                    }
+                                    : null,
                           );
                         },
                       ),
