@@ -52,25 +52,57 @@ class IngredientsInput extends StatelessWidget {
           ),
           child:
               ingredients.isEmpty
-                  ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: Text(
-                        'No ingredients added yet.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
+                  ? const Center(
+                    child: Text('No ingredients added yet. Add one above.'),
                   )
-                  : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        ingredients.map((ingredient) {
-                          return InputChip(
-                            label: Text(ingredient),
-                            onDeleted: () => onRemoveIngredient(ingredient),
-                          );
-                        }).toList(),
+                  : ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: ingredients.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color:
+                              Theme.of(
+                                context,
+                              ).inputDecorationTheme.fillColor ??
+                              Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  ingredients[index],
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, size: 24),
+                                onPressed:
+                                    () =>
+                                        onRemoveIngredient(ingredients[index]),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
         ),
       ],
