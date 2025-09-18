@@ -338,13 +338,7 @@ class _RecipesPageState extends State<RecipesPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.0),
-                              child: Text(
-                                'Ingredients',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
+                            // Removed duplicate Ingredients heading
                             Expanded(
                               child: IngredientsInput(
                                 ingredients: ingredients,

@@ -19,28 +19,34 @@ class IngredientsInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Input field row
+        // Heading and plus button in one row
         Row(
           children: [
             Expanded(
-              child: TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'Add an ingredient',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-                onSubmitted: onAddIngredient,
+              child: Text(
+                'Ingredients',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () => onAddIngredient(controller.text),
+              tooltip: 'Add Ingredient',
             ),
           ],
+        ),
+        // Input field full width
+        TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'Add an ingredient',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+          ),
+          onSubmitted: onAddIngredient,
         ),
         const SizedBox(height: 8),
         Expanded(
