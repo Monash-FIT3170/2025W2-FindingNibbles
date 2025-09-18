@@ -1286,9 +1286,9 @@ class _MapPageState extends State<MapPage> {
                             suffixIcon:
                                 _searchQuery.isNotEmpty
                                     ? IconButton(
-                                        icon: const Icon(Icons.clear),
-                                        onPressed: _clearSearch,
-                                      )
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
                                     : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
