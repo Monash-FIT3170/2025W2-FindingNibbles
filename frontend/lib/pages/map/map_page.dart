@@ -1039,6 +1039,13 @@ class _MapPageState extends State<MapPage> {
       appBar: AppBar(
         title: const Text('Map'),
         automaticallyImplyLeading: false, // Hide back button
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_alt_rounded),
+            tooltip: 'Filter',
+            onPressed: _showFilterDialog,
+          ),
+        ],
       ),
       body:
           _isLoading
@@ -1276,11 +1283,11 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ],
                   ),
-                  // Floating Search Bubble
+                  // Floating Search Bubble (now full width)
                   Positioned(
                     top: 16,
                     left: 16,
-                    right: 80, // Leave space for filter button
+                    right: 16,
                     child: Material(
                       elevation: 8,
                       borderRadius: BorderRadius.circular(25),
@@ -1298,9 +1305,9 @@ class _MapPageState extends State<MapPage> {
                             suffixIcon:
                                 _searchQuery.isNotEmpty
                                     ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: _clearSearch,
-                                    )
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: _clearSearch,
+                                      )
                                     : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
@@ -1312,29 +1319,18 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ),
                   ),
-                  // Separate Filter Button
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Column(
-                      children: [
-                        FloatingActionButton(
-                          heroTag: 'filterButton',
-                          onPressed: _showFilterDialog,
-                          child: const Icon(Icons.filter_alt_rounded),
-                        ),
-                        if (_routePoints.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          FloatingActionButton(
-                            heroTag: 'clearDirectionsButton',
-                            onPressed: _clearDirections,
-                            backgroundColor: Colors.red,
-                            child: const Icon(Icons.clear, color: Colors.white),
-                          ),
-                        ],
-                      ],
+                  // Clear Directions Button (if route is active)
+                  if (_routePoints.isNotEmpty)
+                    Positioned(
+                      top: 80, // below the AppBar
+                      right: 16,
+                      child: FloatingActionButton(
+                        heroTag: 'clearDirectionsButton',
+                        onPressed: _clearDirections,
+                        backgroundColor: Colors.red,
+                        child: const Icon(Icons.clear, color: Colors.white),
+                      ),
                     ),
-                  ),
                   _buildActiveFiltersChip(),
                   _buildRouteInfoCard(),
                 ],
