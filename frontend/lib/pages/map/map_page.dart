@@ -1194,26 +1194,7 @@ class _MapPageState extends State<MapPage> {
                                                     ],
                                                   ),
                                                 ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                // Removed phone number row and empty widget
                                                 SizedBox(height: 8),
                                                 Text.rich(
                                                   TextSpan(

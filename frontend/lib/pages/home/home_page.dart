@@ -870,31 +870,7 @@ class _HomePageState extends State<HomePage> {
                                                           ],
                                                         ),
                                                       ),
-                                                      const SizedBox(height: 8),
-                                                      RichText(
-                                                        text: TextSpan(
-                                                          style:
-                                                              DefaultTextStyle.of(
-                                                                context,
-                                                              ).style,
-                                                          children: [
-                                                            const TextSpan(
-                                                              text: 'PH: ',
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            TextSpan(
-                                                              text:
-                                                                  restaurant
-                                                                      .formattedPhoneNum ??
-                                                                  'Not available',
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
+                                                      // Removed phone number row
                                                       const SizedBox(height: 8),
                                                       RichText(
                                                         text: TextSpan(
