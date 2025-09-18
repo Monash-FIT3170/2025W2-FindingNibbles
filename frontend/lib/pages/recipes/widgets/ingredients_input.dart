@@ -41,10 +41,7 @@ class IngredientsInput extends StatelessWidget {
           decoration: const InputDecoration(
             hintText: 'Add an ingredient',
             border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
           onSubmitted: onAddIngredient,
         ),
