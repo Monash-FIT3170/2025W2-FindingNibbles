@@ -204,9 +204,11 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
           children: [
             Row(
               children: [
-                Text('Cooking Appliances', style: theme.textTheme.titleSmall),
+                Expanded(
+                  child: Text('Cooking Appliances', style: theme.textTheme.titleSmall),
+                ),
                 IconButton(
-                  icon: Icon(Icons.add, color: colorScheme.primary),
+                  icon: const Icon(Icons.add, color: Colors.black),
                   onPressed: _openAddDialog,
                 ),
               ],
