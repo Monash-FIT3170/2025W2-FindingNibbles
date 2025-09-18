@@ -212,8 +212,20 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                 itemCount: localFiltered.length,
                                 itemBuilder: (context, index) {
                                   final item = localFiltered[index];
+                                  final isAlreadyAdded = widget
+                                      .dietaryRequirements
+                                      .any((d) => d.id == item.id);
                                   return ListTile(
-                                    title: Text(item.name),
+                                    enabled: !isAlreadyAdded,
+                                    title: Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        color:
+                                            isAlreadyAdded
+                                                ? Colors.grey
+                                                : Colors.black,
+                                      ),
+                                    ),
                                     tileColor:
                                         index % 2 == 0
                                             ? Colors.grey.shade50
@@ -221,11 +233,18 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    onTap: () async {
-                                      await _addDietaryRequirement(item.id);
-                                      if (!dialogContext.mounted) return;
-                                      Navigator.of(dialogContext).pop();
-                                    },
+                                    onTap:
+                                        isAlreadyAdded
+                                            ? null
+                                            : () async {
+                                              await _addDietaryRequirement(
+                                                item.id,
+                                              );
+                                              if (!dialogContext.mounted) {
+                                                return;
+                                              }
+                                              Navigator.of(dialogContext).pop();
+                                            },
                                   );
                                 },
                               ),
@@ -274,6 +293,7 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -286,8 +306,10 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
             Row(
               children: [
                 Text('Dietary Requirements', style: theme.textTheme.titleSmall),
-                const Spacer(),
-                IconButton(icon: Icon(Icons.add), onPressed: _openAddDialog),
+                IconButton(
+                  icon: Icon(Icons.add, color: colorScheme.primary),
+                  onPressed: _openAddDialog,
+                ),
               ],
             ),
             const SizedBox(height: 8),
