@@ -118,19 +118,20 @@ class ProfilePageState extends State<ProfilePage> {
                 : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center( // 👈 centers the text horizontally
-                      child: Text(
-                        'Profile',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        // 👈 centers the text horizontally
+                        child: Text(
+                          'Profile',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                     // Use Expanded with SingleChildScrollView to prevent overflow
                     Expanded(
                       child: SingleChildScrollView(
