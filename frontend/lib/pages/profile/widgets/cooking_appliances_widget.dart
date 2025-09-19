@@ -166,8 +166,9 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                                             ? null
                                             : () async {
                                               await _addAppliance(item.id);
-                                              if (!dialogContext.mounted)
+                                              if (!dialogContext.mounted) {
                                                 return;
+                                              }
                                               Navigator.of(dialogContext).pop();
                                             },
                                   );
