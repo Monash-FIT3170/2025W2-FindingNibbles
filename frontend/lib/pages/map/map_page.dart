@@ -42,7 +42,7 @@ class _MapPageState extends State<MapPage> {
   static const double _minimumZoomForRestaurants = 12.0;
 
   // Optimization variables
-  Timer? _debounceTimer;
+  Timer? _debounceTimer; // For map movement debouncing
   Timer? _positionUpdateTimer;
   static const Duration _debounceDelay = Duration(milliseconds: 500);
   final Map<String, List<RestaurantDto>> _restaurantCache = {};
@@ -234,9 +234,24 @@ class _MapPageState extends State<MapPage> {
 
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        allRestaurants = await MapService().searchRestaurantsByName(
-          _searchQuery,
-        );
+        // Get current map bounds for quadrant-based search
+        final bounds = _isMapControllerReady() 
+            ? _mapController.camera.visibleBounds 
+            : null;
+        
+        if (bounds != null) {
+          // Use quadrant-based search within current map bounds
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+            swLat: bounds.southWest.latitude,
+            swLng: bounds.southWest.longitude,
+            neLat: bounds.northEast.latitude,
+            neLng: bounds.northEast.longitude,
+          );
+        } else {
+          // Fallback to global search if bounds not available
+          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+        }
       } else {
         // Check if zoom level is sufficient for loading restaurants (only if map controller is ready)
         if (_isMapControllerReady() &&
@@ -383,9 +398,24 @@ class _MapPageState extends State<MapPage> {
 
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        allRestaurants = await MapService().searchRestaurantsByName(
-          _searchQuery,
-        );
+        // Get current map bounds for quadrant-based search
+        final bounds = _isMapControllerReady() 
+            ? _mapController.camera.visibleBounds 
+            : null;
+        
+        if (bounds != null) {
+          // Use quadrant-based search within current map bounds
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+            swLat: bounds.southWest.latitude,
+            swLng: bounds.southWest.longitude,
+            neLat: bounds.northEast.latitude,
+            neLng: bounds.northEast.longitude,
+          );
+        } else {
+          // Fallback to global search if bounds not available
+          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+        }
       } else {
         // Check if map controller is ready before using it
         if (!_isMapControllerReady()) {
@@ -581,28 +611,25 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  void _onSearchChanged(String query) {
+  void _onSearchSubmitted(String query) {
+    if (query.trim() == _searchQuery) return;
+
     setState(() {
       _searchQuery = query.trim();
       _isSearchMode = _searchQuery.isNotEmpty;
     });
 
-    // Clear cache when switching between search and map modes
-    if (_searchQuery.isEmpty || query.trim().isEmpty) {
-      _restaurantCache.clear();
-      _lastFetchedBounds = null;
-      _lastFetchedZoom = null;
+    // Clear cache when starting a new search
+    _restaurantCache.clear();
+    _lastFetchedBounds = null;
+
+    if (_searchQuery.isEmpty) {
+      _fetchRestaurantsInitial();
+      return;
     }
 
-    // Cancel previous debounce timer
-    _debounceTimer?.cancel();
-
-    // Debounce the search to avoid too many API calls
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (_searchQuery == query.trim() && mounted) {
-        _fetchRestaurantsInitial();
-      }
-    });
+    // Trigger search immediately on Enter key press
+    _fetchRestaurantsInitial();
   }
 
   void _clearSearch() {
@@ -1201,9 +1228,9 @@ class _MapPageState extends State<MapPage> {
                         ),
                         child: TextField(
                           controller: _searchController,
-                          onChanged: _onSearchChanged,
+                          onSubmitted: _onSearchSubmitted,
                           decoration: InputDecoration(
-                            hintText: 'Search restaurants by name...',
+                            hintText: 'Search restaurants by name... (Press Enter)',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon:
                                 _searchQuery.isNotEmpty

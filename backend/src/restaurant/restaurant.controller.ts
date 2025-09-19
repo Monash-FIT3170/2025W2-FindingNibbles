@@ -115,9 +115,43 @@ export class RestaurantController {
     });
   }
 
-  // Fetch restaurants by name
+  // Fetch restaurants by name with optional bounds filtering
   @Get('search/:name')
-  findByName(@Param('name') name: string) {
+  findByName(
+    @Param('name') name: string,
+    @Query('swLat') swLat?: string,
+    @Query('swLng') swLng?: string,
+    @Query('neLat') neLat?: string,
+    @Query('neLng') neLng?: string,
+  ) {
+    // Check if bounds parameters are provided for quadrant-based search
+    if (swLat && swLng && neLat && neLng) {
+      const swLatNum = parseFloat(swLat);
+      const swLngNum = parseFloat(swLng);
+      const neLatNum = parseFloat(neLat);
+      const neLngNum = parseFloat(neLng);
+
+      // Validate the coordinates
+      if (
+        isNaN(swLatNum) ||
+        isNaN(swLngNum) ||
+        isNaN(neLatNum) ||
+        isNaN(neLngNum)
+      ) {
+        throw new BadRequestException('Invalid latitude or longitude values.');
+      }
+
+      // Use quadrant-based search within bounds
+      return this.restaurantService.findByNameInBounds(
+        name,
+        swLatNum,
+        swLngNum,
+        neLatNum,
+        neLngNum,
+      );
+    }
+
+    // Fallback to global search if no bounds provided
     return this.restaurantService.findByName(name);
   }
 
