@@ -8,6 +8,8 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/profile/widgets/travel_plan_section_widget.dart';
+import 'package:nibbles/pages/travel/travel_plan_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -157,6 +159,17 @@ class ProfilePageState extends State<ProfilePage> {
                               appliances: _appliances,
                               onAdd: _addAppliance,
                               onRemove: _removeAppliance,
+                            ),
+                            // New Travel plan section
+                            TravelPlanSectionWidget(
+                              onOpen: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const TravelPlanPage(),
+                                  ),
+                                );
+                              },
                             ),
                             LogoutWidget(onLogout: () {}),
                             // Add padding at the bottom to ensure content doesn't get cut off
