@@ -75,7 +75,7 @@ async function main(): Promise<void> {
         name: r.trading_name,
         latitude: parseFloat(r.latitude),
         longitude: parseFloat(r.longitude),
-        rating: Math.round((Math.random() * 1.5 + 3.5) * 10) / 10,
+        rating: Math.round((Math.random() * 3 + 2) * 10) / 10,
         userRatingsTotal: Math.floor(Math.random() * 500) + 1,
         priceLevel: Math.floor(Math.random() * 4) + 1,
         address: r.building_address,
@@ -99,7 +99,7 @@ async function main(): Promise<void> {
           name: r.trading_name,
           latitude: parseFloat(r.latitude),
           longitude: parseFloat(r.longitude),
-          rating: Math.round((Math.random() * 1.5 + 3.5) * 10) / 10,
+          rating: Math.round((Math.random() * 3 + 2) * 10) / 10,
           userRatingsTotal: Math.floor(Math.random() * 500) + 1,
           priceLevel: Math.floor(Math.random() * 4) + 1,
           address: r.building_address,
@@ -209,10 +209,8 @@ async function main(): Promise<void> {
 
     const restaurantsSubset = await prisma.restaurant.findMany({
       select: { id: true },
-      distinct: ['name'],
       take: 5,
     });
-
     await prisma.userFavouritedRestaurant.createMany({
       data: restaurantsSubset.map((restaurant) => ({
         userId: defaultUser.id,
