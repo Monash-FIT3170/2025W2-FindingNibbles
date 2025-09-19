@@ -239,17 +239,14 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                               : (value) {},
                       enabled: _personalInfo != null,
                     ),
-                    _buildFormField(
-                      context,
-                      'Email',
-                      email,
-                      Icons.email_outlined,
-                      onEdit:
-                          _personalInfo != null
-                              ? (value) => _handleFieldUpdate('email', value)
-                              : (value) {},
-                      enabled: _personalInfo != null,
-                    ),
+                      _buildFormField(
+                        context,
+                        'Email',
+                        email,
+                        Icons.email_outlined,
+                        onEdit: (value) {}, // Do nothing
+                        enabled: false, // Disable editing
+                      ),
                     _buildLocationField(context),
 
                     const SizedBox(height: 32),
