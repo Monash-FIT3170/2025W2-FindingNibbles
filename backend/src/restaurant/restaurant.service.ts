@@ -113,25 +113,60 @@ export class RestaurantService {
     neLat: number,
     neLng: number,
   ) {
-    return this.db.restaurant.findMany({
-      where: {
-        latitude: {
-          gte: swLat,
-          lte: neLat,
-        },
-        longitude: {
-          gte: swLng,
-          lte: neLng,
-        },
-      },
-      include: {
-        restaurantCuisines: {
-          include: {
-            cuisine: true,
+    // Calculate the center point to divide into quadrants
+    const centerLat = (swLat + neLat) / 2;
+    const centerLng = (swLng + neLng) / 2;
+
+    // Define the 4 quadrants
+    const quadrants = [
+      // Southwest quadrant
+      { swLat, swLng, neLat: centerLat, neLng: centerLng },
+      // Southeast quadrant
+      { swLat, swLng: centerLng, neLat: centerLat, neLng },
+      // Northwest quadrant
+      { swLat: centerLat, swLng, neLat, neLng: centerLng },
+      // Northeast quadrant
+      { swLat: centerLat, swLng: centerLng, neLat, neLng },
+    ];
+
+    // Fetch 10 restaurants from each quadrant
+    const restaurantPromises = quadrants.map((quadrant) =>
+      this.db.restaurant.findMany({
+        where: {
+          latitude: {
+            gte: quadrant.swLat,
+            lte: quadrant.neLat,
+          },
+          longitude: {
+            gte: quadrant.swLng,
+            lte: quadrant.neLng,
           },
         },
-      },
-    });
+        take: 10, // Limit to 10 restaurants per quadrant
+        orderBy: {
+          rating: 'desc', // Order by rating descending to get best restaurants first
+        },
+        include: {
+          restaurantCuisines: {
+            include: {
+              cuisine: true,
+            },
+          },
+        },
+      }),
+    );
+
+    // Wait for all quadrant queries to complete
+    const quadrantResults = await Promise.all(restaurantPromises);
+
+    // Flatten the results and remove duplicates (if any)
+    const allRestaurants = quadrantResults.flat();
+    const uniqueRestaurants = allRestaurants.filter(
+      (restaurant, index, self) =>
+        index === self.findIndex((r) => r.id === restaurant.id),
+    );
+
+    return uniqueRestaurants;
   }
 
   // Fetch restaurants within bounds and filtered by cuisine
@@ -142,29 +177,64 @@ export class RestaurantService {
     neLng: number,
     cuisineId: number,
   ) {
-    return this.db.restaurant.findMany({
-      where: {
-        latitude: {
-          gte: swLat,
-          lte: neLat,
-        },
-        longitude: {
-          gte: swLng,
-          lte: neLng,
-        },
-        restaurantCuisines: {
-          some: {
-            cuisineId,
+    // Calculate the center point to divide into quadrants
+    const centerLat = (swLat + neLat) / 2;
+    const centerLng = (swLng + neLng) / 2;
+
+    // Define the 4 quadrants
+    const quadrants = [
+      // Southwest quadrant
+      { swLat, swLng, neLat: centerLat, neLng: centerLng },
+      // Southeast quadrant
+      { swLat, swLng: centerLng, neLat: centerLat, neLng },
+      // Northwest quadrant
+      { swLat: centerLat, swLng, neLat, neLng: centerLng },
+      // Northeast quadrant
+      { swLat: centerLat, swLng: centerLng, neLat, neLng },
+    ];
+
+    // Fetch 10 restaurants from each quadrant with cuisine filter
+    const restaurantPromises = quadrants.map((quadrant) =>
+      this.db.restaurant.findMany({
+        where: {
+          latitude: {
+            gte: quadrant.swLat,
+            lte: quadrant.neLat,
+          },
+          longitude: {
+            gte: quadrant.swLng,
+            lte: quadrant.neLng,
+          },
+          restaurantCuisines: {
+            some: {
+              cuisineId,
+            },
           },
         },
-      },
-      include: {
-        restaurantCuisines: {
-          include: {
-            cuisine: true,
+        take: 10, // Limit to 10 restaurants per quadrant
+        orderBy: {
+          rating: 'desc', // Order by rating descending to get best restaurants first
+        },
+        include: {
+          restaurantCuisines: {
+            include: {
+              cuisine: true,
+            },
           },
         },
-      },
-    });
+      }),
+    );
+
+    // Wait for all quadrant queries to complete
+    const quadrantResults = await Promise.all(restaurantPromises);
+
+    // Flatten the results and remove duplicates (if any)
+    const allRestaurants = quadrantResults.flat();
+    const uniqueRestaurants = allRestaurants.filter(
+      (restaurant, index, self) =>
+        index === self.findIndex((r) => r.id === restaurant.id),
+    );
+
+    return uniqueRestaurants;
   }
 }
