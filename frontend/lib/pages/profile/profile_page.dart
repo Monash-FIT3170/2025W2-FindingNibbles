@@ -118,8 +118,9 @@ class ProfilePageState extends State<ProfilePage> {
                 : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center( // 👈 centers the text horizontally
                       child: Text(
                         'Profile',
                         style: const TextStyle(
@@ -129,6 +130,7 @@ class ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
+                  ),
                     // Use Expanded with SingleChildScrollView to prevent overflow
                     Expanded(
                       child: SingleChildScrollView(

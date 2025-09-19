@@ -724,6 +724,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('All Restaurants'),
+        centerTitle: true, // 👈 this centers the title
         automaticallyImplyLeading: false,
         actions: [
           DiceRollWidget(
