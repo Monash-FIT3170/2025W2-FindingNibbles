@@ -78,7 +78,12 @@ class LoginPage extends StatelessWidget {
           // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 70,
+              bottom: 60,
+              left: 16,
+              right: 16,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -92,7 +97,9 @@ class LoginPage extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Sign into your account',
-                    style: AppTheme.textTheme.headlineLarge?.copyWith(color: Colors.white),
+                    style: AppTheme.textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),

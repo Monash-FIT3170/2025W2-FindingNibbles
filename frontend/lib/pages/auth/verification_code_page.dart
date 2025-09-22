@@ -13,7 +13,6 @@ class VerificationCodePage extends StatefulWidget {
 }
 
 class VerificationCodePageState extends State<VerificationCodePage> {
-
   final _codeController = TextEditingController();
   final AuthService _authService = AuthService();
   late String _email;
@@ -114,7 +113,12 @@ class VerificationCodePageState extends State<VerificationCodePage> {
           // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 70,
+              bottom: 60,
+              left: 16,
+              right: 16,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -130,7 +134,9 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                     children: [
                       Text(
                         'Verify Your Email',
-                        style: AppTheme.textTheme.headlineMedium?.copyWith(color: Colors.white),
+                        style: AppTheme.textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
@@ -142,13 +148,18 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                             Flexible(
                               child: Text(
                                 'We sent a code to $_email',
-                                style: AppTheme.textTheme.headlineSmall?.copyWith(color: Colors.white70),
+                                style: AppTheme.textTheme.headlineSmall
+                                    ?.copyWith(color: Colors.white70),
                                 textAlign: TextAlign.center,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
                               tooltip: 'Change email',
                               onPressed: _changeEmailDialog,
                             ),
