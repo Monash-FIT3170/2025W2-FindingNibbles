@@ -13,8 +13,16 @@ class VerificationCodePage extends StatefulWidget {
 }
 
 class VerificationCodePageState extends State<VerificationCodePage> {
+
   final _codeController = TextEditingController();
   final AuthService _authService = AuthService();
+  late String _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _email = widget.email;
+  }
 
   void _verifyCode() async {
     final code = _codeController.text.trim();
@@ -25,7 +33,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       return;
     }
 
-    final success = await _authService.verifyEmail(widget.email, code);
+    final success = await _authService.verifyEmail(_email, code);
     if (!mounted) return; // Check if widget is still mounted
 
     if (success) {
@@ -41,7 +49,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   }
 
   void _resendCode() async {
-    final success = await _authService.newVerification(widget.email);
+    final success = await _authService.newVerification(_email);
     if (!mounted) return; // Check if widget is still mounted
 
     if (success) {
@@ -55,33 +63,103 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     }
   }
 
+  void _changeEmailDialog() async {
+    final controller = TextEditingController(text: _email);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Change Email'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(labelText: 'New Email'),
+            keyboardType: TextInputType.emailAddress,
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newEmail = controller.text.trim();
+                if (newEmail.isNotEmpty && newEmail != _email) {
+                  Navigator.pop(context, newEmail);
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null && result.isNotEmpty && result != _email) {
+      setState(() {
+        _email = result;
+      });
+      // Send new verification code to new email
+      _resendCode();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.colorScheme.primary,
       body: Column(
         children: [
-          // Top section with title
+          // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 150, bottom: 60),
-            alignment: Alignment.center,
-            child: Column(
+            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Verify Your Email',
-                  style: AppTheme.textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
                 ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    'We sent a code to ${widget.email}',
-                    style: AppTheme.textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Verify Your Email',
+                        style: AppTheme.textTheme.headlineMedium?.copyWith(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'We sent a code to $_email',
+                                style: AppTheme.textTheme.headlineSmall?.copyWith(color: Colors.white70),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                              tooltip: 'Change email',
+                              onPressed: _changeEmailDialog,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                // Dummy box to keep title centered
+                const SizedBox(width: 48),
               ],
             ),
           ),

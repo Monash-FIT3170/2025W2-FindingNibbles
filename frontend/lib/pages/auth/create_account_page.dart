@@ -120,9 +120,21 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Registration failed')));
+      // Try to resend verification if registration failed (likely user exists but not verified)
+      final resendSuccess = await authService.newVerification(email);
+      if (resendSuccess) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification code resent to your email.')),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Registration failed')));
+      }
     }
   }
 
@@ -132,15 +144,30 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       backgroundColor: AppTheme.colorScheme.primary,
       body: Column(
         children: [
-          // Top section with title
+          // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 150, bottom: 60),
-            alignment: Alignment.center,
-            child: Text(
-              'Create your account',
-              style: AppTheme.textTheme.headlineLarge,
-              textAlign: TextAlign.center,
+            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Create your account',
+                    style: AppTheme.textTheme.headlineLarge?.copyWith(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                // Dummy box to keep title centered
+                const SizedBox(width: 48),
+              ],
             ),
           ),
 
