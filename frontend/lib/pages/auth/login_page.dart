@@ -75,15 +75,30 @@ class LoginPage extends StatelessWidget {
       backgroundColor: AppTheme.primaryColor,
       body: Column(
         children: [
-          // Top section with just title
+          // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 150, bottom: 60),
-            alignment: Alignment.center,
-            child: Text(
-              'Sign into your account',
-              style: AppTheme.textTheme.headlineLarge,
-              textAlign: TextAlign.center,
+            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Sign into your account',
+                    style: AppTheme.textTheme.headlineLarge?.copyWith(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                // To keep the title centered, add a dummy box of same width as IconButton
+                const SizedBox(width: 48),
+              ],
             ),
           ),
 
