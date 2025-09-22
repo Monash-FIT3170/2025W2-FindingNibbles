@@ -128,7 +128,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verification code resent to your email.')),
+          const SnackBar(
+            content: Text('Verification code resent to your email.'),
+          ),
         );
       } else {
         ScaffoldMessenger.of(
@@ -147,7 +149,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 70, bottom: 60, left: 16, right: 16),
+            padding: const EdgeInsets.only(
+              top: 70,
+              bottom: 60,
+              left: 16,
+              right: 16,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -161,7 +168,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 Expanded(
                   child: Text(
                     'Create your account',
-                    style: AppTheme.textTheme.headlineLarge?.copyWith(color: Colors.white),
+                    style: AppTheme.textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
