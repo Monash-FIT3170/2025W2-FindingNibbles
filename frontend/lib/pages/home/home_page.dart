@@ -12,6 +12,8 @@ import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'dart:math';
+import 'package:nibbles/widgets/search_decoration.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -918,25 +920,18 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              decoration: InputDecoration(
+              decoration: buildSearchDecoration(
+                colorScheme: Theme.of(context).colorScheme,
                 hintText: 'Search restaurants by name...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon:
-                    _searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: _clearSearch,
-                        )
-                        : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ).copyWith(bottom: 24),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
               ),
             ),
+
           ),
           // Restaurant Grid
           Expanded(
