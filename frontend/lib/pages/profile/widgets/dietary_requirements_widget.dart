@@ -3,6 +3,8 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/widgets/search_decoration.dart';
+
 
 class DietaryRequirementsWidget extends StatefulWidget {
   final List<DietaryRequirementDto> dietaryRequirements;
@@ -176,28 +178,20 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 child: Column(
                   children: [
                     TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(color: colorScheme.primary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: colorScheme.primary,
-                        ),
-                      ),
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
-                          localFiltered =
-                              _allDefaults
-                                  .where(
-                                    (d) => d.name.toLowerCase().contains(
-                                      localSearchTerm,
-                                    ),
-                                  )
-                                  .toList();
+                          localFiltered = _allDefaults
+                              .where((d) => d.name.toLowerCase().contains(localSearchTerm))
+                              .toList();
                         });
                       },
+                      decoration: buildSearchDecoration(
+                        colorScheme: Theme.of(context).colorScheme,
+                        hintText: 'Search dietary requirements...',
+                      ),
                     ),
+
                     const SizedBox(height: 16),
                     Expanded(
                       child:
@@ -307,7 +301,7 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
               children: [
                 Text('Dietary Requirements', style: theme.textTheme.titleSmall),
                 IconButton(
-                  icon: Icon(Icons.add, color: colorScheme.primary),
+                  icon: Icon(Icons.add, color: AppTheme.colorScheme.primary),
                   onPressed: _openAddDialog,
                 ),
               ],
