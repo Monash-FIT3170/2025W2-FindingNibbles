@@ -13,6 +13,10 @@ import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/widgets/search_decoration.dart';
+
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -1250,22 +1254,16 @@ class _MapPageState extends State<MapPage> {
                         child: TextField(
                           controller: _searchController,
                           onSubmitted: _onSearchSubmitted,
-                          decoration: InputDecoration(
+                          decoration: buildSearchDecoration(
+                            colorScheme: Theme.of(context).colorScheme,
                             hintText:
                                 'Search restaurants by name... (Press Enter)',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon:
-                                _searchQuery.isNotEmpty
-                                    ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: _clearSearch,
-                                    )
-                                    : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: _clearSearch,
+                                  )
+                                : null,
                           ),
                         ),
                       ),
