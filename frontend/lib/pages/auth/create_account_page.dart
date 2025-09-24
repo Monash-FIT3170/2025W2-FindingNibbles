@@ -123,6 +123,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       // Try to resend verification if registration failed (likely user exists but not verified)
       final resendSuccess = await authService.newVerification(email);
       if (resendSuccess) {
+        if(!mounted) return;
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
@@ -133,6 +134,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
         );
       } else {
+        if(!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Registration failed')));
