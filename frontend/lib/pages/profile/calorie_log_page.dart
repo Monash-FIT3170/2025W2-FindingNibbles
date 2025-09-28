@@ -93,6 +93,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
         title: const Text('Calorie Log'),
