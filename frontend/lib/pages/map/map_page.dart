@@ -235,10 +235,11 @@ class _MapPageState extends State<MapPage> {
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
         // Get current map bounds for quadrant-based search
-        final bounds = _isMapControllerReady() 
-            ? _mapController.camera.visibleBounds 
-            : null;
-        
+        final bounds =
+            _isMapControllerReady()
+                ? _mapController.camera.visibleBounds
+                : null;
+
         if (bounds != null) {
           // Use quadrant-based search within current map bounds
           allRestaurants = await MapService().searchRestaurantsByName(
@@ -250,7 +251,9 @@ class _MapPageState extends State<MapPage> {
           );
         } else {
           // Fallback to global search if bounds not available
-          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+          );
         }
       } else {
         // Check if zoom level is sufficient for loading restaurants (only if map controller is ready)
@@ -399,10 +402,11 @@ class _MapPageState extends State<MapPage> {
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
         // Get current map bounds for quadrant-based search
-        final bounds = _isMapControllerReady() 
-            ? _mapController.camera.visibleBounds 
-            : null;
-        
+        final bounds =
+            _isMapControllerReady()
+                ? _mapController.camera.visibleBounds
+                : null;
+
         if (bounds != null) {
           // Use quadrant-based search within current map bounds
           allRestaurants = await MapService().searchRestaurantsByName(
@@ -414,7 +418,9 @@ class _MapPageState extends State<MapPage> {
           );
         } else {
           // Fallback to global search if bounds not available
-          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+          );
         }
       } else {
         // Check if map controller is ready before using it
@@ -1230,7 +1236,8 @@ class _MapPageState extends State<MapPage> {
                           controller: _searchController,
                           onSubmitted: _onSearchSubmitted,
                           decoration: InputDecoration(
-                            hintText: 'Search restaurants by name... (Press Enter)',
+                            hintText:
+                                'Search restaurants by name... (Press Enter)',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon:
                                 _searchQuery.isNotEmpty
