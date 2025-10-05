@@ -92,9 +92,11 @@ class _RecipesPageState extends State<RecipesPage> {
             fetchedAppliances
                 .map(
                   (dto) =>
-                      Appliance(id: dto.id, name: dto.name, isSelected: false),
+                      Appliance(id: dto.id, name: dto.name, isSelected: true),
                 )
                 .toList();
+        // Select all appliances by default
+        selectedAppliances = List.from(availableAppliances);
       });
     } catch (e) {
       _logger.e('Failed to fetch appliances: ${e.toString()}');
@@ -107,6 +109,28 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   Future<void> _generateRecipes() async {
+    // Validate that at least one appliance is selected
+    if (selectedAppliances.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('No Appliances Selected'),
+            content: const Text(
+              'Please select at least one appliance to generate recipes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
     // Show loading dialog
     showDialog(
       context: context,
