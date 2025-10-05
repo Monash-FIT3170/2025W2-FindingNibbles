@@ -1263,26 +1263,53 @@ class _HomePageState extends State<HomePage> {
                                                   restaurant.priceLevel,
                                                 ),
                                               ),
-                                              const Spacer(),
-                                              // Cuisines at the bottom
+                                              const SizedBox(height: 4),
+                                              // Cuisine tags
                                               if (restaurant
-                                                  .getFormattedCuisineNames()
+                                                  .cuisineNames
                                                   .isNotEmpty)
-                                                Text(
-                                                  restaurant
-                                                      .getFormattedCuisineNames(
-                                                        priorityCuisineId:
-                                                            _selectedCuisine
-                                                                ?.id,
-                                                        maxLength: 25,
-                                                      ),
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey.shade600,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                                Wrap(
+                                                  spacing: 4,
+                                                  runSpacing: 2,
+                                                  children:
+                                                      restaurant.cuisineNames
+                                                          .take(
+                                                            2,
+                                                          ) // Limit to 2 tags to fit in card
+                                                          .map(
+                                                            (
+                                                              cuisine,
+                                                            ) => Container(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        6,
+                                                                    vertical: 2,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color:
+                                                                    colorScheme
+                                                                        .secondaryContainer,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
+                                                                    ),
+                                                              ),
+                                                              child: Text(
+                                                                cuisine,
+                                                                style: TextStyle(
+                                                                  fontSize: 10,
+                                                                  color:
+                                                                      colorScheme
+                                                                          .onSecondaryContainer,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          )
+                                                          .toList(),
                                                 ),
                                             ],
                                           ),
