@@ -92,11 +92,9 @@ class _RecipesPageState extends State<RecipesPage> {
             fetchedAppliances
                 .map(
                   (dto) =>
-                      Appliance(id: dto.id, name: dto.name, isSelected: true),
+                      Appliance(id: dto.id, name: dto.name, isSelected: false),
                 )
                 .toList();
-        // Select all appliances by default
-        selectedAppliances = List.from(availableAppliances);
       });
     } catch (e) {
       _logger.e('Failed to fetch appliances: ${e.toString()}');
@@ -131,7 +129,10 @@ class _RecipesPageState extends State<RecipesPage> {
       return;
     }
 
-    // Show loading dialog
+    // Flag to track if the operation was cancelled
+    bool isCancelled = false;
+
+    // Show loading dialog with cancel button
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -153,6 +154,15 @@ class _RecipesPageState extends State<RecipesPage> {
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                isCancelled = true;
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
         );
       },
     );
@@ -169,9 +179,11 @@ class _RecipesPageState extends State<RecipesPage> {
         calorieCount: calorieCount,
       );
 
+      // Check if operation was cancelled before proceeding
+      if (isCancelled || !mounted) return;
+
       _logger.d(recipeResults);
 
-      if (!mounted) return;
       // Close loading dialog
       Navigator.pop(context);
 
@@ -190,7 +202,8 @@ class _RecipesPageState extends State<RecipesPage> {
         ),
       );
     } catch (e) {
-      if (!mounted) return;
+      // Check if operation was cancelled before showing error
+      if (isCancelled || !mounted) return;
 
       // Close loading dialog
       Navigator.pop(context);
