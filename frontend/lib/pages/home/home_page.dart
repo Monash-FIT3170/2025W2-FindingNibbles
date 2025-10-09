@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   static const int _pageSize = 20;
   List<CuisineDto> _availableCuisines = [];
   List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
+  List<int> _favoriteRestaurantIds = []; // track favorite restaurant IDs
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
   final TextEditingController _searchController = TextEditingController();
@@ -46,6 +47,7 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
     _fetchCuisines();
     _loadFavouriteCuisines(); // load favourite cuisines
+    _loadFavoriteRestaurants(); // load favorite restaurants
     _setupScrollListener();
   }
 
@@ -74,6 +76,76 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       debugPrint("Failed to load favourite cuisines: $e");
+    }
+  }
+
+  Future<void> _loadFavoriteRestaurants() async {
+    try {
+      final favoriteRestaurants =
+          await _profileService.getFavouriteRestaurants();
+      setState(() {
+        _favoriteRestaurantIds =
+            favoriteRestaurants.map((restaurant) => restaurant.id).toList();
+      });
+    } catch (e) {
+      debugPrint("Failed to load favorite restaurants: $e");
+    }
+  }
+
+  Future<void> _toggleFavoriteRestaurant(int restaurantId) async {
+    final wasAlreadyFavorite = _favoriteRestaurantIds.contains(restaurantId);
+
+    // Optimistic update - update UI immediately
+    setState(() {
+      if (wasAlreadyFavorite) {
+        _favoriteRestaurantIds.remove(restaurantId);
+      } else {
+        _favoriteRestaurantIds.add(restaurantId);
+      }
+    });
+
+    try {
+      if (wasAlreadyFavorite) {
+        await _profileService.removeFavouriteRestaurant(restaurantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant removed from favorites'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        await _profileService.addFavouriteRestaurant(restaurantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant added to favorites'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Revert the optimistic update on error
+      setState(() {
+        if (wasAlreadyFavorite) {
+          _favoriteRestaurantIds.add(restaurantId);
+        } else {
+          _favoriteRestaurantIds.remove(restaurantId);
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorites: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      debugPrint("Failed to toggle favorite restaurant: $e");
     }
   }
 
@@ -964,6 +1036,8 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                   itemBuilder: (context, index) {
                                     final restaurant = _restaurants[index];
+                                    final isFavorite = _favoriteRestaurantIds
+                                        .contains(restaurant.id);
                                     return Card(
                                       child: InkWell(
                                         onTap: () {
@@ -1123,6 +1197,8 @@ class _HomePageState extends State<HomePage> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Expanded(
                                                     child: Text(
@@ -1140,48 +1216,86 @@ class _HomePageState extends State<HomePage> {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      restaurant.menuUrl ==
-                                                              'menu-analysed'
-                                                          ? Icons.restaurant
-                                                          : Icons
-                                                              .qr_code_scanner,
-                                                    ),
-                                                    iconSize: 20,
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(),
-                                                    onPressed: () async {
-                                                      if (restaurant.menuUrl ==
-                                                          'menu-analysed') {
-                                                        _showBestDishModal(
-                                                          restaurant,
-                                                        );
-                                                      } else {
-                                                        final result = await Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (
-                                                                  context,
-                                                                ) => MenuScannerPage(
-                                                                  restaurantId:
-                                                                      restaurant
-                                                                          .id,
-                                                                  restaurantName:
-                                                                      restaurant
-                                                                          .name,
-                                                                ),
-                                                          ),
-                                                        );
+                                                  // Heart and QR icons in a Column
+                                                  Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      // QR Code Icon
+                                                      IconButton(
+                                                        icon: Icon(
+                                                          restaurant.menuUrl ==
+                                                                  'menu-analysed'
+                                                              ? Icons.restaurant
+                                                              : Icons
+                                                                  .qr_code_scanner,
+                                                        ),
+                                                        iconSize: 20,
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        constraints:
+                                                            const BoxConstraints(),
+                                                        onPressed: () async {
+                                                          if (restaurant
+                                                                  .menuUrl ==
+                                                              'menu-analysed') {
+                                                            _showBestDishModal(
+                                                              restaurant,
+                                                            );
+                                                          } else {
+                                                            final result = await Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (
+                                                                      context,
+                                                                    ) => MenuScannerPage(
+                                                                      restaurantId:
+                                                                          restaurant
+                                                                              .id,
+                                                                      restaurantName:
+                                                                          restaurant
+                                                                              .name,
+                                                                    ),
+                                                              ),
+                                                            );
 
-                                                        // Refresh restaurant list if menu was successfully analyzed
-                                                        if (result == true) {
-                                                          _fetchRestaurants();
-                                                        }
-                                                      }
-                                                    },
+                                                            // Refresh restaurant list if menu was successfully analyzed
+                                                            if (result ==
+                                                                true) {
+                                                              _fetchRestaurants();
+                                                            }
+                                                          }
+                                                        },
+                                                      ),
+
+                                                      IconButton(
+                                                        icon: Icon(
+                                                          isFavorite
+                                                              ? Icons.favorite
+                                                              : Icons
+                                                                  .favorite_border,
+                                                          color:
+                                                              isFavorite
+                                                                  ? Colors.red
+                                                                  : colorScheme
+                                                                      .onSurface
+                                                                      .withAlpha(
+                                                                        153,
+                                                                      ),
+                                                          size: 20,
+                                                        ),
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        constraints:
+                                                            const BoxConstraints(),
+                                                        onPressed:
+                                                            () =>
+                                                                _toggleFavoriteRestaurant(
+                                                                  restaurant.id,
+                                                                ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ],
                                               ),
