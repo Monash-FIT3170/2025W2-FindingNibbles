@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/service/travel/travel_plan_service.dart';
 
 class TravelPlanPage extends StatefulWidget {
   const TravelPlanPage({super.key});
@@ -9,7 +10,7 @@ class TravelPlanPage extends StatefulWidget {
 }
 
 class _TravelPlanPageState extends State<TravelPlanPage> {
-  final List<Map<String, dynamic>> _trips = [];
+  final service = TravelPlanService();
 
   void _showCreateTripSheet(BuildContext context) {
     showModalBottomSheet(
@@ -25,7 +26,7 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
         ),
         child: _CreateTripForm(onSave: (tripName, start, end) {
           setState(() {
-            _trips.add({
+            service.addTrip({
               'name': tripName,
               'start': start,
               'end': end,
@@ -42,13 +43,14 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
 
   @override
   Widget build(BuildContext context) {
+    final trips = service.trips;
     final colorScheme = AppTheme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Travel plan'),
       ),
-      body: _trips.isEmpty
+      body: trips.isEmpty
           ? const Center(
               child: Text(
                 'No trips yet.\nTap + to create your first travel plan.',
@@ -57,10 +59,10 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
             )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: _trips.length,
+              itemCount: trips.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, idx) {
-                final trip = _trips[idx];
+                final trip = trips[idx];
                 return ListTile(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
