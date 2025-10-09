@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/service/travel/travel_plan_service.dart';
+import 'package:nibbles/pages/travel/trip_details_page.dart';
 
 class TravelPlanPage extends StatefulWidget {
   const TravelPlanPage({super.key});
@@ -30,6 +31,7 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
               'name': tripName,
               'start': start,
               'end': end,
+              'restaurants': <Map<String, dynamic>>[],
             });
           });
           Navigator.pop(context);
@@ -75,8 +77,14 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Open trip: ${trip['name']}')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TripDetailsPage(
+                          tripName: trip['name'],
+                          restaurants: trip['restaurants'] ?? [],
+                        ),
+                      ),
                     );
                   },
                 );
