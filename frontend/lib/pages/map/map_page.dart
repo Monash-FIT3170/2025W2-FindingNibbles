@@ -1,17 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:nibbles/service/map/map_service.dart';
-import 'package:nibbles/service/profile/restaurant_dto.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/directions/directions_service.dart';
+import 'package:nibbles/service/map/map_service.dart';
+import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
-import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -833,6 +834,20 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  // Center map on user's current location
+  void _centerOnCurrentLocation() {
+    if (_currentPosition != null && _isMapControllerReady()) {
+      _mapController.move(_currentPosition!, 15.0); // Zoom level 15
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Current location not available'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
@@ -1268,6 +1283,20 @@ class _MapPageState extends State<MapPage> {
                         child: const Icon(Icons.clear, color: Colors.white),
                       ),
                     ),
+                  // My Location Button
+                  Positioned(
+                    bottom: 16, // at the bottom corner
+                    right: 16,
+                    child: FloatingActionButton(
+                      heroTag: 'myLocationButton',
+                      onPressed: _centerOnCurrentLocation,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.my_location,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                  ),
                   _buildActiveFiltersChip(),
                   _buildRouteInfoCard(),
                 ],
