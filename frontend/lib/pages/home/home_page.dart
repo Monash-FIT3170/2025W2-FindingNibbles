@@ -14,7 +14,6 @@ import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'dart:math';
 import 'package:nibbles/widgets/search_decoration.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -923,15 +922,15 @@ class _HomePageState extends State<HomePage> {
               decoration: buildSearchDecoration(
                 colorScheme: Theme.of(context).colorScheme,
                 hintText: 'Search restaurants by name...',
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clearSearch,
-                      )
-                    : null,
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: _clearSearch,
+                        )
+                        : null,
               ),
             ),
-
           ),
           // Restaurant Grid
           Expanded(

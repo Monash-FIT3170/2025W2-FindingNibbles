@@ -17,7 +17,6 @@ import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/widgets/search_decoration.dart';
 
-
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
 
@@ -1258,12 +1257,13 @@ class _MapPageState extends State<MapPage> {
                             colorScheme: Theme.of(context).colorScheme,
                             hintText:
                                 'Search restaurants by name... (Press Enter)',
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: _clearSearch,
-                                  )
-                                : null,
+                            suffixIcon:
+                                _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
                           ),
                         ),
                       ),
@@ -1289,10 +1289,7 @@ class _MapPageState extends State<MapPage> {
                       heroTag: 'myLocationButton',
                       onPressed: _centerOnCurrentLocation,
                       backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.my_location,
-                        color: Colors.blue[700],
-                      ),
+                      child: Icon(Icons.my_location, color: Colors.blue[700]),
                     ),
                   ),
                   _buildActiveFiltersChip(),
