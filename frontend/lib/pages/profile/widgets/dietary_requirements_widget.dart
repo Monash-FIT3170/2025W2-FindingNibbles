@@ -5,7 +5,6 @@ import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/widgets/search_decoration.dart';
 
-
 class DietaryRequirementsWidget extends StatefulWidget {
   final List<DietaryRequirementDto> dietaryRequirements;
   final void Function(DietaryRequirementDto) onAdd;
@@ -181,9 +180,14 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
-                          localFiltered = _allDefaults
-                              .where((d) => d.name.toLowerCase().contains(localSearchTerm))
-                              .toList();
+                          localFiltered =
+                              _allDefaults
+                                  .where(
+                                    (d) => d.name.toLowerCase().contains(
+                                      localSearchTerm,
+                                    ),
+                                  )
+                                  .toList();
                         });
                       },
                       decoration: buildSearchDecoration(

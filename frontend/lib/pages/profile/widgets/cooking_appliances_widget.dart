@@ -5,7 +5,6 @@ import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/widgets/search_decoration.dart';
 
-
 class CookingAppliancesWidget extends StatefulWidget {
   final List<ApplianceRequirementDto> appliances;
   final void Function(ApplianceRequirementDto) onAdd;
@@ -90,9 +89,14 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
-                          localFiltered = _allDefaults
-                              .where((item) => item.name.toLowerCase().contains(localSearchTerm))
-                              .toList();
+                          localFiltered =
+                              _allDefaults
+                                  .where(
+                                    (item) => item.name.toLowerCase().contains(
+                                      localSearchTerm,
+                                    ),
+                                  )
+                                  .toList();
                         });
                       },
                       decoration: buildSearchDecoration(
@@ -194,12 +198,9 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
           children: [
             Row(
               children: [
-                  Text(
-                    'Cooking Appliances',
-                    style: theme.textTheme.titleSmall,
-                  ),
+                Text('Cooking Appliances', style: theme.textTheme.titleSmall),
                 IconButton(
-                  icon:  Icon(Icons.add, color: AppTheme.colorScheme.primary),
+                  icon: Icon(Icons.add, color: AppTheme.colorScheme.primary),
                   onPressed: _openAddDialog,
                 ),
               ],

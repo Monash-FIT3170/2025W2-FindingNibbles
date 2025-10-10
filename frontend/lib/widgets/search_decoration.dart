@@ -21,9 +21,6 @@ InputDecoration buildSearchDecoration({
     ),
     filled: true,
     fillColor: Colors.grey.shade100,
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 14,
-    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
   );
 }
