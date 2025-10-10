@@ -13,8 +13,6 @@ import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
-import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/widgets/search_decoration.dart';
 
 class RestaurantMarker extends Marker {
