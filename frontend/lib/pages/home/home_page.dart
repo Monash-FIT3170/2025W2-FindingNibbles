@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
   static const int _pageSize = 20;
   List<CuisineDto> _availableCuisines = [];
   List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
-  List<int> _favoriteRestaurantIds = []; // track favorite restaurant IDs
+  List<int> _favoriteRestaurantIds = [];
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
   final TextEditingController _searchController = TextEditingController();
@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
     _fetchCuisines();
     _loadFavouriteCuisines(); // load favourite cuisines
-    _loadFavoriteRestaurants(); // load favorite restaurants
+    _loadFavoriteRestaurants();
     _setupScrollListener();
   }
 
@@ -1160,8 +1160,6 @@ class _HomePageState extends State<HomePage> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Expanded(
                                                     child: Text(
@@ -1179,86 +1177,81 @@ class _HomePageState extends State<HomePage> {
                                                           TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  // Heart and QR icons in a Column
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      // QR Code Icon
-                                                      IconButton(
-                                                        icon: Icon(
-                                                          restaurant.menuUrl ==
-                                                                  'menu-analysed'
-                                                              ? Icons.restaurant
-                                                              : Icons
-                                                                  .qr_code_scanner,
-                                                        ),
-                                                        iconSize: 20,
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        constraints:
-                                                            const BoxConstraints(),
-                                                        onPressed: () async {
-                                                          if (restaurant
-                                                                  .menuUrl ==
-                                                              'menu-analysed') {
-                                                            _showBestDishModal(
-                                                              restaurant,
-                                                            );
-                                                          } else {
-                                                            final result = await Navigator.push(
-                                                              context,
-                                                              MaterialPageRoute(
-                                                                builder:
-                                                                    (
-                                                                      context,
-                                                                    ) => MenuScannerPage(
-                                                                      restaurantId:
-                                                                          restaurant
-                                                                              .id,
-                                                                      restaurantName:
-                                                                          restaurant
-                                                                              .name,
+                                                  // Heart Icon
+                                                  GestureDetector(
+                                                    onTap:
+                                                        () =>
+                                                            _toggleFavoriteRestaurant(
+                                                              restaurant.id,
+                                                            ),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            4,
+                                                          ),
+                                                      child: Icon(
+                                                        isFavorite
+                                                            ? Icons.favorite
+                                                            : Icons
+                                                                .favorite_border,
+                                                        color:
+                                                            isFavorite
+                                                                ? Colors.red
+                                                                : colorScheme
+                                                                    .onSurface
+                                                                    .withAlpha(
+                                                                      153,
                                                                     ),
-                                                              ),
-                                                            );
-
-                                                            // Refresh restaurant list if menu was successfully analyzed
-                                                            if (result ==
-                                                                true) {
-                                                              _fetchRestaurants();
-                                                            }
-                                                          }
-                                                        },
+                                                        size: 20,
                                                       ),
-
-                                                      IconButton(
-                                                        icon: Icon(
-                                                          isFavorite
-                                                              ? Icons.favorite
-                                                              : Icons
-                                                                  .favorite_border,
-                                                          color:
-                                                              isFavorite
-                                                                  ? Colors.red
-                                                                  : colorScheme
-                                                                      .onSurface
-                                                                      .withAlpha(
-                                                                        153,
-                                                                      ),
-                                                          size: 20,
-                                                        ),
-                                                        padding:
-                                                            EdgeInsets.zero,
-                                                        constraints:
-                                                            const BoxConstraints(),
-                                                        onPressed:
-                                                            () =>
-                                                                _toggleFavoriteRestaurant(
-                                                                  restaurant.id,
+                                                    ),
+                                                  ),
+                                                  // QR Code Icon
+                                                  GestureDetector(
+                                                    onTap: () async {
+                                                      if (restaurant.menuUrl ==
+                                                          'menu-analysed') {
+                                                        _showBestDishModal(
+                                                          restaurant,
+                                                        );
+                                                      } else {
+                                                        final result = await Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                ) => MenuScannerPage(
+                                                                  restaurantId:
+                                                                      restaurant
+                                                                          .id,
+                                                                  restaurantName:
+                                                                      restaurant
+                                                                          .name,
                                                                 ),
+                                                          ),
+                                                        );
+
+                                                        // Refresh restaurant list if menu was successfully analyzed
+                                                        if (result == true) {
+                                                          _fetchRestaurants();
+                                                        }
+                                                      }
+                                                    },
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            4,
+                                                          ),
+                                                      child: Icon(
+                                                        restaurant.menuUrl ==
+                                                                'menu-analysed'
+                                                            ? Icons.restaurant
+                                                            : Icons
+                                                                .qr_code_scanner,
+                                                        size: 20,
                                                       ),
-                                                    ],
+                                                    ),
                                                   ),
                                                 ],
                                               ),
