@@ -1038,8 +1038,45 @@ class _HomePageState extends State<HomePage> {
                                                           ],
                                                         ),
                                                       ),
-                                                      // Removed phone number row
                                                       const SizedBox(height: 8),
+                                                      // Add cuisines
+                                                      if (restaurant
+                                                          .getFormattedCuisineNames()
+                                                          .isNotEmpty) ...[
+                                                        RichText(
+                                                          text: TextSpan(
+                                                            style:
+                                                                DefaultTextStyle.of(
+                                                                  context,
+                                                                ).style,
+                                                            children: [
+                                                              const TextSpan(
+                                                                text:
+                                                                    'Cuisines: ',
+                                                                style: TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                              TextSpan(
+                                                                text: restaurant
+                                                                    .getFormattedCuisineNames(
+                                                                      priorityCuisineId:
+                                                                          _selectedCuisine
+                                                                              ?.id,
+                                                                      maxLength:
+                                                                          50,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 8,
+                                                        ),
+                                                      ],
+                                                      // Removed phone number row
                                                       RichText(
                                                         text: TextSpan(
                                                           style:
@@ -1177,6 +1214,27 @@ class _HomePageState extends State<HomePage> {
                                                   restaurant.priceLevel,
                                                 ),
                                               ),
+                                              const Spacer(),
+                                              // Cuisines at the bottom
+                                              if (restaurant
+                                                  .getFormattedCuisineNames()
+                                                  .isNotEmpty)
+                                                Text(
+                                                  restaurant
+                                                      .getFormattedCuisineNames(
+                                                        priorityCuisineId:
+                                                            _selectedCuisine
+                                                                ?.id,
+                                                        maxLength: 25,
+                                                      ),
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                             ],
                                           ),
                                         ),

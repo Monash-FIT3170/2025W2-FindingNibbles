@@ -141,6 +141,50 @@ class RestaurantDto {
   bool hasCuisine(int cuisineId) {
     return restaurantCuisines?.any((rc) => rc.cuisineId == cuisineId) ?? false;
   }
+
+  // Helper method to get formatted cuisine names with priority for selected cuisine
+  String getFormattedCuisineNames({
+    int? priorityCuisineId,
+    int maxLength = 30,
+  }) {
+    if (restaurantCuisines == null || restaurantCuisines!.isEmpty) {
+      return '';
+    }
+
+    List<String> cuisineNamesList = [];
+
+    // If there's a priority cuisine, add it first
+    if (priorityCuisineId != null) {
+      final priorityCuisine =
+          restaurantCuisines!
+              .where((rc) => rc.cuisineId == priorityCuisineId)
+              .map((rc) => rc.cuisine?.name ?? '')
+              .firstOrNull;
+
+      if (priorityCuisine != null && priorityCuisine.isNotEmpty) {
+        cuisineNamesList.add(priorityCuisine);
+      }
+    }
+
+    // Add other cuisines (excluding the priority one if it exists)
+    cuisineNamesList.addAll(
+      restaurantCuisines!
+          .where((rc) => rc.cuisineId != priorityCuisineId)
+          .map((rc) => rc.cuisine?.name ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList(),
+    );
+
+    // Join cuisines with separator
+    String result = cuisineNamesList.join(' • ');
+
+    // Truncate if too long
+    if (result.length > maxLength && maxLength > 3) {
+      result = '${result.substring(0, maxLength - 3)}...';
+    }
+
+    return result;
+  }
 }
 
 // Supporting DTOs for the relations
