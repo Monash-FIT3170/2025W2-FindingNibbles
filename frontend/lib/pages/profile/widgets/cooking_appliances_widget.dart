@@ -46,6 +46,15 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     }
   }
 
+  Future<void> _createCustomAppliance(String name) async {
+    try {
+      final newAppliance = await _profileService.createAppliance(name, null);
+      widget.onAdd(newAppliance);
+    } catch (e) {
+      _logger.e('Error creating custom appliance: $e');
+    }
+  }
+
   Future<void> _addAppliance(int itemId) async {
     try {
       await _profileService.addAppliance(itemId);
@@ -57,6 +66,70 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     } catch (e) {
       _logger.e('Error adding appliance: $e');
     }
+  }
+
+  void _openCustomCreationDialog() {
+    final TextEditingController nameController = TextEditingController();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Create Custom Appliance',
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Appliance Name'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+
+                if (name.isNotEmpty) {
+                  await _createCustomAppliance(name);
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                } else {
+                  // Optionally, show an error message if fields are empty
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a name')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Create'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _openAddDialog() {
@@ -157,6 +230,16 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 ),
               ),
               actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _openCustomCreationDialog();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.colorScheme.primary,
+                  ),
+                  child: const Text('Create custom'),
+                ),
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(

@@ -18,54 +18,54 @@ class IngredientsInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // Don't expand unnecessarily
       children: [
-        // Heading and plus button in one row
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Ingredients',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => onAddIngredient(controller.text),
-              tooltip: 'Add Ingredient',
-            ),
-          ],
-        ),
-        // Input field full width
+        const SizedBox(height: 16), // Add spacing from top
+        // Heading
+        Text('Ingredients', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        // Input field with inline add functionality
         TextField(
           controller: controller,
           decoration: const InputDecoration(
-            hintText: 'Add an ingredient',
+            labelText: 'Add an ingredient',
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-          onSubmitted: onAddIngredient,
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              onAddIngredient(value);
+            }
+          },
         ),
         const SizedBox(height: 8),
-        Expanded(
+        // Display added ingredients as chips (matching appliances/dietary style)
+        InputDecorator(
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
           child:
               ingredients.isEmpty
-                  ? const Center(
-                    child: Text('No ingredients added yet. Add one above.'),
+                  ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: Text(
+                        'No ingredients added yet.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
                   )
-                  : ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: ingredients.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        dense: true,
-                        title: Text(ingredients[index]),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed:
-                              () => onRemoveIngredient(ingredients[index]),
-                        ),
-                      );
-                    },
+                  : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        ingredients.map((ingredient) {
+                          return InputChip(
+                            label: Text(ingredient),
+                            onDeleted: () => onRemoveIngredient(ingredient),
+                          );
+                        }).toList(),
                   ),
         ),
       ],
