@@ -34,7 +34,7 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   late final MapController _mapController = MapController();
   LatLng? _currentPosition;
   StreamSubscription<Position>? _positionStreamSubscription;
@@ -849,6 +849,50 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  // Smooth zoom in
+  void _zoomIn() {
+    if (_isMapControllerReady()) {
+      final currentZoom = _mapController.camera.zoom;
+      final newZoom = (currentZoom + 1).clamp(10.0, 18.0);
+      _animateToZoom(newZoom);
+    }
+  }
+
+  // Smooth zoom out
+  void _zoomOut() {
+    if (_isMapControllerReady()) {
+      final currentZoom = _mapController.camera.zoom;
+      final newZoom = (currentZoom - 1).clamp(10.0, 18.0);
+      _animateToZoom(newZoom);
+    }
+  }
+
+  // Animate zoom smoothly
+  void _animateToZoom(double targetZoom) {
+    final animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    final startZoom = _mapController.camera.zoom;
+    final center = _mapController.camera.center;
+
+    final Animation<double> animation = Tween<double>(
+      begin: startZoom,
+      end: targetZoom,
+    ).animate(
+      CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+    );
+
+    animation.addListener(() {
+      _mapController.move(center, animation.value);
+    });
+
+    animationController.forward().then((_) {
+      animationController.dispose();
+    });
+  }
+
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
@@ -1038,6 +1082,20 @@ class _MapPageState extends State<MapPage> {
                       initialCenter:
                           _currentPosition ?? LatLng(37.9111, 145.1367),
                       initialZoom: 13,
+                      minZoom: 10,
+                      maxZoom: 18,
+                      // Add smooth interaction settings
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all,
+                        enableMultiFingerGestureRace: true,
+                        rotationThreshold: 20.0,
+                        pinchZoomThreshold: 0.5,
+                        pinchMoveThreshold: 40.0,
+                        scrollWheelVelocity:
+                            0.002, // Reduced from 0.005 for slower scrolling
+                      ),
+                      keepAlive: true,
+                      backgroundColor: Colors.grey[100]!,
                       onMapReady: () {
                         // Map is ready - no action needed since we handle loading in initState
                       },
@@ -1060,6 +1118,13 @@ class _MapPageState extends State<MapPage> {
                         urlTemplate:
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.nibbles.findingnibbles',
+                        maxNativeZoom: 19,
+                        maxZoom: 22,
+                        keepBuffer: 8,
+                        panBuffer: 2,
+                        tileDisplay: const TileDisplay.fadeIn(
+                          duration: Duration(milliseconds: 200),
+                        ),
                       ),
                       if (_routePoints.isNotEmpty)
                         PolylineLayer(
@@ -1316,6 +1381,61 @@ class _MapPageState extends State<MapPage> {
                       onPressed: _centerOnCurrentLocation,
                       backgroundColor: Colors.white,
                       child: Icon(Icons.my_location, color: Colors.blue[700]),
+                    ),
+                  ),
+                  // Zoom Controls (bottom left)
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Zoom In Button
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.add, size: 20),
+                            onPressed: _zoomIn,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Zoom Out Button
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.remove, size: 20),
+                            onPressed: _zoomOut,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   _buildActiveFiltersChip(),
