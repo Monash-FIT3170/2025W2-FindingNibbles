@@ -895,6 +895,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
+    // Hide filter tag when directions are active
+    if (_routePoints.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
     List<Widget> filterWidgets = [];
 
     if (_isSearchMode && _searchQuery.isNotEmpty) {
@@ -962,7 +967,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     final distanceInKm = (_routeDistance! / 1000);
 
     return Positioned(
-      top: 16,
+      top: 80, // Move down to below search bar
       left: 16,
       child: Card(
         color: Colors.white.withValues(alpha: 0.9),
@@ -1363,7 +1368,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   // Clear Directions Button (if route is active)
                   if (_routePoints.isNotEmpty)
                     Positioned(
-                      top: 80, // below the AppBar
+                      top: 80,
                       right: 16,
                       child: FloatingActionButton(
                         heroTag: 'clearDirectionsButton',
