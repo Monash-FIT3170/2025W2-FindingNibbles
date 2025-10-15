@@ -1167,6 +1167,34 @@ class _MapPageState extends State<MapPage> {
                                                 ),
                                                 // Removed phone number row and empty widget
                                                 SizedBox(height: 8),
+                                                // Add cuisines
+                                                if (restaurant
+                                                    .getFormattedCuisineNames()
+                                                    .isNotEmpty) ...[
+                                                  Text.rich(
+                                                    TextSpan(
+                                                      children: [
+                                                        TextSpan(
+                                                          text: 'Cuisines: ',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                        TextSpan(
+                                                          text: restaurant
+                                                              .getFormattedCuisineNames(
+                                                                priorityCuisineId:
+                                                                    _selectedCuisine
+                                                                        ?.id,
+                                                                maxLength: 50,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                ],
                                                 Text.rich(
                                                   TextSpan(
                                                     children: [
