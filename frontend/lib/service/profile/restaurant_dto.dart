@@ -15,6 +15,7 @@ class RestaurantDto {
   final String? formattedPhoneNum;
   final String? website;
   final String? menuUrl;
+  final String? imageUrl; // Random food/restaurant image URL
   final bool? dineIn;
   final bool? takeout;
   final bool? delivery;
@@ -43,6 +44,7 @@ class RestaurantDto {
     this.formattedPhoneNum,
     this.website,
     this.menuUrl,
+    this.imageUrl,
     this.dineIn,
     this.takeout,
     this.delivery,
@@ -76,6 +78,7 @@ class RestaurantDto {
       formattedPhoneNum: json['formattedPhoneNum'] as String?,
       website: json['website'] as String?,
       menuUrl: json['menuUrl'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       dineIn: json['dineIn'] as bool?,
       takeout: json['takeout'] as bool?,
       delivery: json['delivery'] as bool?,
@@ -113,6 +116,7 @@ class RestaurantDto {
       'formattedPhoneNum': formattedPhoneNum,
       'website': website,
       'menuUrl': menuUrl,
+      'imageUrl': imageUrl,
       'dineIn': dineIn,
       'takeout': takeout,
       'delivery': delivery,

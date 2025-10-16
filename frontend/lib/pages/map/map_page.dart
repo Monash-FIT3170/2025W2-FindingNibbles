@@ -1018,7 +1018,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map'),
-        automaticallyImplyLeading: false, // Hide back button
+        // Removed automaticallyImplyLeading: false to show back button
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt_rounded),

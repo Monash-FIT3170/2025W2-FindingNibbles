@@ -110,6 +110,7 @@ model Restaurant {
   website           String?
   openingHours      Json?
   photos            Photo[]
+  imageUrl          String? // Random food/restaurant image URL
 
   // Menu Information
   dishes             Dish[]
