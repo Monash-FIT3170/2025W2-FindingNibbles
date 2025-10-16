@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
@@ -727,97 +728,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openRestaurantDetails(RestaurantDto restaurant) {
-    // Add a brief delay to let the modal close animation complete
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-
-      final colorScheme = Theme.of(context).colorScheme;
-
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text(
-                restaurant.name,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: DefaultTextStyle.of(context).style,
-                      children: [
-                        const TextSpan(
-                          text: 'Rating: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: restaurant.rating.toString()),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    text: TextSpan(
-                      style: DefaultTextStyle.of(context).style,
-                      children: [
-                        const TextSpan(
-                          text: 'Total reviews: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: restaurant.userRatingsTotal.toString()),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Add cuisines
-                  if (restaurant.getFormattedCuisineNames().isNotEmpty) ...[
-                    RichText(
-                      text: TextSpan(
-                        style: DefaultTextStyle.of(context).style,
-                        children: [
-                          const TextSpan(
-                            text: 'Cuisines: ',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(
-                            text: restaurant.getFormattedCuisineNames(
-                              priorityCuisineId: _selectedCuisine?.id,
-                              maxLength: 50,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  RichText(
-                    text: TextSpan(
-                      style: DefaultTextStyle.of(context).style,
-                      children: [
-                        const TextSpan(
-                          text: 'Address: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(text: restaurant.address),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-      );
+    // Navigate to the new Restaurant Details Page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RestaurantDetailsPage(
+          restaurant: restaurant,
+          isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+        ),
+      ),
+    ).then((_) {
+      // Refresh favorite status when returning from details page
+      _loadFavoriteRestaurants();
     });
   }
 
@@ -1121,198 +1043,289 @@ class _HomePageState extends State<HomePage> {
                                         crossAxisCount: 2,
                                         mainAxisSpacing: 8,
                                         crossAxisSpacing: 8,
-                                        childAspectRatio: 1,
+                                        childAspectRatio: 0.75,
                                       ),
                                   itemBuilder: (context, index) {
                                     final restaurant = _restaurants[index];
                                     final isFavorite = _favoriteRestaurantIds
                                         .contains(restaurant.id);
                                     return Card(
+                                      clipBehavior: Clip.antiAlias,
                                       child: InkWell(
                                         onTap:
                                             () => _openRestaurantDetails(
                                               restaurant,
                                             ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(12.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Restaurant Image
+                                            Expanded(
+                                              flex: 3,
+                                              child: Stack(
+                                                fit: StackFit.expand,
                                                 children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      restaurant.name,
-                                                      style: theme
-                                                          .textTheme
-                                                          .titleSmall
-                                                          ?.copyWith(
-                                                            color:
-                                                                colorScheme
-                                                                    .primary,
-                                                          ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  // Heart Icon
-                                                  GestureDetector(
-                                                    onTap:
-                                                        () =>
-                                                            _toggleFavoriteRestaurant(
-                                                              restaurant.id,
-                                                            ),
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            4,
-                                                          ),
-                                                      child: Icon(
-                                                        isFavorite
-                                                            ? Icons.favorite
-                                                            : Icons
-                                                                .favorite_border,
-                                                        color:
-                                                            isFavorite
-                                                                ? Colors.red
-                                                                : colorScheme
-                                                                    .onSurface
-                                                                    .withAlpha(
-                                                                      153,
-                                                                    ),
-                                                        size: 20,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  // QR Code Icon
-                                                  GestureDetector(
-                                                    onTap: () async {
-                                                      if (restaurant.menuUrl ==
-                                                          'menu-analysed') {
-                                                        _showBestDishModal(
-                                                          restaurant,
-                                                        );
-                                                      } else {
-                                                        final result = await Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (
-                                                                  context,
-                                                                ) => MenuScannerPage(
-                                                                  restaurantId:
-                                                                      restaurant
-                                                                          .id,
-                                                                  restaurantName:
-                                                                      restaurant
-                                                                          .name,
-                                                                ),
-                                                          ),
-                                                        );
-
-                                                        if (result == true) {
-                                                          _fetchRestaurants();
-                                                        }
-                                                      }
-                                                    },
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            4,
-                                                          ),
-                                                      child: Icon(
-                                                        restaurant.menuUrl ==
-                                                                'menu-analysed'
-                                                            ? Icons.restaurant
-                                                            : Icons
-                                                                .qr_code_scanner,
-                                                        size: 20,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.star,
-                                                    color:
-                                                        colorScheme.secondary,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    restaurant.rating
-                                                            ?.toStringAsFixed(
-                                                              1,
-                                                            ) ??
-                                                        '',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                formatPriceLevel(
-                                                  restaurant.priceLevel,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              // Cuisine tags
-                                              if (restaurant
-                                                  .cuisineNames
-                                                  .isNotEmpty)
-                                                Wrap(
-                                                  spacing: 4,
-                                                  runSpacing: 2,
-                                                  children:
-                                                      restaurant.cuisineNames
-                                                          .take(
-                                                            2,
-                                                          ) // Limit to 2 tags to fit in card
-                                                          .map(
-                                                            (
-                                                              cuisine,
-                                                            ) => Container(
-                                                              padding:
-                                                                  const EdgeInsets.symmetric(
-                                                                    horizontal:
-                                                                        6,
-                                                                    vertical: 2,
-                                                                  ),
-                                                              decoration: BoxDecoration(
-                                                                color:
-                                                                    colorScheme
-                                                                        .secondaryContainer,
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      12,
-                                                                    ),
-                                                              ),
-                                                              child: Text(
-                                                                cuisine,
-                                                                style: TextStyle(
-                                                                  fontSize: 10,
+                                                  restaurant.imageUrl != null
+                                                      ? Image.network(
+                                                          restaurant.imageUrl!,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder:
+                                                              (
+                                                                context,
+                                                                error,
+                                                                stackTrace,
+                                                              ) {
+                                                                return Container(
                                                                   color:
                                                                       colorScheme
-                                                                          .onSecondaryContainer,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w500,
-                                                                ),
-                                                              ),
+                                                                          .surfaceContainerHighest,
+                                                                  child: Icon(
+                                                                    Icons
+                                                                        .restaurant,
+                                                                    size: 40,
+                                                                    color:
+                                                                        colorScheme
+                                                                            .onSurfaceVariant,
+                                                                  ),
+                                                                );
+                                                              },
+                                                        )
+                                                      : Container(
+                                                          color: colorScheme
+                                                              .surfaceContainerHighest,
+                                                          child: Icon(
+                                                            Icons.restaurant,
+                                                            size: 40,
+                                                            color: colorScheme
+                                                                .onSurfaceVariant,
+                                                          ),
+                                                        ),
+                                                  // Action buttons overlay
+                                                  Positioned(
+                                                    top: 4,
+                                                    right: 4,
+                                                    child: Row(
+                                                      children: [
+                                                        // Heart Icon
+                                                        GestureDetector(
+                                                          onTap:
+                                                              () =>
+                                                                  _toggleFavoriteRestaurant(
+                                                                    restaurant
+                                                                        .id,
+                                                                  ),
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(6),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: Colors
+                                                                  .black54,
+                                                              shape: BoxShape
+                                                                  .circle,
                                                             ),
-                                                          )
-                                                          .toList(),
+                                                            child: Icon(
+                                                              isFavorite
+                                                                  ? Icons
+                                                                      .favorite
+                                                                  : Icons
+                                                                      .favorite_border,
+                                                              color:
+                                                                  isFavorite
+                                                                      ? Colors
+                                                                          .red
+                                                                      : Colors
+                                                                          .white,
+                                                              size: 18,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 4,
+                                                        ),
+                                                        // QR Code Icon
+                                                        GestureDetector(
+                                                          onTap: () async {
+                                                            if (restaurant
+                                                                    .menuUrl ==
+                                                                'menu-analysed') {
+                                                              _showBestDishModal(
+                                                                restaurant,
+                                                              );
+                                                            } else {
+                                                              final result = await Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder:
+                                                                      (
+                                                                        context,
+                                                                      ) => MenuScannerPage(
+                                                                        restaurantId:
+                                                                            restaurant.id,
+                                                                        restaurantName:
+                                                                            restaurant.name,
+                                                                      ),
+                                                                ),
+                                                              );
+
+                                                              if (result ==
+                                                                  true) {
+                                                                _fetchRestaurants();
+                                                              }
+                                                            }
+                                                          },
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(6),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              color: Colors
+                                                                  .black54,
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                            ),
+                                                            child: Icon(
+                                                              restaurant
+                                                                          .menuUrl ==
+                                                                      'menu-analysed'
+                                                                  ? Icons
+                                                                      .restaurant
+                                                                  : Icons
+                                                                      .qr_code_scanner,
+                                                              color:
+                                                                  Colors.white,
+                                                              size: 18,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Restaurant Details
+                                            Expanded(
+                                              flex: 2,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      restaurant.name,
+                                                      style: theme.textTheme
+                                                          .titleSmall
+                                                          ?.copyWith(
+                                                            color: colorScheme
+                                                                .primary,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow
+                                                          .ellipsis,
+                                                    ),
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.star,
+                                                          color: colorScheme
+                                                              .secondary,
+                                                          size: 14,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 4,
+                                                        ),
+                                                        Text(
+                                                          restaurant.rating
+                                                                  ?.toStringAsFixed(
+                                                                    1,
+                                                                  ) ??
+                                                              'N/A',
+                                                          style:
+                                                              const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Text(
+                                                          formatPriceLevel(
+                                                            restaurant
+                                                                .priceLevel,
+                                                          ),
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    // Cuisine tags
+                                                    if (restaurant.cuisineNames
+                                                        .isNotEmpty)
+                                                      Wrap(
+                                                        spacing: 4,
+                                                        runSpacing: 2,
+                                                        children:
+                                                            restaurant
+                                                                .cuisineNames
+                                                                .take(
+                                                                  2,
+                                                                ) // Limit to 2 tags to fit in card
+                                                                .map(
+                                                                  (
+                                                                    cuisine,
+                                                                  ) => Container(
+                                                                    padding:
+                                                                        const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          6,
+                                                                      vertical:
+                                                                          2,
+                                                                    ),
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      color: colorScheme
+                                                                          .secondaryContainer,
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                        8,
+                                                                      ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      cuisine,
+                                                                      style:
+                                                                          TextStyle(
+                                                                        fontSize:
+                                                                            9,
+                                                                        color: colorScheme
+                                                                            .onSecondaryContainer,
+                                                                        fontWeight:
+                                                                            FontWeight.w500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                )
+                                                                .toList(),
+                                                      ),
+                                                  ],
                                                 ),
-                                            ],
-                                          ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     );
