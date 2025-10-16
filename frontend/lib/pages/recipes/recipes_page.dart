@@ -401,45 +401,46 @@ class _RecipesPageState extends State<RecipesPage> {
                   : Column(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.0),
-                              child: Text(
-                                'Ingredients',
-                                style: Theme.of(context).textTheme.titleMedium,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(
+                                  'Ingredients',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: IngredientsInput(
+                              IngredientsInput(
                                 ingredients: ingredients,
                                 controller: _ingredientInputController,
                                 onAddIngredient: _addIngredient,
                                 onRemoveIngredient: _removeIngredient,
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Calorie Count (Optional)',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Calorie Count (Optional)',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
+                                keyboardType: TextInputType.number,
+                                inputFormatters: <TextInputFormatter>[
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    calorieCount = int.tryParse(value);
+                                  });
+                                },
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  calorieCount = int.tryParse(value);
-                                });
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
