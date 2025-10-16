@@ -39,6 +39,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Create App icon
+        run: dart run flutter_launcher_icons
+
+      - name: Create App Splash Screen
+        run: dart run flutter_native_splash:create
+
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
