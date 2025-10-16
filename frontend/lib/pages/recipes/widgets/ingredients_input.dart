@@ -31,23 +31,29 @@ class _IngredientsInputState extends State<IngredientsInput> {
   }
 
   void _selectSuggestion(String suggestion) {
-    widget.onAddIngredient(suggestion);
-    widget.controller.clear();
+    // Clear UI state first to prevent layout issues
     setState(() {
       _showSuggestions = false;
       _suggestions = [];
     });
+    // Then clear the controller
+    widget.controller.clear();
+    // Finally add the ingredient (triggers parent rebuild)
+    widget.onAddIngredient(suggestion);
   }
 
   void _addCustomIngredient([String? value]) {
     final text = value ?? widget.controller.text;
     if (text.isNotEmpty) {
-      widget.onAddIngredient(text);
-      widget.controller.clear();
+      // Clear UI state first
       setState(() {
         _showSuggestions = false;
         _suggestions = [];
       });
+      // Then clear the controller
+      widget.controller.clear();
+      // Finally add the ingredient (triggers parent rebuild)
+      widget.onAddIngredient(text);
     }
   }
 
@@ -123,6 +129,7 @@ class _IngredientsInputState extends State<IngredientsInput> {
                     child: Text('No ingredients added yet. Add one above.'),
                   )
                   : ListView.builder(
+                    shrinkWrap: true,
                     padding: EdgeInsets.zero,
                     itemCount: widget.ingredients.length,
                     itemBuilder: (context, index) {
