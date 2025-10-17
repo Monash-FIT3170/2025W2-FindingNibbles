@@ -11,10 +11,11 @@ import {
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
 import {
-  GetRandomDishSuccessResponseDto,
-  GetRandomDishErrorResponseDto,
-  RandomDishResponseDto,
-} from './dto/random-dish.dto';
+  GetBestDishSuccessResponseDto,
+  GetBestDishErrorResponseDto,
+  BestDishResponseDto,
+} from './dto/get-best-dish.dto';
+
 import { basicMenuSchema, menuAnalysisSchema } from './schemas';
 
 @Injectable()
@@ -387,46 +388,45 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
     return menuResponse.menu_items;
   }
 
-  async getRandomDishByDietaryRequirements(
+  async getBestDishForRestaurant(
+    restaurantId: number,
     dietaryRequirements: string[],
-  ): Promise<GetRandomDishSuccessResponseDto | GetRandomDishErrorResponseDto> {
+  ): Promise<GetBestDishSuccessResponseDto | GetBestDishErrorResponseDto> {
     try {
-      // Validate that dietary requirements exist in the database
-      const validDietaryRequirements =
-        await this.db.dietaryRequirement.findMany({
-          where: {
-            name: { in: dietaryRequirements },
-          },
-          select: { id: true, name: true },
-        });
+      // Get restaurant name for response messages
+      const restaurant = await this.db.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { name: true },
+      });
 
-      if (validDietaryRequirements.length === 0) {
-        return {
-          success: false,
-          error: 'INVALID_DIETARY_REQUIREMENTS',
-          message: 'None of the provided dietary requirements are valid.',
-          requestedDietaryRequirements: dietaryRequirements,
-        };
-      }
+      // Get valid dietary requirement IDs from the provided names
+      // Handle empty dietary requirements array to avoid database query issues
+      const validDietaryRequirements = dietaryRequirements.length > 0
+        ? await this.db.dietaryRequirement.findMany({
+            where: {
+              name: { in: dietaryRequirements },
+            },
+            select: { id: true, name: true },
+          })
+        : [];
 
       const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
 
-      // Find dishes that match ALL the provided dietary requirements
-      const matchingDishes = await this.db.dish.findMany({
+      // Find dishes from this restaurant
+      // If user has no dietary requirements, get all dishes
+      // If user has dietary requirements, filter by those requirements
+      const dishQuery = {
         where: {
-          dishDietaries: {
-            every: {
-              dietaryId: { in: validDietaryIds },
-            },
-          },
-          // Ensure the dish has dietary relationships for ALL required dietaries
-          AND: validDietaryIds.map((dietaryId) => ({
-            dishDietaries: {
-              some: {
-                dietaryId: dietaryId,
+          restaurantId: restaurantId,
+          ...(validDietaryIds.length > 0 && {
+            AND: validDietaryIds.map((dietaryId) => ({
+              dishDietaries: {
+                some: {
+                  dietaryId: dietaryId,
+                },
               },
-            },
-          })),
+            })),
+          }),
         },
         include: {
           restaurant: {
@@ -445,14 +445,17 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
             },
           },
         },
-      });
+      };
+
+      const matchingDishes = await this.db.dish.findMany(dishQuery);
 
       if (matchingDishes.length === 0) {
         return {
           success: false,
-          error: 'NO_MATCHING_DISHES',
-          message: `No dishes found that satisfy all dietary requirements: ${dietaryRequirements.join(', ')}.`,
+          error: 'NO_SUITABLE_DISHES',
+          message: 'Unfortunately no items on the menu meet your dietary requirements',
           requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
         };
       }
 
@@ -461,7 +464,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       const selectedDish = matchingDishes[randomIndex];
 
       // Format the response
-      const dishResponse: RandomDishResponseDto = {
+      const dishResponse: BestDishResponseDto = {
         id: selectedDish.id,
         name: selectedDish.name,
         description: selectedDish.description || undefined,
@@ -475,7 +478,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       return {
         success: true,
         dish: dishResponse,
-        message: `Found a random dish matching your dietary requirements: ${dietaryRequirements.join(', ')}.`,
+        message: `Found a perfect dish for you at ${restaurant?.name || 'this restaurant'}!`,
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -484,6 +487,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
         error: 'DATABASE_ERROR',
         message: errorMessage,
         requestedDietaryRequirements: dietaryRequirements,
+        restaurantId,
       };
     }
   }

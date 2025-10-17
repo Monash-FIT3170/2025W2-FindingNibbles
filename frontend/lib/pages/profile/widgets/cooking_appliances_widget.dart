@@ -45,16 +45,16 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     }
   }
 
-  Future<void> _addAppliance(int item) async {
+  Future<void> _addAppliance(int itemId) async {
     try {
-      await _profileService.addAppliance(item);
+      await _profileService.addAppliance(itemId);
       final appliance = _allDefaults.firstWhere(
-        (d) => d.id == item,
-        orElse: () => throw Exception('Dietary requirement not found'),
+        (d) => d.id == itemId,
+        orElse: () => throw Exception('Appliance requirement not found'),
       );
       widget.onAdd(appliance);
     } catch (e) {
-      _logger.e('Error adding dietary requirement: $e');
+      _logger.e('Error adding appliance: $e');
     }
   }
 
@@ -118,7 +118,7 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                           localFiltered =
                               _allDefaults
                                   .where(
-                                    (d) => d.name.toLowerCase().contains(
+                                    (item) => item.name.toLowerCase().contains(
                                       localSearchTerm,
                                     ),
                                   )
@@ -140,8 +140,20 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                                 itemCount: localFiltered.length,
                                 itemBuilder: (context, index) {
                                   final item = localFiltered[index];
+                                  final isAlreadyAdded = widget.appliances.any(
+                                    (a) => a.id == item.id,
+                                  );
                                   return ListTile(
-                                    title: Text(item.name),
+                                    enabled: !isAlreadyAdded,
+                                    title: Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        color:
+                                            isAlreadyAdded
+                                                ? Colors.grey
+                                                : Colors.black,
+                                      ),
+                                    ),
                                     tileColor:
                                         index % 2 == 0
                                             ? Colors.grey.shade50
@@ -149,11 +161,16 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    onTap: () async {
-                                      await _addAppliance(item.id);
-                                      if (!dialogContext.mounted) return;
-                                      Navigator.of(dialogContext).pop();
-                                    },
+                                    onTap:
+                                        isAlreadyAdded
+                                            ? null
+                                            : () async {
+                                              await _addAppliance(item.id);
+                                              if (!dialogContext.mounted) {
+                                                return;
+                                              }
+                                              Navigator.of(dialogContext).pop();
+                                            },
                                   );
                                 },
                               ),
@@ -192,7 +209,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -204,9 +220,14 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
           children: [
             Row(
               children: [
-                Text('Cooking Appliances', style: theme.textTheme.titleSmall),
+                Expanded(
+                  child: Text(
+                    'Cooking Appliances',
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ),
                 IconButton(
-                  icon: Icon(Icons.add, color: colorScheme.primary),
+                  icon: const Icon(Icons.add, color: Colors.black),
                   onPressed: _openAddDialog,
                 ),
               ],

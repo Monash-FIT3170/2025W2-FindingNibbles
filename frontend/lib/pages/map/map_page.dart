@@ -10,6 +10,8 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -40,7 +42,7 @@ class _MapPageState extends State<MapPage> {
   static const double _minimumZoomForRestaurants = 12.0;
 
   // Optimization variables
-  Timer? _debounceTimer;
+  Timer? _debounceTimer; // For map movement debouncing
   Timer? _positionUpdateTimer;
   static const Duration _debounceDelay = Duration(milliseconds: 500);
   final Map<String, List<RestaurantDto>> _restaurantCache = {};
@@ -232,9 +234,24 @@ class _MapPageState extends State<MapPage> {
 
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        allRestaurants = await MapService().searchRestaurantsByName(
-          _searchQuery,
-        );
+        // Get current map bounds for quadrant-based search
+        final bounds = _isMapControllerReady() 
+            ? _mapController.camera.visibleBounds 
+            : null;
+        
+        if (bounds != null) {
+          // Use quadrant-based search within current map bounds
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+            swLat: bounds.southWest.latitude,
+            swLng: bounds.southWest.longitude,
+            neLat: bounds.northEast.latitude,
+            neLng: bounds.northEast.longitude,
+          );
+        } else {
+          // Fallback to global search if bounds not available
+          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+        }
       } else {
         // Check if zoom level is sufficient for loading restaurants (only if map controller is ready)
         if (_isMapControllerReady() &&
@@ -381,9 +398,24 @@ class _MapPageState extends State<MapPage> {
 
       // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        allRestaurants = await MapService().searchRestaurantsByName(
-          _searchQuery,
-        );
+        // Get current map bounds for quadrant-based search
+        final bounds = _isMapControllerReady() 
+            ? _mapController.camera.visibleBounds 
+            : null;
+        
+        if (bounds != null) {
+          // Use quadrant-based search within current map bounds
+          allRestaurants = await MapService().searchRestaurantsByName(
+            _searchQuery,
+            swLat: bounds.southWest.latitude,
+            swLng: bounds.southWest.longitude,
+            neLat: bounds.northEast.latitude,
+            neLng: bounds.northEast.longitude,
+          );
+        } else {
+          // Fallback to global search if bounds not available
+          allRestaurants = await MapService().searchRestaurantsByName(_searchQuery);
+        }
       } else {
         // Check if map controller is ready before using it
         if (!_isMapControllerReady()) {
@@ -579,28 +611,25 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  void _onSearchChanged(String query) {
+  void _onSearchSubmitted(String query) {
+    if (query.trim() == _searchQuery) return;
+
     setState(() {
       _searchQuery = query.trim();
       _isSearchMode = _searchQuery.isNotEmpty;
     });
 
-    // Clear cache when switching between search and map modes
-    if (_searchQuery.isEmpty || query.trim().isEmpty) {
-      _restaurantCache.clear();
-      _lastFetchedBounds = null;
-      _lastFetchedZoom = null;
+    // Clear cache when starting a new search
+    _restaurantCache.clear();
+    _lastFetchedBounds = null;
+
+    if (_searchQuery.isEmpty) {
+      _fetchRestaurantsInitial();
+      return;
     }
 
-    // Cancel previous debounce timer
-    _debounceTimer?.cancel();
-
-    // Debounce the search to avoid too many API calls
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      if (_searchQuery == query.trim() && mounted) {
-        _fetchRestaurantsInitial();
-      }
-    });
+    // Trigger search immediately on Enter key press
+    _fetchRestaurantsInitial();
   }
 
   void _clearSearch() {
@@ -798,126 +827,6 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
-  // Show filter dialog
-  void _showFilterDialog() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Filter Restaurants'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Min Rating'),
-                    subtitle: DropdownButton<int>(
-                      value: _minimumRating,
-                      isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text('$rating'),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.star,
-                                        size: 16,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _minimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  if (!_isSearchMode) // Only show cuisine filter when not searching
-                    ListTile(
-                      leading: const Icon(Icons.restaurant_menu),
-                      title: const Text('Cuisine'),
-                      subtitle: DropdownButton<CuisineDto?>(
-                        value: _selectedCuisine,
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem<CuisineDto?>(
-                            value: null,
-                            child: Text('All'),
-                          ),
-                          ..._availableCuisines.map(
-                            (cuisine) => DropdownMenuItem(
-                              value: cuisine,
-                              child: Text(cuisine.name),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCuisine = value;
-                          });
-                        },
-                      ),
-                    ),
-                  if (_isSearchMode)
-                    ListTile(
-                      leading: const Icon(Icons.info_outline),
-                      title: const Text('Search Mode'),
-                      subtitle: Text(
-                        'Cuisine filter disabled while searching for "$_searchQuery"',
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Re-apply filters to currently loaded restaurants
-                    if (_restaurants.isNotEmpty) {
-                      _refreshFilters();
-                    } else {
-                      // If no restaurants loaded, fetch fresh data
-                      _forceFetchRestaurants();
-                    }
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Refresh filters and re-fetch restaurants
-  void _refreshFilters() {
-    // Clear cache when filters change
-    _restaurantCache.clear();
-    _lastFetchedBounds = null;
-    _lastFetchedZoom = null;
-
-    // Re-fetch from API (for cuisine filter) and apply rating filter
-    _forceFetchRestaurants();
-  }
-
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
     List<Widget> filterWidgets = [];
@@ -1039,6 +948,53 @@ class _MapPageState extends State<MapPage> {
       appBar: AppBar(
         title: const Text('Map'),
         automaticallyImplyLeading: false, // Hide back button
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_alt_rounded),
+            tooltip: 'Filter',
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder:
+                    (context) => RestaurantFilterDialog(
+                      initialMinimumRating: _minimumRating,
+                      initialSelectedCuisine: _selectedCuisine,
+                      availableCuisines: _availableCuisines,
+                      isSearchMode: _isSearchMode,
+                      searchQuery: _searchQuery,
+                      onApply: (minimumRating, selectedCuisine) {
+                        setState(() {
+                          _minimumRating = minimumRating;
+                          _selectedCuisine = selectedCuisine;
+                          _forceFetchRestaurants();
+                        });
+                      },
+                      showCuisineSelectionDialog: ({
+                        bool skipApplyLogic = false,
+                      }) async {
+                        return await showDialog<CuisineDto>(
+                          context: context,
+                          builder:
+                              (context) => CuisineSelectionDialog(
+                                availableCuisines: _availableCuisines,
+                                skipApplyLogic: skipApplyLogic,
+                                onCuisineSelected:
+                                    !skipApplyLogic
+                                        ? (cuisine) {
+                                          setState(() {
+                                            _selectedCuisine = cuisine;
+                                            _forceFetchRestaurants();
+                                          });
+                                        }
+                                        : null,
+                              ),
+                        );
+                      },
+                    ),
+              );
+            },
+          ),
+        ],
       ),
       body:
           _isLoading
@@ -1187,26 +1143,7 @@ class _MapPageState extends State<MapPage> {
                                                     ],
                                                   ),
                                                 ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'PH: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            restaurant
-                                                                .formattedPhoneNum ??
-                                                            'Not available',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                                                // Removed phone number row and empty widget
                                                 SizedBox(height: 8),
                                                 Text.rich(
                                                   TextSpan(
@@ -1276,11 +1213,11 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ],
                   ),
-                  // Floating Search Bubble
+                  // Floating Search Bubble (now full width)
                   Positioned(
                     top: 16,
                     left: 16,
-                    right: 80, // Leave space for filter button
+                    right: 16,
                     child: Material(
                       elevation: 8,
                       borderRadius: BorderRadius.circular(25),
@@ -1291,9 +1228,9 @@ class _MapPageState extends State<MapPage> {
                         ),
                         child: TextField(
                           controller: _searchController,
-                          onChanged: _onSearchChanged,
+                          onSubmitted: _onSearchSubmitted,
                           decoration: InputDecoration(
-                            hintText: 'Search restaurants by name...',
+                            hintText: 'Search restaurants by name... (Press Enter)',
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon:
                                 _searchQuery.isNotEmpty
@@ -1312,29 +1249,18 @@ class _MapPageState extends State<MapPage> {
                       ),
                     ),
                   ),
-                  // Separate Filter Button
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Column(
-                      children: [
-                        FloatingActionButton(
-                          heroTag: 'filterButton',
-                          onPressed: _showFilterDialog,
-                          child: const Icon(Icons.filter_alt_rounded),
-                        ),
-                        if (_routePoints.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          FloatingActionButton(
-                            heroTag: 'clearDirectionsButton',
-                            onPressed: _clearDirections,
-                            backgroundColor: Colors.red,
-                            child: const Icon(Icons.clear, color: Colors.white),
-                          ),
-                        ],
-                      ],
+                  // Clear Directions Button (if route is active)
+                  if (_routePoints.isNotEmpty)
+                    Positioned(
+                      top: 80, // below the AppBar
+                      right: 16,
+                      child: FloatingActionButton(
+                        heroTag: 'clearDirectionsButton',
+                        onPressed: _clearDirections,
+                        backgroundColor: Colors.red,
+                        child: const Icon(Icons.clear, color: Colors.white),
+                      ),
                     ),
-                  ),
                   _buildActiveFiltersChip(),
                   _buildRouteInfoCard(),
                 ],

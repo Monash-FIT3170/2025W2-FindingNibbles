@@ -9,6 +9,7 @@ import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -93,48 +94,21 @@ class _LikedPageState extends State<LikedPage> {
       return;
     }
 
-    final selectedCuisine = await showDialog<CuisineDto>(
+    await showDialog<CuisineDto>(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Cuisine Preference'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: ListView.builder(
-              itemCount: availableCuisines.length,
-              itemBuilder: (context, index) {
-                final cuisine = availableCuisines[index];
-                return ListTile(
-                  title: Text(cuisine.name),
-                  subtitle:
-                      cuisine.description != null &&
-                              cuisine.description!.isNotEmpty
-                          ? Text(
-                            cuisine.description!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                          : null,
-                  onTap: () => Navigator.of(context).pop(cuisine),
-                );
-              },
-            ),
+      builder:
+          (context) => CuisineSelectionDialog(
+            availableCuisines:
+                _allCuisines, // Show all cuisines, not just available
+            favoriteCuisines:
+                _favoriteCuisines, // Pass favorite cuisines for star icons
+            allowSelectingFavorited:
+                false, // Prevent selecting already favorited cuisines
+            onCuisineSelected: (cuisine) async {
+              await _addCuisinePreference(cuisine);
+            },
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
     );
-
-    // If user selected a cuisine, add it to their preferences
-    if (selectedCuisine != null) {
-      await _addCuisinePreference(selectedCuisine);
-    }
   }
 
   Future<void> _addCuisinePreference(CuisineDto cuisine) async {

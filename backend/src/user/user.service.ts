@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma, Restaurant } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
 import { DietaryRequirementService } from 'src/dietary-requirement/dietary-requirement.service';
@@ -8,8 +13,8 @@ import {
 } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
 import { CreateUserLocationDto } from './dto/create-user-location.dto';
 import { UpdateUserLocationDto } from './dto/update-user-location.dto';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
+import { CalorieLogResponseDto } from './dto/calorie-log-response.dto';
 
 @Injectable()
 export class UserService {
@@ -39,19 +44,31 @@ export class UserService {
     userId: number,
     calories: number,
     date: Date,
-    recipeId: number,
+    recipeId?: number,
+    mealName?: string,
   ): Promise<any> {
+    if (!recipeId && !mealName) {
+      throw new BadRequestException(
+        'Either recipeId or mealName must be provided.',
+      );
+    }
+
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const data: Prisma.UserCalorieLogUncheckedCreateInput = {
+        userId,
+        calories,
+        date,
+      };
+
+      if (recipeId) {
+        data.recipeId = recipeId;
+      }
+      if (mealName) {
+        data.mealName = mealName;
+      }
 
       const calorieLog = await this.db.userCalorieLog.create({
-        data: {
-          userId: userId,
-          calories: calories,
-          date: date,
-          recipeId: recipeId,
-        },
+        data,
       });
 
       this.logger.log(
@@ -97,7 +114,10 @@ export class UserService {
     return totalCalories;
   }
 
-  async getDailyCalorieLogs(userId: number, date: Date): Promise<RecipeDto[]> {
+  async getDailyCalorieLogs(
+    userId: number,
+    date: Date,
+  ): Promise<CalorieLogResponseDto[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -120,21 +140,34 @@ export class UserService {
       },
     });
 
-    return calorieLogs.map((log) => ({
-      id: log.recipe.id,
-      title: log.recipe.title,
-      description: log.recipe.description,
-      ingredients: log.recipe.ingredients,
-      instructions: log.recipe.instructions,
-      estimatedTimeMinutes: log.recipe.estimatedTimeMinutes,
-      servings: log.recipe.servings,
-      nutritionalInfo: log.recipe.nutritionalInfo,
-      difficultyLevel: log.recipe.difficultyLevel,
-      cuisine: log.recipe.cuisine?.name || 'Other',
-      cuisineId: log.recipe.cuisine?.id ?? 0,
-      dietaryTags: log.recipe.dietaryTags || [],
-      logId: log.id,
-    }));
+    return calorieLogs.map((log) => {
+      const logDto: CalorieLogResponseDto = {
+        id: log.id,
+        calories: log.calories,
+        date: log.date,
+        mealName: log.mealName,
+      };
+
+      if (log.recipe) {
+        const { recipe } = log;
+        logDto.recipe = {
+          id: recipe.id,
+          title: recipe.title,
+          description: recipe.description,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          estimatedTimeMinutes: recipe.estimatedTimeMinutes,
+          servings: recipe.servings,
+          nutritionalInfo: recipe.nutritionalInfo,
+          difficultyLevel: recipe.difficultyLevel,
+          cuisine: recipe.cuisine?.name || 'Other',
+          cuisineId: recipe.cuisine?.id ?? 0,
+          dietaryTags: recipe.dietaryTags || [],
+        };
+      }
+
+      return logDto;
+    });
   }
 
   async removeCalorieLog(userId: number, logId: number) {

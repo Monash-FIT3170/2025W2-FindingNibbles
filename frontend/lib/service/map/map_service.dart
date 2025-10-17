@@ -107,9 +107,29 @@ class MapService {
   }
 
   /// search restaurants by name
-  Future<List<RestaurantDto>> searchRestaurantsByName(String name) async {
+  Future<List<RestaurantDto>> searchRestaurantsByName(
+    String name, {
+    double? swLat,
+    double? swLng,
+    double? neLat,
+    double? neLng,
+  }) async {
     try {
-      final response = await _dio.get('restaurant/search/$name');
+      // Build query parameters for bounds if provided
+      Map<String, dynamic> queryParams = {};
+      if (swLat != null && swLng != null && neLat != null && neLng != null) {
+        queryParams = {
+          'swLat': swLat,
+          'swLng': swLng,
+          'neLat': neLat,
+          'neLng': neLng,
+        };
+      }
+
+      final response = await _dio.get(
+        'restaurant/search/$name',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data as List;

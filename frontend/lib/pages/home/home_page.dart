@@ -5,8 +5,12 @@ import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant/restaurant_service.dart';
+import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant-menu/best_dish_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'dart:math';
 
 class HomePage extends StatefulWidget {
@@ -18,6 +22,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ProfileService _profileService = ProfileService();
+  final RestaurantMenuService _restaurantMenuService = RestaurantMenuService();
   final Random _random = Random();
   final ScrollController _scrollController = ScrollController();
   List<RestaurantDto> _restaurants = [];
@@ -202,66 +207,39 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Filter Restaurants'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.star),
-                    title: const Text('Min Rating'),
-                    subtitle: DropdownButton<int>(
-                      value: _minimumRating,
-                      isExpanded: true,
-                      items:
-                          List.generate(5, (index) => index + 1)
-                              .map(
-                                (rating) => DropdownMenuItem(
-                                  value: rating,
-                                  child: Row(
-                                    children: [
-                                      Text('$rating'),
-                                      const Icon(Icons.star),
-                                    ],
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _minimumRating = value!;
-                        });
-                      },
-                    ),
-                  ),
-                  if (!_isSearchMode) // Only show cuisine filter when not searching
-                    ListTile(
-                      leading: const Icon(Icons.restaurant_menu),
-                      title: const Text('Cuisine'),
-                      subtitle: DropdownButton<CuisineDto?>(
-                        value: _selectedCuisine,
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem<CuisineDto?>(
-                            value: null,
-                            child: Text('All'),
-                          ),
-                          ..._availableCuisines.map(
-                            (cuisine) => DropdownMenuItem(
-                              value: cuisine,
-                              child: Text(cuisine.name),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) async {
-                          setState(() => _selectedCuisine = value);
-                          if (value != null) {
-                            // ✅ check if already liked dynamically
+        return RestaurantFilterDialog(
+          initialMinimumRating: _minimumRating,
+          initialSelectedCuisine: _selectedCuisine,
+          availableCuisines: _availableCuisines,
+          isSearchMode: _isSearchMode,
+          searchQuery: _searchQuery,
+          onApply: (minimumRating, selectedCuisine) async {
+            // Apply the filter values
+            setState(() {
+              _selectedCuisine = selectedCuisine;
+              _minimumRating = minimumRating;
+            });
+
+            await _fetchRestaurants();
+            await _loadFavouriteCuisines();
+          },
+          showCuisineSelectionDialog: ({bool skipApplyLogic = false}) async {
+            return await showDialog<CuisineDto>(
+              context: context,
+              builder: (BuildContext context) {
+                return CuisineSelectionDialog(
+                  availableCuisines: _availableCuisines,
+                  favoriteCuisines: _favoriteCuisines,
+                  allowSelectingFavorited: true,
+                  skipApplyLogic: skipApplyLogic,
+                  onCuisineSelected:
+                      skipApplyLogic
+                          ? null
+                          : (cuisine) async {
+                            // Handle the add to favorites logic here if not skipping
                             await _loadFavouriteCuisines();
                             final alreadyLiked = _favoriteCuisines.any(
-                              (c) => c.id == value.id,
+                              (c) => c.id == cuisine.id,
                             );
 
                             if (!alreadyLiked) {
@@ -272,7 +250,7 @@ class _HomePageState extends State<HomePage> {
                                     (ctx) => AlertDialog(
                                       title: const Text("Add to favourites?"),
                                       content: Text(
-                                        "Do you want to add ${value.name} to your liked cuisines?",
+                                        "Do you want to add ${cuisine.name} to your liked cuisines?",
                                       ),
                                       actions: [
                                         TextButton(
@@ -292,60 +270,37 @@ class _HomePageState extends State<HomePage> {
                               if (shouldAdd == true) {
                                 try {
                                   await _profileService.addCuisinePreference(
-                                    value.id,
+                                    cuisine.id,
                                   );
                                   setState(() {
-                                    _favoriteCuisines.add(value);
+                                    _favoriteCuisines.add(cuisine);
                                   });
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        "${value.name} added to favourites",
+                                        "${cuisine.name} added to favourites",
                                       ),
                                     ),
                                   );
                                 } catch (e) {
-                                  debugPrint("Failed to add ${value.name}: $e");
+                                  debugPrint(
+                                    "Failed to add ${cuisine.name}: $e",
+                                  );
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        "Could not add ${value.name}",
+                                        "Could not add ${cuisine.name}",
                                       ),
                                     ),
                                   );
                                 }
                               }
                             }
-                          }
-                        },
-                      ),
-                    ),
-                  if (_isSearchMode)
-                    ListTile(
-                      leading: const Icon(Icons.info_outline),
-                      title: const Text('Search Mode'),
-                      subtitle: Text(
-                        'Cuisine filter disabled while searching for "$_searchQuery"',
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await _fetchRestaurants();
-                    await _loadFavouriteCuisines();
-                  },
-                  child: const Text('Apply'),
-                ),
-              ],
+                          },
+                );
+              },
             );
           },
         );
@@ -473,20 +428,18 @@ class _HomePageState extends State<HomePage> {
 
   void _selectRandomPreferredCuisine() async {
     try {
-      // Get user's preferred cuisines
-      final userPreferences = await _getUserCuisinePreferences();
+      // Ensure we have the latest preferred cuisines
+      await _loadFavouriteCuisines();
 
       if (!mounted) return;
-
-      if (userPreferences.isEmpty) {
-        _showNoPreferredCuisinesDialog();
-        return;
-      }
 
       // Filter available cuisines to only preferred ones
       final preferredCuisines =
           _availableCuisines
-              .where((cuisine) => userPreferences.contains(cuisine.id))
+              .where(
+                (cuisine) =>
+                    _favoriteCuisines.any((fav) => fav.id == cuisine.id),
+              )
               .toList();
 
       if (preferredCuisines.isEmpty) {
@@ -615,17 +568,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Implementation using your ProfileService
-  Future<List<int>> _getUserCuisinePreferences() async {
-    try {
-      // TO BE IMPLEMENTED AFTER JACK HAS FINISHED CUISINES
-      throw UnimplementedError('User cuisine preferences not implemented yet');
-    } catch (e) {
-      debugPrint('Error fetching user cuisine preferences: $e');
-      return [];
-    }
-  }
-
   void _showNoPreferredCuisinesDialog() {
     showDialog(
       context: context,
@@ -716,6 +658,237 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _showBestDishModal(RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.restaurant,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  restaurant.name,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: const Text(
+            'Do you want me to choose the best dish for you?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('No, thanks'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the initial modal
+                await _chooseBestDish(restaurant);
+              },
+              child: const Text('Yes, please!'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _chooseBestDish(RestaurantDto restaurant) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Finding the perfect dish for you...',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+      );
+
+      // Get user's dietary requirements from profile
+      List<String> dietaryRequirements = [];
+      try {
+        final userDietaryRequirements =
+            await _profileService.getDietaryRequirements();
+        dietaryRequirements =
+            userDietaryRequirements.map((dietary) => dietary.name).toList();
+      } catch (e) {
+        debugPrint('Error getting user dietary requirements: $e');
+        // Continue with empty list if we can't get user preferences
+      }
+
+      final response = await _restaurantMenuService.getBestDish(
+        restaurant.id,
+        dietaryRequirements,
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (response.isSuccess) {
+        final dish = response.success!.dish;
+        _showDishResultModal(dish, restaurant);
+      } else {
+        final error = response.error!;
+        _showErrorModal(error.message, restaurant);
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) Navigator.of(context).pop();
+
+      debugPrint('Error getting best dish: $e');
+      _showErrorModal(
+        'Sorry, we encountered an error while finding the best dish. Please try again.',
+        restaurant,
+      );
+    }
+  }
+
+  void _showDishResultModal(BestDishDto dish, RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.restaurant_menu,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Perfect Dish Found!')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                dish.name,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (dish.description != null) ...[
+                Text(dish.description!),
+                const SizedBox(height: 8),
+              ],
+              if (dish.price != null) ...[
+                Text(
+                  'Price: \$${dish.price!.toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (dish.dietaryTags.isNotEmpty) ...[
+                Text(
+                  'Dietary: ${dish.dietaryTags.join(', ')}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                'At ${dish.restaurantName}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _chooseBestDish(restaurant); // Try again
+              },
+              child: const Text('Choose another dish'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Perfect!'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorModal(String message, RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('No Suitable Dishes')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+                iconSize: 20,
+              ),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _chooseBestDish(restaurant); // Try again
+              },
+              child: const Text('Try again'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -724,6 +897,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('All Restaurants'),
+        centerTitle: true, // 👈 this centers the title
         automaticallyImplyLeading: false,
         actions: [
           DiceRollWidget(
@@ -758,9 +932,9 @@ class _HomePageState extends State<HomePage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 32,
                   vertical: 12,
-                ),
+                ).copyWith(bottom: 24),
               ),
             ),
           ),
@@ -870,31 +1044,7 @@ class _HomePageState extends State<HomePage> {
                                                           ],
                                                         ),
                                                       ),
-                                                      const SizedBox(height: 8),
-                                                      RichText(
-                                                        text: TextSpan(
-                                                          style:
-                                                              DefaultTextStyle.of(
-                                                                context,
-                                                              ).style,
-                                                          children: [
-                                                            const TextSpan(
-                                                              text: 'PH: ',
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            TextSpan(
-                                                              text:
-                                                                  restaurant
-                                                                      .formattedPhoneNum ??
-                                                                  'Not available',
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
+                                                      // Removed phone number row
                                                       const SizedBox(height: 8),
                                                       RichText(
                                                         text: TextSpan(
@@ -961,13 +1111,9 @@ class _HomePageState extends State<HomePage> {
                                                   ),
                                                   IconButton(
                                                     icon: Icon(
-                                                      restaurant.menuUrl !=
-                                                                  null &&
-                                                              restaurant
-                                                                  .menuUrl!
-                                                                  .isNotEmpty
-                                                          ? Icons
-                                                              .restaurant_menu
+                                                      restaurant.menuUrl ==
+                                                              'menu-analysed'
+                                                          ? Icons.restaurant
                                                           : Icons
                                                               .qr_code_scanner,
                                                     ),
@@ -975,27 +1121,14 @@ class _HomePageState extends State<HomePage> {
                                                     padding: EdgeInsets.zero,
                                                     constraints:
                                                         const BoxConstraints(),
-                                                    onPressed: () {
-                                                      if (restaurant.menuUrl !=
-                                                              null &&
-                                                          restaurant
-                                                              .menuUrl!
-                                                              .isNotEmpty) {
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              'Menu available at: ${restaurant.menuUrl}',
-                                                            ),
-                                                            duration:
-                                                                const Duration(
-                                                                  seconds: 3,
-                                                                ),
-                                                          ),
+                                                    onPressed: () async {
+                                                      if (restaurant.menuUrl ==
+                                                          'menu-analysed') {
+                                                        _showBestDishModal(
+                                                          restaurant,
                                                         );
                                                       } else {
-                                                        Navigator.push(
+                                                        final result = await Navigator.push(
                                                           context,
                                                           MaterialPageRoute(
                                                             builder:
@@ -1011,6 +1144,11 @@ class _HomePageState extends State<HomePage> {
                                                                 ),
                                                           ),
                                                         );
+
+                                                        // Refresh restaurant list if menu was successfully analyzed
+                                                        if (result == true) {
+                                                          _fetchRestaurants();
+                                                        }
                                                       }
                                                     },
                                                   ),
