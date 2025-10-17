@@ -88,22 +88,15 @@ async function main(): Promise<void> {
         '1560624052-449f5ddf0c31', // steak
         '1565299585323-38d6b0865b47', // dessert
         '1559847844-5315695dadae', // drinks
-        '1493770348161-555b3e6e00fa', // asian food
         '1571091718767-18b5b1457add', // seafood
-        '1567337418602-e9a7afb7ef55', // tacos
-        '1563379091339-03b47d8f7e67', // fine dining
         '1533777324565-a040eb52facd', // ramen
         '1496412705862-e0088f16f791', // cafe
         '1590846406792-0adc7f938f1d', // indian food
         '1574894709920-11b28e7367e3', // steak dinner
         '1578474846511-04ba529f0b88', // mexican food
-        '1504185945330-7a3ca1d5c7cf', // breakfast spread
-        '1473093295587-7c4c96c6f777', // dining table
         '1559329007-40df8a9345d8', // chicken dish
-        '1576402187878-565e8b4d66c5', // salmon
         '1568901346375-23c9450c58cd', // burrito
         '1529042410759-befb1204b468', // curry
-        '1563620013-b0f233f76eb3', // dim sum
         '1555244162-803834f70033', // lobster
         '1506354666786-959d6d497f1a', // poke bowl
         '1499028344343-cd173ffc68a9', // soup
