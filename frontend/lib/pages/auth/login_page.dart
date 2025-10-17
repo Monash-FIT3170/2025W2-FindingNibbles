@@ -82,16 +82,13 @@ class _LoginPageState extends State<LoginPage> {
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred during Google login'),
-        ),
+        const SnackBar(content: Text('An error occurred during Google login')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,
       body: Column(
@@ -128,7 +125,10 @@ class _LoginPageState extends State<LoginPage> {
                       controller: emailController,
                       autocorrect: false,
                       textInputAction: TextInputAction.next,
-                      onSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
+                      onSubmitted:
+                          (_) => FocusScope.of(
+                            context,
+                          ).requestFocus(_passwordFocusNode),
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         hintText: 'example@mail.com',
@@ -151,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: Colors.grey
+                            color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {

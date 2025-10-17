@@ -211,7 +211,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             _obscurePassword
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: Colors.grey
+                            color: Colors.grey,
                           ),
                           onPressed: () {
                             setState(() {
@@ -292,4 +292,3 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     );
   }
 }
-
