@@ -52,22 +52,18 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
   }
 
   void _navigateToMap() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MapPage(),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage()));
   }
 
   void _navigateToMenuScanner() async {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MenuScannerPage(
-          restaurantId: widget.restaurant.id,
-          restaurantName: widget.restaurant.name,
-        ),
+        builder:
+            (context) => MenuScannerPage(
+              restaurantId: widget.restaurant.id,
+              restaurantName: widget.restaurant.name,
+            ),
       ),
     );
   }
@@ -104,37 +100,34 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                   // Restaurant Image
                   widget.restaurant.imageUrl != null
                       ? Image.network(
-                          widget.restaurant.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: colorScheme.surfaceContainerHighest,
-                              child: Icon(
-                                Icons.restaurant,
-                                size: 80,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            );
-                          },
-                        )
+                        widget.restaurant.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.restaurant,
+                              size: 80,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      )
                       : Container(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.restaurant,
-                            size: 80,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 80,
+                          color: colorScheme.onSurfaceVariant,
                         ),
+                      ),
                   // Gradient overlay for better text visibility
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black87,
-                        ],
+                        colors: [Colors.transparent, Colors.black87],
                       ),
                     ),
                   ),
@@ -148,12 +141,7 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 8,
-                            color: Colors.black87,
-                          ),
-                        ],
+                        shadows: [Shadow(blurRadius: 8, color: Colors.black87)],
                       ),
                     ),
                   ),
@@ -209,8 +197,9 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  widget.restaurant.rating
-                                          ?.toStringAsFixed(1) ??
+                                  widget.restaurant.rating?.toStringAsFixed(
+                                        1,
+                                      ) ??
                                       'N/A',
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -238,9 +227,7 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              _formatPriceLevel(
-                                widget.restaurant.priceLevel,
-                              ),
+                              _formatPriceLevel(widget.restaurant.priceLevel),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.bold,
@@ -275,18 +262,20 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: widget.restaurant.cuisineNames
-                          .map(
-                            (cuisine) => Chip(
-                              label: Text(cuisine),
-                              backgroundColor: colorScheme.secondaryContainer,
-                              labelStyle: TextStyle(
-                                color: colorScheme.onSecondaryContainer,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          )
-                          .toList(),
+                      children:
+                          widget.restaurant.cuisineNames
+                              .map(
+                                (cuisine) => Chip(
+                                  label: Text(cuisine),
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  labelStyle: TextStyle(
+                                    color: colorScheme.onSecondaryContainer,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 16),
                   ],

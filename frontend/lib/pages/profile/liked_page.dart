@@ -273,13 +273,14 @@ class _LikedPageState extends State<LikedPage> {
                                                         context,
                                                         MaterialPageRoute(
                                                           builder:
-                                                              (context) =>
-                                                                  RestaurantDetailsPage(
-                                                                    restaurant:
-                                                                        restaurant,
-                                                                    isFavorite:
-                                                                        true,
-                                                                  ),
+                                                              (
+                                                                context,
+                                                              ) => RestaurantDetailsPage(
+                                                                restaurant:
+                                                                    restaurant,
+                                                                isFavorite:
+                                                                    true,
+                                                              ),
                                                         ),
                                                       ).then((_) {
                                                         // Refresh the favorites list when returning
