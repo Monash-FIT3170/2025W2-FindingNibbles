@@ -40,6 +40,26 @@ class DioClient {
         },
         onError: (e, handler) async {
           if (e.response?.statusCode == 401) {
+            final path = e.requestOptions.path;
+            final hasAuthHeader = 
+                e.requestOptions.headers['Authorization'] != null;
+            final skipRedirect =
+                e.requestOptions.extra['skipAuthRedirect'] == true;
+
+            bool isAuthPath(String p) {
+              final normalised = p.startsWith('/') ? p.substring(1) : p;
+              return normalised.startsWith('auth/login') ||
+                     normalised.startsWith('auth/register') ||
+                     normalised.startsWith('auth/verify') ||
+                     normalised.startsWith('auth/google') ||
+                     normalised.startsWith('auth/refresh') ||
+                     normalised.startsWith('auth/check') ||
+                     normalised.startsWith('auth/new');
+            }
+
+            if (skipRedirect || !hasAuthHeader || isAuthPath(path)) {
+              return handler.next(e);
+            }
             final refreshToken = await _storage.read(key: 'refresh_token');
             if (refreshToken == null) {
               await _clearTokensAndRedirect();
