@@ -1,11 +1,13 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'recipe_ingredients_page.dart';
-import 'recipe_model.dart';
-import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
-import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
-import 'dart:math';
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
+
+import 'recipe_ingredients_page.dart';
+import 'recipe_model.dart';
 
 class RecipeRecommendationsPage extends StatefulWidget {
   final List<RecipeModel> recipes;
@@ -252,14 +254,13 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         );
       },
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              _buildRecipeImage(recipe, textTheme, colorScheme),
-              _buildRecipeDetails(recipe, index, textTheme, colorScheme),
-            ],
-          ),
+        clipBehavior: Clip.antiAlias,
+        margin: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          children: [
+            _buildRecipeImage(recipe, textTheme, colorScheme),
+            _buildRecipeDetails(recipe, index, textTheme, colorScheme),
+          ],
         ),
       ),
     );
@@ -272,26 +273,41 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
   ) {
     return Stack(
       children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: Container(
-            // Reduce height to half
-            height: 80,
-            width: double.infinity,
-            color: colorScheme.surfaceContainerHighest,
-            child: Icon(
-              Icons.image,
-              // Keep icon size the same
-              size: 50,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
+        // Hero Image
+        SizedBox(
+          height: 200,
+          width: double.infinity,
+          child:
+              recipe.imageURL != null && recipe.imageURL!.isNotEmpty
+                  ? Image.network(
+                    recipe.imageURL!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 60,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      );
+                    },
+                  )
+                  : Container(
+                    color: colorScheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.restaurant,
+                      size: 60,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
         ),
+        // Difficulty badge
         Positioned(
           right: 8,
           top: 8,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: _getDifficultyColor(
                 recipe_service.RecipeDifficulty.values.firstWhere(
@@ -304,9 +320,8 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
             child: Text(
               recipe.difficultyLevel.name[0].toUpperCase() +
                   recipe.difficultyLevel.name.substring(1),
-              // Keep text size the same
-              style: textTheme.labelSmall?.copyWith(
-                color: colorScheme.onPrimary,
+              style: textTheme.labelMedium?.copyWith(
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -323,72 +338,64 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
     ColorScheme colorScheme,
   ) {
     return Padding(
-      // Reduce padding
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            recipe.title,
-            // Keep text size the same
-            style: textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4), // Reduced spacing
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    // Keep icon size the same
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
+              Expanded(
+                child: Text(
+                  recipe.title,
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${recipe.estimatedTimeMinutes} min',
-                    // Keep text size the same
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.water_drop_outlined,
-                    // Keep icon size the same
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${recipe.calories} calories',
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
               IconButton(
                 icon: Icon(
                   recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  // Keep icon size the same
-                  size: 24,
+                  size: 28,
                   color:
                       recipe.isFavorite
                           ? colorScheme.error
                           : colorScheme.onSurfaceVariant,
                 ),
-                // Reduce padding around the button
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
                 onPressed: () => _toggleFavorite(index),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Icons.access_time,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${recipe.estimatedTimeMinutes} min',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Icon(
+                Icons.local_fire_department,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${recipe.calories} cal',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
               ),
             ],
           ),
