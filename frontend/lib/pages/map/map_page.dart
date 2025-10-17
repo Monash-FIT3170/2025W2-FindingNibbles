@@ -4,8 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
@@ -1363,7 +1363,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withAlpha(26),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
