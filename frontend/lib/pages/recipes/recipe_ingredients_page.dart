@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
+
 import 'recipe_model.dart';
 
 class RecipeIngredientsPage extends StatefulWidget {
@@ -237,29 +238,77 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.recipe.title)),
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Recipe Image Container
-            Container(
-              height: 150,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Image Header
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                widget.recipe.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 1),
+                      blurRadius: 3.0,
+                      color: Colors.black54,
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                Icons.image,
-                size: 50,
-                color: colorScheme.onSurfaceVariant,
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Hero Image
+                  widget.recipe.imageURL != null &&
+                          widget.recipe.imageURL!.isNotEmpty
+                      ? Image.network(
+                        widget.recipe.imageURL!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.restaurant,
+                              size: 80,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      )
+                      : Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 80,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  // Gradient overlay for better text readability
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black87,
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-
-            // Tab Navigation
-            Container(
+          ),
+          
+          // Tab Navigation
+          SliverToBoxAdapter(
+            child: Container(
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -287,23 +336,31 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                 ],
               ),
             ),
+          ),
 
-            // Content
-            Expanded(
-              child:
-                  currentTab == 0
-                      ? _buildIngredientsList(textTheme, colorScheme)
-                      : _buildInstructionList(textTheme, colorScheme),
+          // Content
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child:
+                      currentTab == 0
+                          ? _buildIngredientsList(textTheme, colorScheme)
+                          : _buildInstructionList(textTheme, colorScheme),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: _logCalories,
+                    child: const Text('Log Calories'),
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _logCalories,
-                child: const Text('Log Calories'),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

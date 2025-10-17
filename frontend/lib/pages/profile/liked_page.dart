@@ -1,15 +1,16 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/profile/widgets/restaurant_card.dart';
 import 'package:nibbles/pages/recipes/widgets/recipe_card.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
-import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/service/cuisine/cuisine_dto.dart';
-import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -267,7 +268,24 @@ class _LikedPageState extends State<LikedPage> {
                                                     restaurant: restaurant,
                                                     isLiked: true,
                                                     height: 80.0,
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (context) =>
+                                                                  RestaurantDetailsPage(
+                                                                    restaurant:
+                                                                        restaurant,
+                                                                    isFavorite:
+                                                                        true,
+                                                                  ),
+                                                        ),
+                                                      ).then((_) {
+                                                        // Refresh the favorites list when returning
+                                                        _loadFavorites();
+                                                      });
+                                                    },
                                                     onFavoriteTap: () async {
                                                       try {
                                                         await _profileService

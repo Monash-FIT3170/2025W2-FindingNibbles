@@ -1,11 +1,12 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
-import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { getErrorMessage } from 'src/utils';
+import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { Prisma } from '@prisma/client';
+import { DatabaseService } from 'src/database/database.service';
+import { GeminiService } from 'src/gemini/gemini.service';
+import { getErrorMessage } from 'src/utils';
+import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
 import {
   RecipeFromFrontEnd,
   RecipeResponseDto,
@@ -23,6 +24,7 @@ type RecipeGenerated = {
   difficultyLevel: RecipeDifficulty;
   cuisine: string;
   calories: number;
+  imageURL?: string | null;
 };
 
 const responseSchema = {
@@ -70,6 +72,7 @@ export class RecipeService {
   constructor(
     private db: DatabaseService,
     private configService: ConfigService,
+    private geminiService: GeminiService,
   ) {}
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated[]> {
     try {
@@ -223,7 +226,32 @@ export class RecipeService {
         calories: recipeData.calories,
       }));
 
-      return recipes as RecipeGenerated[];
+      // Generate images for each recipe
+      const recipesWithImages = await Promise.all(
+        recipes.map(async (recipe) => {
+          try {
+            const imagePrompt = `A professional, appetizing food photography image of ${recipe.title}. The dish should look delicious and well-presented on a clean, modern plate. Natural lighting, high quality, realistic style.`;
+            const imageDataUrl =
+              await this.geminiService.generateImage(imagePrompt);
+            return {
+              ...recipe,
+              imageURL: imageDataUrl,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to generate image for recipe ${recipe.title}:`,
+              error,
+            );
+            // Return recipe without image if generation fails
+            return {
+              ...recipe,
+              imageURL: null,
+            };
+          }
+        }),
+      );
+
+      return recipesWithImages as RecipeGenerated[];
     } catch (error) {
       const errorMessage = getErrorMessage(error);
       console.error('Error in generate method:', errorMessage);
