@@ -1,4 +1,3 @@
-// lib/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,106 +5,100 @@ import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
 import 'package:nibbles/pages/auth/create_account_page.dart';
 import 'package:nibbles/service/auth/auth_service.dart';
-import 'package:nibbles/theme/app_theme.dart'; // Add this import
+import 'package:nibbles/theme/app_theme.dart';
 
-class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final _logger = getLogger();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final authService = AuthService();
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    final success = await authService.loginWithEmail(email, password);
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AppNavigation()),
+      ); // Navigate to home
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid email or password')),
+      );
+    }
+  }
+
+  void handleGoogleLogin(BuildContext context) async {
+    try {
+      final success = await authService.loginWithGoogle();
+      if (!context.mounted) return;
+
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AppNavigation()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Google login failed')));
+      }
+    } catch (e) {
+      _logger.d('Error during Google login: $e');
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('An error occurred during Google login'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    final authService = AuthService();
-
-    void login() async {
-      final email = emailController.text.trim();
-      final password = passwordController.text.trim();
-
-      if (email.isEmpty || password.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill in all fields')),
-        );
-        return;
-      }
-
-      final success = await authService.loginWithEmail(email, password);
-      if (context.mounted) {
-        if (success) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AppNavigation()),
-          ); // Navigate to home
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid email or password')),
-          );
-        }
-      }
-    }
-
-    void handleGoogleLogin(BuildContext context) async {
-      try {
-        final success = await authService.loginWithGoogle();
-        if (!context.mounted) return;
-
-        if (success) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AppNavigation()),
-          );
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Google login failed')));
-        }
-      } catch (e) {
-        _logger.d('Error during Google login: $e');
-        if (!context.mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('An error occurred during Google login'),
-          ),
-        );
-      }
-    }
 
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,
       body: Column(
         children: [
-          // Top section with back button and title
+          // Top section with just title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(
-              top: 70,
-              bottom: 60,
-              left: 16,
-              right: 16,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () {
-                    Navigator.of(context).maybePop();
-                  },
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Sign into your account',
-                    style: AppTheme.textTheme.headlineLarge?.copyWith(
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                // To keep the title centered, add a dummy box of same width as IconButton
-                const SizedBox(width: 48),
-              ],
+            padding: const EdgeInsets.only(top: 150, bottom: 60),
+            alignment: Alignment.center,
+            child: Text(
+              'Sign into your account',
+              style: AppTheme.textTheme.headlineLarge,
+              textAlign: TextAlign.center,
             ),
           ),
 
@@ -138,9 +131,24 @@ class LoginPage extends StatelessWidget {
                     // Password field with floating label
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       autocorrect: false,
-                      decoration: const InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
                     ),
 
                     // Forgot password aligned right

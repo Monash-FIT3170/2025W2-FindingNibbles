@@ -1,4 +1,3 @@
-// lib/pages/create_account_page.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/login_page.dart';
@@ -24,6 +23,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   bool _isPasswordValid = true;
   String _passwordErrorMessage = '';
   bool _isPasswordFocused = false; // Track if password field is being edited
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -120,25 +120,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
       );
     } else {
-      // Try to resend verification if registration failed (likely user exists but not verified)
-      final resendSuccess = await authService.newVerification(email);
-      if (resendSuccess) {
-        if (!mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => VerificationCodePage(email: email)),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Verification code resent to your email.'),
-          ),
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Registration failed')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Registration failed')));
     }
   }
 
@@ -148,37 +132,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       backgroundColor: AppTheme.colorScheme.primary,
       body: Column(
         children: [
-          // Top section with back button and title
+          // Top section with title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(
-              top: 70,
-              bottom: 60,
-              left: 16,
-              right: 16,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () {
-                    Navigator.of(context).maybePop();
-                  },
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Create your account',
-                    style: AppTheme.textTheme.headlineLarge?.copyWith(
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                // Dummy box to keep title centered
-                const SizedBox(width: 48),
-              ],
+            padding: const EdgeInsets.only(top: 150, bottom: 60),
+            alignment: Alignment.center,
+            child: Text(
+              'Create your account',
+              style: AppTheme.textTheme.headlineLarge,
+              textAlign: TextAlign.center,
             ),
           ),
 
@@ -230,7 +192,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     // Password field
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       onChanged: (value) => _validatePassword(value),
                       onTap: () {
                         setState(() {
@@ -242,7 +204,22 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           _isPasswordFocused = false;
                         });
                       },
-                      decoration: InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
                     ),
 
                     // Only show password requirements during typing and only if not valid
@@ -315,3 +292,4 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     );
   }
 }
+
