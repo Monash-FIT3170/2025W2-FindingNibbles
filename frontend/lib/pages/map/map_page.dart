@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
@@ -13,7 +14,6 @@ import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/service/map/map_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/widgets/search_decoration.dart';
 
 class RestaurantMarker extends Marker {
   final RestaurantDto restaurant;
@@ -64,8 +64,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   double? _routeDistance; // in meters
   // Search variables
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  String get _searchQuery => _searchController.text.trim();
+  set _searchQuery(String value) => _searchController.text = value;
   bool _isSearchMode = false;
+  List<RestaurantDto> _searchResults = [];
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -305,9 +308,19 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Helper to create bounds around a position
   LatLngBounds _getBoundsAroundPosition(LatLng center, double offset) {
+    // Clamp latitude and longitude to valid ranges
+    final clampedLat = center.latitude.clamp(-90.0, 90.0);
+    final clampedLng = center.longitude.clamp(-180.0, 180.0);
+
     return LatLngBounds(
-      LatLng(center.latitude - offset, center.longitude - offset),
-      LatLng(center.latitude + offset, center.longitude + offset),
+      LatLng(
+        (clampedLat - offset).clamp(-90.0, 90.0),
+        (clampedLng - offset).clamp(-180.0, 180.0),
+      ),
+      LatLng(
+        (clampedLat + offset).clamp(-90.0, 90.0),
+        (clampedLng + offset).clamp(-180.0, 180.0),
+      ),
     );
   }
 
@@ -620,18 +633,19 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   void _onSearchSubmitted(String query) {
-    if (query.trim() == _searchQuery) return;
+    final trimmedQuery = query.trim();
+    if (trimmedQuery == _searchQuery) return;
 
     setState(() {
-      _searchQuery = query.trim();
-      _isSearchMode = _searchQuery.isNotEmpty;
+      _searchQuery = trimmedQuery;
+      _isSearchMode = trimmedQuery.isNotEmpty;
     });
 
     // Clear cache when starting a new search
     _restaurantCache.clear();
     _lastFetchedBounds = null;
 
-    if (_searchQuery.isEmpty) {
+    if (trimmedQuery.isEmpty) {
       _fetchRestaurantsInitial();
       return;
     }
@@ -640,11 +654,205 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     _fetchRestaurantsInitial();
   }
 
+  void _onSearchChanged(String query) {
+    // Cancel previous search debounce
+    if (_searchDebounce?.isActive ?? false) _searchDebounce!.cancel();
+
+    // If query is empty, clear results
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _searchQuery = '';
+        _isSearchMode = false;
+      });
+      return;
+    }
+
+    // Debounce search to avoid too many API calls
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+
+      try {
+        List<RestaurantDto> results;
+
+        // Create a much wider search radius (approximately 200km in each direction)
+        // This is roughly 1.8 degrees latitude/longitude at Melbourne's latitude
+        if (_currentPosition != null) {
+          const double searchRadiusDegrees = 1.8; // ~200km radius
+
+          final swLat = _currentPosition!.latitude - searchRadiusDegrees;
+          final swLng = _currentPosition!.longitude - searchRadiusDegrees;
+          final neLat = _currentPosition!.latitude + searchRadiusDegrees;
+          final neLng = _currentPosition!.longitude + searchRadiusDegrees;
+
+          results = await MapService().searchRestaurantsByName(
+            query.trim(),
+            swLat: swLat,
+            swLng: swLng,
+            neLat: neLat,
+            neLng: neLng,
+          );
+        } else {
+          // Fallback to global search if position unknown
+          results = await MapService().searchRestaurantsByName(query.trim());
+        }
+
+        // Limit to 5 results
+        if (mounted) {
+          setState(() {
+            _searchResults = results.take(5).toList();
+            _searchQuery = query.trim();
+            _isSearchMode = true;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error searching restaurants: $e');
+        if (mounted) {
+          setState(() => _searchResults = []);
+        }
+      }
+    });
+  }
+
+  void _onSearchResultSelected(RestaurantDto restaurant) async {
+    // Clear search results and update UI first
+    // Only show the selected restaurant marker
+    setState(() {
+      _searchResults = [];
+      _searchController.text = restaurant.name;
+      _isSearchMode = true; // Keep in search mode to show only this marker
+
+      // Replace restaurants list with just the selected one
+      _restaurants = [restaurant];
+    });
+
+    // Wait for UI to update
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Snap map to restaurant location
+    if (_isMapControllerReady()) {
+      _mapController.move(
+        LatLng(restaurant.latitude, restaurant.longitude),
+        16.0, // Zoom level to show the restaurant clearly
+      );
+    }
+
+    // Wait for the map to move and render before showing dialog
+    // This prevents the white flash on Chrome
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    if (mounted) {
+      // Show restaurant details dialog
+      _showRestaurantDetails(restaurant);
+    }
+  }
+
+  // Helper method to show restaurant details dialog
+  void _showRestaurantDetails(RestaurantDto restaurant) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              restaurant.name,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      TextSpan(
+                        text: 'Rating: ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(text: '${restaurant.rating}'),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Total reviews: ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(text: '${restaurant.userRatingsTotal}'),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8),
+                if (restaurant.getFormattedCuisineNames().isNotEmpty) ...[
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Cuisines: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(
+                          text: restaurant.getFormattedCuisineNames(
+                            priorityCuisineId: _selectedCuisine?.id,
+                            maxLength: 50,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                ],
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Address: ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(text: '${restaurant.address}'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    _isLoadingDirections
+                        ? null
+                        : () {
+                          Navigator.pop(context);
+                          _getDirectionsToRestaurant(restaurant);
+                        },
+                child:
+                    _isLoadingDirections
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Get Directions'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+    );
+  }
+
   void _clearSearch() {
     _searchController.clear();
+    _searchDebounce?.cancel();
+
     setState(() {
-      _searchQuery = '';
       _isSearchMode = false;
+      _searchResults = [];
+      _restaurants = []; // Clear current restaurants to force fresh fetch
     });
 
     // Clear cache when switching back to map mode
@@ -652,7 +860,63 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     _lastFetchedBounds = null;
     _lastFetchedZoom = null;
 
-    _fetchRestaurantsInitial();
+    // Fetch restaurants at the current visible map area without loading screen
+    _fetchRestaurantsQuiet();
+  }
+
+  // Fetch restaurants without showing loading indicator (for smooth transitions)
+  Future<void> _fetchRestaurantsQuiet() async {
+    if (!mounted) return;
+
+    try {
+      List<RestaurantDto> allRestaurants;
+
+      // Check if map controller is ready before using it
+      if (!_isMapControllerReady()) {
+        // If map isn't ready, use default bounds
+        final bounds =
+            _currentPosition != null
+                ? _getBoundsAroundPosition(_currentPosition!, 0.01)
+                : LatLngBounds(
+                  LatLng(-37.9211, 145.1267), // Melbourne area fallback
+                  LatLng(-37.9011, 145.1467),
+                );
+        await _fetchWithBounds(bounds);
+        return;
+      }
+
+      // Check if zoom level is sufficient for loading restaurants
+      if (_mapController.camera.zoom < _minimumZoomForRestaurants) {
+        setState(() {
+          _restaurants = [];
+        });
+        return;
+      }
+
+      // Use the visible map bounds
+      final bounds = _mapController.camera.visibleBounds;
+
+      allRestaurants = await MapService().getRestaurants(
+        swLat: bounds.southWest.latitude,
+        swLng: bounds.southWest.longitude,
+        neLat: bounds.northEast.latitude,
+        neLng: bounds.northEast.longitude,
+        cuisineId: _selectedCuisine?.id,
+      );
+
+      // Filter restaurants to only show those within bounds
+      allRestaurants = _filterRestaurantsInBounds(allRestaurants, bounds);
+
+      final filteredRestaurants = _applyRatingFilter(allRestaurants);
+
+      if (mounted) {
+        setState(() {
+          _restaurants = filteredRestaurants;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching restaurants quietly: $e');
+    }
   }
 
   // Apply rating filter to the list of restaurants
@@ -675,42 +939,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     } catch (e) {
       debugPrint('Error fetching cuisines: $e');
     }
-  }
-
-  // Simple polyline decoder (basic implementation)
-  List<LatLng> _decodePolyline(String polyline) {
-    List<LatLng> points = [];
-    int index = 0;
-    int len = polyline.length;
-    int lat = 0;
-    int lng = 0;
-
-    while (index < len) {
-      int b;
-      int shift = 0;
-      int result = 0;
-      do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = polyline.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      points.add(LatLng(lat / 1E5, lng / 1E5));
-    }
-
-    return points;
   }
 
   // Get directions to restaurant
@@ -738,7 +966,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
         endLon: restaurant.longitude,
       );
 
-      debugPrint('Received directions data: $directionsData');
+      debugPrint('==== FULL DIRECTIONS RESPONSE ====');
+      debugPrint('Response type: ${directionsData.runtimeType}');
+      debugPrint('Response keys: ${directionsData?.keys}');
+      debugPrint('Full response: $directionsData');
+      debugPrint('==================================');
 
       if (directionsData != null) {
         // Check if we have routes
@@ -749,30 +981,95 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             final route = routes[0] as Map<String, dynamic>;
             final geometry = route['geometry'];
 
-            if (geometry != null && geometry is String) {
+            debugPrint('==== GEOMETRY DEBUG ====');
+            debugPrint('Geometry type: ${geometry.runtimeType}');
+            debugPrint('Geometry value: $geometry');
+
+            if (geometry is String) {
+              debugPrint('Polyline length: ${geometry.length}');
               debugPrint(
-                'Decoding polyline geometry: ${geometry.substring(0, math.min(50, geometry.length))}...',
+                'First 100 chars: ${geometry.substring(0, math.min(100, geometry.length))}',
               );
+            } else if (geometry is Map) {
+              debugPrint('Geometry is a Map with keys: ${geometry.keys}');
+              debugPrint('Full geometry Map: $geometry');
+            }
+            debugPrint('=======================');
 
-              final points = _decodePolyline(geometry);
-              debugPrint('Decoded ${points.length} points');
+            if (geometry != null && geometry is String) {
+              debugPrint('Using google_polyline_algorithm to decode polyline');
 
-              // Extract duration and distance from route
-              final durationValue = route['duration'];
-              final distanceValue = route['distance'];
+              try {
+                // Use the proper polyline decoder package
+                final List<List<num>> decodedCoords = decodePolyline(geometry);
 
-              // Convert to double, handling both int and double types
-              final duration =
-                  durationValue is num ? durationValue.toDouble() : null;
-              final distance =
-                  distanceValue is num ? distanceValue.toDouble() : null;
+                debugPrint('Decoded ${decodedCoords.length} coordinate pairs');
 
-              if (points.isNotEmpty) {
+                // Convert to LatLng points
+                final points =
+                    decodedCoords.map((coord) {
+                      return LatLng(coord[0].toDouble(), coord[1].toDouble());
+                    }).toList();
+
+                if (points.isEmpty) {
+                  throw Exception(
+                    'No valid points could be decoded from polyline',
+                  );
+                }
+
+                // Extract duration and distance from route
+                final durationValue = route['duration'];
+                final distanceValue = route['distance'];
+
+                // Convert to double, handling both int and double types
+                final duration =
+                    durationValue is num ? durationValue.toDouble() : null;
+                final distance =
+                    distanceValue is num ? distanceValue.toDouble() : null;
+
                 setState(() {
                   _routePoints = points;
                   _routeDuration = duration;
                   _routeDistance = distance;
                 });
+
+                // Zoom map to show both current location and destination
+                if (_isMapControllerReady() && _currentPosition != null) {
+                  // Calculate bounds that include both points
+                  double minLat = math.min(
+                    _currentPosition!.latitude,
+                    restaurant.latitude,
+                  );
+                  double maxLat = math.max(
+                    _currentPosition!.latitude,
+                    restaurant.latitude,
+                  );
+                  double minLng = math.min(
+                    _currentPosition!.longitude,
+                    restaurant.longitude,
+                  );
+                  double maxLng = math.max(
+                    _currentPosition!.longitude,
+                    restaurant.longitude,
+                  );
+
+                  // Add padding (10% on each side)
+                  double latPadding = (maxLat - minLat) * 0.1;
+                  double lngPadding = (maxLng - minLng) * 0.1;
+
+                  final bounds = LatLngBounds(
+                    LatLng(minLat - latPadding, minLng - lngPadding),
+                    LatLng(maxLat + latPadding, maxLng + lngPadding),
+                  );
+
+                  // Fit map to bounds
+                  _mapController.fitCamera(
+                    CameraFit.bounds(
+                      bounds: bounds,
+                      padding: const EdgeInsets.all(50.0),
+                    ),
+                  );
+                }
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -782,8 +1079,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                   );
                 }
                 return;
-              } else {
-                throw Exception('No route points could be decoded');
+              } catch (e) {
+                debugPrint('Error decoding polyline: $e');
+                throw Exception('Failed to decode route polyline: $e');
               }
             } else {
               throw Exception('No geometry data in route');
@@ -902,6 +1200,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     List<Widget> filterWidgets = [];
 
+    // Safe check for search mode
     if (_isSearchMode && _searchQuery.isNotEmpty) {
       filterWidgets.add(Text('Search: "$_searchQuery"'));
     }
@@ -1009,6 +1308,99 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchInterface() {
+    return Positioned(
+      top: 16,
+      left: 16,
+      right: 16,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Search Bar
+          Material(
+            elevation: 8,
+            borderRadius: BorderRadius.circular(25),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                onSubmitted: _onSearchSubmitted,
+                decoration: InputDecoration(
+                  hintText: 'Search restaurants...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon:
+                      (_searchController.text.isNotEmpty ||
+                              (_searchResults.isNotEmpty))
+                          ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _clearSearch,
+                          )
+                          : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Search Results Dropdown
+          if (_searchResults.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _searchResults.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final restaurant = _searchResults[index];
+                  return ListTile(
+                    dense: true,
+                    leading: const Icon(
+                      Icons.restaurant,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                    title: Text(
+                      restaurant.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${restaurant.rating?.toStringAsFixed(1) ?? 'No rating'} ⭐',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onTap: () => _onSearchResultSelected(restaurant),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -1333,38 +1725,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  // Floating Search Bubble (now full width)
-                  Positioned(
-                    top: 16,
-                    left: 16,
-                    right: 16,
-                    child: Material(
-                      elevation: 8,
-                      borderRadius: BorderRadius.circular(25),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          onSubmitted: _onSearchSubmitted,
-                          decoration: buildSearchDecoration(
-                            colorScheme: Theme.of(context).colorScheme,
-                            hintText:
-                                'Search restaurants by name... (Press Enter)',
-                            suffixIcon:
-                                _searchQuery.isNotEmpty
-                                    ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: _clearSearch,
-                                    )
-                                    : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Search Interface with live results
+                  _buildSearchInterface(),
                   // Clear Directions Button (if route is active)
                   if (_routePoints.isNotEmpty)
                     Positioned(
@@ -1455,6 +1817,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     _positionStreamSubscription?.cancel();
     _debounceTimer?.cancel();
     _positionUpdateTimer?.cancel();
+    _searchDebounce?.cancel();
     _restaurantCache.clear();
     _mapController.dispose();
     _searchController.dispose();
