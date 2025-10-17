@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/navigation/app_navigation.dart';
@@ -21,16 +22,21 @@ class _LoginPageState extends State<LoginPage> {
   final authService = AuthService();
   bool _obscurePassword = true;
 
+  final FocusNode _passwordFocusNode = FocusNode();
+
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   void login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+
+    FocusScope.of(context).unfocus();
 
     if (email.isEmpty || password.isEmpty) {
       if (!mounted) return;
@@ -121,6 +127,8 @@ class _LoginPageState extends State<LoginPage> {
                     TextField(
                       controller: emailController,
                       autocorrect: false,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) => FocusScope.of(context).requestFocus(_passwordFocusNode),
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         hintText: 'example@mail.com',
@@ -133,6 +141,9 @@ class _LoginPageState extends State<LoginPage> {
                       controller: passwordController,
                       obscureText: _obscurePassword,
                       autocorrect: false,
+                      focusNode: _passwordFocusNode,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => login(),
                       decoration: InputDecoration(
                         labelText: 'Password',
                         suffixIcon: IconButton(
