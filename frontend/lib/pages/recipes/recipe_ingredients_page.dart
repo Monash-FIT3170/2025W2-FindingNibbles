@@ -294,10 +294,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black87,
-                        ],
+                        colors: [Colors.transparent, Colors.black87],
                       ),
                     ),
                   ),
@@ -305,7 +302,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
               ),
             ),
           ),
-          
+
           // Tab Navigation
           SliverToBoxAdapter(
             child: Container(

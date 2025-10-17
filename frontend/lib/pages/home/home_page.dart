@@ -732,10 +732,11 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RestaurantDetailsPage(
-          restaurant: restaurant,
-          isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
-        ),
+        builder:
+            (context) => RestaurantDetailsPage(
+              restaurant: restaurant,
+              isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+            ),
       ),
     ).then((_) {
       // Refresh favorite status when returning from details page
@@ -1068,39 +1069,39 @@ class _HomePageState extends State<HomePage> {
                                                 children: [
                                                   restaurant.imageUrl != null
                                                       ? Image.network(
-                                                          restaurant.imageUrl!,
-                                                          fit: BoxFit.cover,
-                                                          errorBuilder:
-                                                              (
-                                                                context,
-                                                                error,
-                                                                stackTrace,
-                                                              ) {
-                                                                return Container(
-                                                                  color:
-                                                                      colorScheme
-                                                                          .surfaceContainerHighest,
-                                                                  child: Icon(
-                                                                    Icons
-                                                                        .restaurant,
-                                                                    size: 40,
-                                                                    color:
-                                                                        colorScheme
-                                                                            .onSurfaceVariant,
-                                                                  ),
-                                                                );
-                                                              },
-                                                        )
+                                                        restaurant.imageUrl!,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return Container(
+                                                            color:
+                                                                colorScheme
+                                                                    .surfaceContainerHighest,
+                                                            child: Icon(
+                                                              Icons.restaurant,
+                                                              size: 40,
+                                                              color:
+                                                                  colorScheme
+                                                                      .onSurfaceVariant,
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
                                                       : Container(
-                                                          color: colorScheme
-                                                              .surfaceContainerHighest,
-                                                          child: Icon(
-                                                            Icons.restaurant,
-                                                            size: 40,
-                                                            color: colorScheme
-                                                                .onSurfaceVariant,
-                                                          ),
+                                                        color:
+                                                            colorScheme
+                                                                .surfaceContainerHighest,
+                                                        child: Icon(
+                                                          Icons.restaurant,
+                                                          size: 40,
+                                                          color:
+                                                              colorScheme
+                                                                  .onSurfaceVariant,
                                                         ),
+                                                      ),
                                                   // Action buttons overlay
                                                   Positioned(
                                                     top: 4,
@@ -1117,15 +1118,18 @@ class _HomePageState extends State<HomePage> {
                                                                   ),
                                                           child: Container(
                                                             padding:
-                                                                const EdgeInsets
-                                                                    .all(6),
+                                                                const EdgeInsets.all(
+                                                                  6,
+                                                                ),
                                                             decoration:
                                                                 BoxDecoration(
-                                                              color: Colors
-                                                                  .black54,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                            ),
+                                                                  color:
+                                                                      Colors
+                                                                          .black54,
+                                                                  shape:
+                                                                      BoxShape
+                                                                          .circle,
+                                                                ),
                                                             child: Icon(
                                                               isFavorite
                                                                   ? Icons
@@ -1178,18 +1182,20 @@ class _HomePageState extends State<HomePage> {
                                                           },
                                                           child: Container(
                                                             padding:
-                                                                const EdgeInsets
-                                                                    .all(6),
+                                                                const EdgeInsets.all(
+                                                                  6,
+                                                                ),
                                                             decoration:
                                                                 BoxDecoration(
-                                                              color: Colors
-                                                                  .black54,
-                                                              shape: BoxShape
-                                                                  .circle,
-                                                            ),
+                                                                  color:
+                                                                      Colors
+                                                                          .black54,
+                                                                  shape:
+                                                                      BoxShape
+                                                                          .circle,
+                                                                ),
                                                             child: Icon(
-                                                              restaurant
-                                                                          .menuUrl ==
+                                                              restaurant.menuUrl ==
                                                                       'menu-analysed'
                                                                   ? Icons
                                                                       .restaurant
@@ -1211,8 +1217,9 @@ class _HomePageState extends State<HomePage> {
                                             Expanded(
                                               flex: 2,
                                               child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
+                                                padding: const EdgeInsets.all(
+                                                  8.0,
+                                                ),
                                                 child: Column(
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -1222,24 +1229,27 @@ class _HomePageState extends State<HomePage> {
                                                   children: [
                                                     Text(
                                                       restaurant.name,
-                                                      style: theme.textTheme
+                                                      style: theme
+                                                          .textTheme
                                                           .titleSmall
                                                           ?.copyWith(
-                                                            color: colorScheme
-                                                                .primary,
+                                                            color:
+                                                                colorScheme
+                                                                    .primary,
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                           ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                     Row(
                                                       children: [
                                                         Icon(
                                                           Icons.star,
-                                                          color: colorScheme
-                                                              .secondary,
+                                                          color:
+                                                              colorScheme
+                                                                  .secondary,
                                                           size: 14,
                                                         ),
                                                         const SizedBox(
@@ -1253,10 +1263,11 @@ class _HomePageState extends State<HomePage> {
                                                               'N/A',
                                                           style:
                                                               const TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                            fontSize: 12,
-                                                          ),
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                fontSize: 12,
+                                                              ),
                                                         ),
                                                         const SizedBox(
                                                           width: 8,
@@ -1268,13 +1279,14 @@ class _HomePageState extends State<HomePage> {
                                                           ),
                                                           style:
                                                               const TextStyle(
-                                                            fontSize: 12,
-                                                          ),
+                                                                fontSize: 12,
+                                                              ),
                                                         ),
                                                       ],
                                                     ),
                                                     // Cuisine tags
-                                                    if (restaurant.cuisineNames
+                                                    if (restaurant
+                                                        .cuisineNames
                                                         .isNotEmpty)
                                                       Wrap(
                                                         spacing: 4,
@@ -1289,30 +1301,28 @@ class _HomePageState extends State<HomePage> {
                                                                   (
                                                                     cuisine,
                                                                   ) => Container(
-                                                                    padding:
-                                                                        const EdgeInsets.symmetric(
+                                                                    padding: const EdgeInsets.symmetric(
                                                                       horizontal:
                                                                           6,
                                                                       vertical:
                                                                           2,
                                                                     ),
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: colorScheme
-                                                                          .secondaryContainer,
+                                                                    decoration: BoxDecoration(
+                                                                      color:
+                                                                          colorScheme
+                                                                              .secondaryContainer,
                                                                       borderRadius:
                                                                           BorderRadius.circular(
-                                                                        8,
-                                                                      ),
+                                                                            8,
+                                                                          ),
                                                                     ),
                                                                     child: Text(
                                                                       cuisine,
-                                                                      style:
-                                                                          TextStyle(
+                                                                      style: TextStyle(
                                                                         fontSize:
                                                                             9,
-                                                                        color: colorScheme
-                                                                            .onSecondaryContainer,
+                                                                        color:
+                                                                            colorScheme.onSecondaryContainer,
                                                                         fontWeight:
                                                                             FontWeight.w500,
                                                                       ),

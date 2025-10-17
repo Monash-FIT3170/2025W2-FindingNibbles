@@ -372,11 +372,7 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(
-                Icons.access_time,
-                size: 20,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.access_time, size: 20, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
                 '${recipe.estimatedTimeMinutes} min',
