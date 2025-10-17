@@ -8,6 +8,7 @@ import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
+import 'package:nibbles/service/profile/history_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant-menu/best_dish_dto.dart';
@@ -1053,8 +1054,9 @@ class _HomePageState extends State<HomePage> {
                                     return Card(
                                       clipBehavior: Clip.antiAlias,
                                       child: InkWell(
-                                        onTap:
-                                            () => _openRestaurantDetails(
+                                        onTap: () async {
+                                          try {
+                                            await HistoryService().addToHistory(
                                               restaurant,
                                             ),
                                         child: Column(
@@ -1066,6 +1068,25 @@ class _HomePageState extends State<HomePage> {
                                               flex: 3,
                                               child: Stack(
                                                 fit: StackFit.expand,
+                                            );
+                                            debugPrint(
+                                              '✅ Added ${restaurant.name} to browsing history.',
+                                            );
+                                          } catch (e) {
+                                            debugPrint(
+                                              '⚠️ Failed to log history: $e',
+                                            );
+                                          }
+                                          _openRestaurantDetails(restaurant);
+                                        },
+
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
                                                 children: [
                                                   restaurant.imageUrl != null
                                                       ? Image.network(
