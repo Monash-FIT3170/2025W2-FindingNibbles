@@ -216,7 +216,15 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         if (isLoadMore) {
-          _restaurants.addAll(filteredRestaurants);
+          // Get existing restaurant IDs to prevent duplicates
+          final existingIds = _restaurants.map((r) => r.id).toSet();
+          
+          // Only add restaurants that aren't already in the list
+          final uniqueRestaurants = filteredRestaurants
+              .where((restaurant) => !existingIds.contains(restaurant.id))
+              .toList();
+          
+          _restaurants.addAll(uniqueRestaurants);
           _currentPage++;
           _isLoadingMore = false;
           if (filteredRestaurants.length < _pageSize) {
