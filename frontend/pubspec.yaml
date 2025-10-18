@@ -51,14 +51,14 @@ flutter_native_splash:
   web: false
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   image_path: "assets/launcher_icon.png"
-  background_color: "#B83C5E"
   adaptive_icon_foreground: "assets/launcher_icon.png"
   adaptive_icon_background: "#B83C5E"
   min_sdk_android: 21 # android min sdk min:16, default 21
   # If we want to create icon for web or ios need to modify here.
   ios: false
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
