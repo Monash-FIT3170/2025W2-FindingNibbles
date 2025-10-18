@@ -2,9 +2,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'dart:convert';
+import 'package:nibbles/core/logger.dart';
 
 class HistoryService {
   static const _historyKey = 'browsing_history';
+  final _logger = getLogger();
 
   Future<void> addToHistory(RestaurantDto restaurant) async {
     final prefs = await SharedPreferences.getInstance();
@@ -69,7 +71,7 @@ class HistoryService {
       try {
         restaurants.add(RestaurantDto.fromJson(jsonDecode(r)));
       } catch (e) {
-        print("Error decoding restaurant history: $e");
+        _logger.e("Error decoding restaurant history: $e");
       }
     }
 
