@@ -1,4 +1,4 @@
-import { RestaurantData, CuisineData } from './types';
+import { CuisineData, RestaurantData } from './types';
 
 export const cuisines: CuisineData[] = [
   {
@@ -529,6 +529,26 @@ export const appliances = [
   { id: 8, name: 'Toaster' },
   { id: 9, name: 'Pressure Cooker' },
   { id: 10, name: 'Rice Cooker' },
+  { id: 11, name: 'Stovetop' },
+  { id: 12, name: 'Grill' },
+  { id: 13, name: 'Toaster Oven' },
+  { id: 14, name: 'Instant Pot' },
+  { id: 15, name: 'Deep Fryer' },
+  { id: 16, name: 'Electric Kettle' },
+  { id: 17, name: 'Coffee Maker' },
+  { id: 18, name: 'Juicer' },
+  { id: 19, name: 'Sous Vide' },
+  { id: 20, name: 'Waffle Maker' },
+  { id: 21, name: 'Sandwich Press' },
+  { id: 22, name: 'Electric Steamer' },
+  { id: 23, name: 'Bread Maker' },
+  { id: 24, name: 'Ice Cream Maker' },
+  { id: 25, name: 'Dehydrator' },
+  { id: 26, name: 'Smoker' },
+  { id: 27, name: 'Griddle' },
+  { id: 28, name: 'Panini Press' },
+  { id: 29, name: 'Fondue Pot' },
+  { id: 30, name: 'Pasta Maker' },
 ];
 
 // Defined the list of dietary restrictions
@@ -551,7 +571,112 @@ export const dietaryRequirements = [
   {
     id: 4,
     name: 'Halal',
-    description: 'Meat from animals slaughter',
+    description: 'Meat from animals slaughtered according to Islamic law',
+  },
+  {
+    id: 5,
+    name: 'Kosher',
+    description: 'Food prepared according to Jewish dietary laws',
+  },
+  {
+    id: 6,
+    name: 'Dairy Free',
+    description: 'No milk or dairy products',
+  },
+  {
+    id: 7,
+    name: 'Lactose Intolerant',
+    description: 'No lactose-containing dairy products',
+  },
+  {
+    id: 8,
+    name: 'Nut Allergy',
+    description: 'No tree nuts or peanuts',
+  },
+  {
+    id: 9,
+    name: 'Shellfish Allergy',
+    description: 'No shellfish or crustaceans',
+  },
+  {
+    id: 10,
+    name: 'Egg Allergy',
+    description: 'No eggs or egg products',
+  },
+  {
+    id: 11,
+    name: 'Soy Allergy',
+    description: 'No soy or soy-based products',
+  },
+  {
+    id: 12,
+    name: 'Pescatarian',
+    description: 'No meat or poultry, but fish is allowed',
+  },
+  {
+    id: 13,
+    name: 'Paleo',
+    description: 'No grains, legumes, dairy, or processed foods',
+  },
+  {
+    id: 14,
+    name: 'Keto',
+    description: 'Low carb, high fat diet',
+  },
+  {
+    id: 15,
+    name: 'Low FODMAP',
+    description: 'Low in fermentable carbohydrates',
+  },
+  {
+    id: 16,
+    name: 'Diabetic Friendly',
+    description: 'Low sugar and controlled carbohydrates',
+  },
+  {
+    id: 17,
+    name: 'Low Sodium',
+    description: 'Reduced salt content',
+  },
+  {
+    id: 18,
+    name: 'Low Fat',
+    description: 'Reduced fat content',
+  },
+  {
+    id: 19,
+    name: 'Low Calorie',
+    description: 'Reduced calorie content',
+  },
+  {
+    id: 20,
+    name: 'Raw Food',
+    description: 'Uncooked or minimally heated foods',
+  },
+  {
+    id: 21,
+    name: 'Mediterranean',
+    description: 'Plant-based with moderate fish and poultry',
+  },
+  {
+    id: 22,
+    name: 'Whole30',
+    description: 'No sugar, grains, dairy, or legumes for 30 days',
+  },
+  {
+    id: 23,
+    name: 'Sugar Free',
+    description: 'No added sugars or sweeteners',
+  },
+  {
+    id: 24,
+    name: 'Sesame Allergy',
+    description: 'No sesame seeds or sesame oil',
+  },
+  {
+    id: 25,
+    name: 'Fish Allergy',
+    description: 'No fish or fish products',
   },
 ];
 
