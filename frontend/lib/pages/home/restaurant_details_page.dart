@@ -3,6 +3,9 @@ import 'package:nibbles/pages/map/map_page.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
+import 'package:nibbles/service/restaurant-menu/dish_dto.dart';
+import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/widgets/dish_card.dart';
 
 class RestaurantDetailsPage extends StatefulWidget {
   final RestaurantDto restaurant;
@@ -20,12 +23,41 @@ class RestaurantDetailsPage extends StatefulWidget {
 
 class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
   final ProfileService _profileService = ProfileService();
+  final RestaurantMenuService _restaurantMenuService = RestaurantMenuService();
   late bool _isFavorite;
+  List<DishDto> _dishes = [];
+  bool _isLoadingDishes = false;
 
   @override
   void initState() {
     super.initState();
     _isFavorite = widget.isFavorite;
+    _loadDishes();
+  }
+
+  Future<void> _loadDishes() async {
+    setState(() {
+      _isLoadingDishes = true;
+    });
+
+    try {
+      final dishes = await _restaurantMenuService.getDishes(
+        widget.restaurant.id,
+      );
+      if (mounted) {
+        setState(() {
+          _dishes = dishes;
+          _isLoadingDishes = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading dishes: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingDishes = false;
+        });
+      }
+    }
   }
 
   Future<void> _toggleFavorite() async {
@@ -71,6 +103,8 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
             ),
       ),
     );
+    // Reload dishes after returning from menu scanner
+    _loadDishes();
   }
 
   String _formatPriceLevel(int? level) {
@@ -358,41 +392,57 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                   const SizedBox(height: 16),
 
                   // Dishes List or Empty State
-                  Container(
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.restaurant_menu,
-                            size: 48,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            widget.restaurant.menuUrl == 'menu-analysed'
-                                ? 'Menu available'
-                                : 'No menu uploaded yet',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Use the Menu Scanner to view or add dishes',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                  if (_isLoadingDishes)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: CircularProgressIndicator(),
                       ),
+                    )
+                  else if (_dishes.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu,
+                              size: 48,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No dishes available yet',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Use the Menu Scanner to add dishes',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    // Display dishes in cards
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _dishes.length,
+                      itemBuilder: (context, index) {
+                        return DishCard(dish: _dishes[index]);
+                      },
                     ),
-                  ),
                 ],
               ),
             ),

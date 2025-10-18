@@ -23,7 +23,7 @@ export class RestaurantMenuService {
   constructor(
     private db: DatabaseService,
     private geminiService: GeminiService,
-  ) {}
+  ) { }
 
   async analyseAndStoreMenu(
     menu: Express.Multer.File,
@@ -135,9 +135,19 @@ export class RestaurantMenuService {
 
     for (const item of menuItems) {
       try {
-        // Create dish record
-        const dish = await this.db.dish.create({
-          data: {
+        // Upsert dish record (create or update if exists)
+        const dish = await this.db.dish.upsert({
+          where: {
+            name_restaurantId: {
+              name: item.name,
+              restaurantId: restaurantId,
+            },
+          },
+          update: {
+            description: item.description || null,
+            price: item.price || null,
+          },
+          create: {
             name: item.name,
             description: item.description || null,
             price: item.price || null,
@@ -149,6 +159,13 @@ export class RestaurantMenuService {
         const dietaryTagsStored: string[] = [];
         if (item.dietaryTags && item.dietaryTags.length > 0) {
           try {
+            // Delete existing dietary relationships for this dish
+            await this.db.dishDietary.deleteMany({
+              where: {
+                dishId: dish.id,
+              },
+            });
+
             // Get dietary requirement IDs
             const dietaryRequirements =
               await this.db.dietaryRequirement.findMany({
@@ -403,11 +420,11 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       // Handle empty dietary requirements array to avoid database query issues
       const validDietaryRequirements = dietaryRequirements.length > 0
         ? await this.db.dietaryRequirement.findMany({
-            where: {
-              name: { in: dietaryRequirements },
-            },
-            select: { id: true, name: true },
-          })
+          where: {
+            name: { in: dietaryRequirements },
+          },
+          select: { id: true, name: true },
+        })
         : [];
 
       const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
@@ -489,6 +506,41 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
         requestedDietaryRequirements: dietaryRequirements,
         restaurantId,
       };
+    }
+  }
+
+  async getDishesByRestaurant(restaurantId: number) {
+    try {
+      const dishes = await this.db.dish.findMany({
+        where: {
+          restaurantId: restaurantId,
+        },
+        include: {
+          dishDietaries: {
+            include: {
+              dietary: true,
+            },
+          },
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      // Format the response
+      return dishes.map((dish) => ({
+        id: dish.id,
+        name: dish.name,
+        description: dish.description || undefined,
+        price: dish.price || undefined,
+        category: dish.category || undefined,
+        calories: dish.calories || undefined,
+        dietaryTags: dish.dishDietaries.map((dd) => dd.dietary.name),
+      }));
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to fetch dishes: ${getErrorMessage(error)}`,
+      );
     }
   }
 }

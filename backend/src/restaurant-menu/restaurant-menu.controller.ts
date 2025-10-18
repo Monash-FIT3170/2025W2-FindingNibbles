@@ -3,6 +3,7 @@ import 'multer';
 import {
   Controller,
   Post,
+  Get,
   UseInterceptors,
   UploadedFile,
   Param,
@@ -14,7 +15,7 @@ import { GetBestDishDto } from './dto/get-best-dish.dto';
 
 @Controller('restaurant-menu')
 export class RestaurantMenuController {
-  constructor(private readonly restaurantMenuService: RestaurantMenuService) {}
+  constructor(private readonly restaurantMenuService: RestaurantMenuService) { }
 
   @Post(':restaurantId')
   @UseInterceptors(FileInterceptor('file'))
@@ -43,5 +44,13 @@ export class RestaurantMenuController {
       getBestDishDto.dietaryRequirements,
     );
     return result;
+  }
+
+  @Get(':restaurantId/dishes')
+  async getDishes(@Param('restaurantId') restaurantId: string) {
+    const restaurantIdNum = parseInt(restaurantId, 10);
+    const dishes =
+      await this.restaurantMenuService.getDishesByRestaurant(restaurantIdNum);
+    return dishes;
   }
 }
