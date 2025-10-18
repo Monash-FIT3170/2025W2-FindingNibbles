@@ -1709,6 +1709,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                                               .contains(
                                                                 restaurant.id,
                                                               ),
+                                                      selectedCuisineName:
+                                                          _selectedCuisine
+                                                              ?.name,
                                                     ),
                                           ),
                                         ).then((_) {
@@ -1760,6 +1763,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                             restaurant: restaurant,
                                             isFavorite: _favoriteRestaurantIds
                                                 .contains(restaurant.id),
+                                            selectedCuisineName:
+                                                _selectedCuisine?.name,
                                           ),
                                     ),
                                   ).then((_) {

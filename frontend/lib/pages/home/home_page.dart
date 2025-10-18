@@ -218,12 +218,13 @@ class _HomePageState extends State<HomePage> {
         if (isLoadMore) {
           // Get existing restaurant IDs to prevent duplicates
           final existingIds = _restaurants.map((r) => r.id).toSet();
-          
+
           // Only add restaurants that aren't already in the list
-          final uniqueRestaurants = filteredRestaurants
-              .where((restaurant) => !existingIds.contains(restaurant.id))
-              .toList();
-          
+          final uniqueRestaurants =
+              filteredRestaurants
+                  .where((restaurant) => !existingIds.contains(restaurant.id))
+                  .toList();
+
           _restaurants.addAll(uniqueRestaurants);
           _currentPage++;
           _isLoadingMore = false;
@@ -744,6 +745,7 @@ class _HomePageState extends State<HomePage> {
             (context) => RestaurantDetailsPage(
               restaurant: restaurant,
               isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+              selectedCuisineName: _selectedCuisine?.name,
             ),
       ),
     ).then((_) {
@@ -1300,8 +1302,12 @@ class _HomePageState extends State<HomePage> {
                                                         spacing: 4,
                                                         runSpacing: 2,
                                                         children:
-                                                            restaurant
-                                                                .cuisineNames
+                                                            _sortCuisinesByFilter(
+                                                                  restaurant
+                                                                      .cuisineNames,
+                                                                  _selectedCuisine
+                                                                      ?.name,
+                                                                )
                                                                 .take(
                                                                   2,
                                                                 ) // Limit to 2 tags to fit in card
@@ -1368,5 +1374,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  // Helper method to sort cuisines with selected cuisine first
+  List<String> _sortCuisinesByFilter(
+    List<String> cuisines,
+    String? selectedCuisine,
+  ) {
+    if (selectedCuisine == null || !cuisines.contains(selectedCuisine)) {
+      return cuisines;
+    }
+    return [selectedCuisine, ...cuisines.where((c) => c != selectedCuisine)];
   }
 }
