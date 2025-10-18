@@ -12,11 +12,13 @@ import 'package:nibbles/widgets/dish_card.dart';
 class RestaurantDetailsPage extends StatefulWidget {
   final RestaurantDto restaurant;
   final bool isFavorite;
+  final String? selectedCuisineName;
 
   const RestaurantDetailsPage({
     super.key,
     required this.restaurant,
     required this.isFavorite,
+    this.selectedCuisineName,
   });
 
   @override
@@ -330,7 +332,10 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                       spacing: 8,
                       runSpacing: 8,
                       children:
-                          widget.restaurant.cuisineNames
+                          _sortCuisinesByFilter(
+                                widget.restaurant.cuisineNames,
+                                widget.selectedCuisineName,
+                              )
                               .map(
                                 (cuisine) => Chip(
                                   label: Text(cuisine),
@@ -594,5 +599,16 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
         ],
       ),
     );
+  }
+
+  // Helper method to sort cuisines with selected cuisine first
+  List<String> _sortCuisinesByFilter(
+    List<String> cuisines,
+    String? selectedCuisine,
+  ) {
+    if (selectedCuisine == null || !cuisines.contains(selectedCuisine)) {
+      return cuisines;
+    }
+    return [selectedCuisine, ...cuisines.where((c) => c != selectedCuisine)];
   }
 }
