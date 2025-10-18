@@ -439,7 +439,7 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                         color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.2),
+                          color: colorScheme.outline.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
