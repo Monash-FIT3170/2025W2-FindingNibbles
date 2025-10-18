@@ -35,7 +35,9 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   void _removeDietaryRequirement(DietaryRequirementDto requirement) {
-    setState(() => _dietaryRequirements.removeWhere((r) => r.id == requirement.id));
+    setState(
+      () => _dietaryRequirements.removeWhere((r) => r.id == requirement.id),
+    );
   }
 
   void _addAppliance(ApplianceRequirementDto appliance) {
@@ -85,53 +87,46 @@ class ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: AppTheme.colorScheme.primary,
       body: SafeArea(
-        child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: AppTheme.surfaceColor),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(
-                      child: Text(
-                        'Profile',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+        child:
+            isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.surfaceColor,
+                  ),
+                )
+                : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: Text(
+                          'Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PersonalMenuWidget(
-                            onPersonalInfo: () {},
-                            onFavourites: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LikedPage(),
-                                ),
-                              );
-                            },
-                            onMyReviews: () {},
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: ListTile(
-                              leading: const Icon(Icons.history, color: Colors.white),
-                              title: const Text(
-                                'Browsing History',
-                                style: TextStyle(color: Colors.white, fontSize: 18),
-                              ),
-                              onTap: () {
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PersonalMenuWidget(
+                              onPersonalInfo: () {},
+                              onFavourites: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LikedPage(),
+                                  ),
+                                );
+                              },
+                              onBrowsingHistory: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -139,27 +134,27 @@ class ProfilePageState extends State<ProfilePage> {
                                   ),
                                 );
                               },
+                              onMyReviews: () {},
                             ),
-                          ),
 
-                          DietaryRequirementsWidget(
-                            dietaryRequirements: _dietaryRequirements,
-                            onAdd: _addDietaryRequirement,
-                            onRemove: _removeDietaryRequirement,
-                          ),
-                          CookingAppliancesWidget(
-                            appliances: _appliances,
-                            onAdd: _addAppliance,
-                            onRemove: _removeAppliance,
-                          ),
-                          LogoutWidget(onLogout: () {}),
-                          const SizedBox(height: 80),
-                        ],
+                            DietaryRequirementsWidget(
+                              dietaryRequirements: _dietaryRequirements,
+                              onAdd: _addDietaryRequirement,
+                              onRemove: _removeDietaryRequirement,
+                            ),
+                            CookingAppliancesWidget(
+                              appliances: _appliances,
+                              onAdd: _addAppliance,
+                              onRemove: _removeAppliance,
+                            ),
+                            LogoutWidget(onLogout: () {}),
+                            const SizedBox(height: 80),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
       ),
     );
   }
