@@ -34,12 +34,14 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _clearHistory() async {
     await _historyService.clearHistory();
     setState(() => _history.clear());
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Browsing history cleared'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Browsing history cleared'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Future<void> _confirmClearHistory() async {
