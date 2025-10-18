@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/map/map_page.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
@@ -5,6 +6,7 @@ import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant-menu/dish_dto.dart';
 import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant-menu/menu_analysis_tracker.dart';
 import 'package:nibbles/widgets/dish_card.dart';
 
 class RestaurantDetailsPage extends StatefulWidget {
@@ -24,15 +26,41 @@ class RestaurantDetailsPage extends StatefulWidget {
 class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
   final ProfileService _profileService = ProfileService();
   final RestaurantMenuService _restaurantMenuService = RestaurantMenuService();
+  final MenuAnalysisTracker _analysisTracker = MenuAnalysisTracker();
   late bool _isFavorite;
   List<DishDto> _dishes = [];
   bool _isLoadingDishes = false;
+  StreamSubscription<MenuAnalysisStatus>? _analysisSubscription;
+  MenuAnalysisStatus _analysisStatus = MenuAnalysisStatus.idle;
 
   @override
   void initState() {
     super.initState();
     _isFavorite = widget.isFavorite;
+    _analysisStatus = _analysisTracker.getStatus(widget.restaurant.id);
     _loadDishes();
+    _subscribeToAnalysisUpdates();
+  }
+
+  @override
+  void dispose() {
+    _analysisSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _subscribeToAnalysisUpdates() {
+    _analysisSubscription = _analysisTracker
+        .getStatusStream(widget.restaurant.id)
+        .listen((status) {
+          setState(() {
+            _analysisStatus = status;
+          });
+
+          // Auto-reload dishes when analysis completes
+          if (status == MenuAnalysisStatus.completed) {
+            _loadDishes();
+          }
+        });
   }
 
   Future<void> _loadDishes() async {
@@ -380,7 +408,10 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _navigateToMenuScanner,
+                        onPressed:
+                            _analysisStatus == MenuAnalysisStatus.analyzing
+                                ? null
+                                : _navigateToMenuScanner,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
@@ -390,6 +421,119 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
                     ],
                   ),
                   const SizedBox(height: 16),
+
+                  // Menu Analysis Progress Indicator
+                  if (_analysisStatus == MenuAnalysisStatus.analyzing)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: colorScheme.outline.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Analyzing menu...',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Success Message
+                  if (_analysisStatus == MenuAnalysisStatus.completed)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.green.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.green.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Analysis complete!',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Error Message
+                  if (_analysisStatus == MenuAnalysisStatus.failed)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.red.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red.shade700,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Analysis failed. Try again.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.red.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // Dishes List or Empty State
                   if (_isLoadingDishes)
