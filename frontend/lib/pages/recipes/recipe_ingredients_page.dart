@@ -35,6 +35,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Future<void> _logCalories() async {
+    final messenger = ScaffoldMessenger.of(context);
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -51,13 +52,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         );
         if (!mounted) return;
         _logger.i('Calories logged successfully!');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Calories logged successfully!')),
         );
       } catch (e) {
         if (!mounted) return;
         _logger.e('Failed to log calories: ${e.toString()}');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
         );
       }
@@ -262,16 +263,19 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     color: widget.recipe.isFavorite ? Colors.red : Colors.white,
                   ),
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     try {
                       if (!widget.recipe.isFavorite) {
                         await _profileService.addFavouriteRecipe(widget.recipe);
-                        setState(() {
-                          widget.recipe.isFavorite = true;
-                        });
+                        if (mounted) {
+                          setState(() {
+                            widget.recipe.isFavorite = true;
+                          });
+                        }
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Failed to add to favorites: $e'),
                           ),
