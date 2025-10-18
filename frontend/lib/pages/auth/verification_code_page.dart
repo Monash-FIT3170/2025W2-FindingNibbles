@@ -62,48 +62,6 @@ class VerificationCodePageState extends State<VerificationCodePage> {
     }
   }
 
-  void _changeEmailDialog() async {
-    final controller = TextEditingController(text: _email);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Change Email'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(labelText: 'New Email'),
-            keyboardType: TextInputType.emailAddress,
-            autofocus: true,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newEmail = controller.text.trim();
-                if (newEmail.isNotEmpty && newEmail != _email) {
-                  Navigator.pop(context, newEmail);
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Update'),
-            ),
-          ],
-        );
-      },
-    );
-    if (result != null && result.isNotEmpty && result != _email) {
-      setState(() {
-        _email = result;
-      });
-      // Send new verification code to new email
-      _resendCode();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,27 +99,26 @@ class VerificationCodePageState extends State<VerificationCodePage> {
                       ),
                       const SizedBox(height: 16),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
                           children: [
-                            Flexible(
-                              child: Text(
-                                'We sent a code to $_email',
-                                style: AppTheme.textTheme.headlineSmall
-                                    ?.copyWith(color: Colors.white70),
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.edit,
+                            Text(
+                              'We sent a code to',
+                              style: AppTheme.textTheme.bodyLarge?.copyWith(
                                 color: Colors.white70,
-                                size: 20,
                               ),
-                              tooltip: 'Change email',
-                              onPressed: _changeEmailDialog,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _email,
+                              style: AppTheme.textTheme.bodyLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
