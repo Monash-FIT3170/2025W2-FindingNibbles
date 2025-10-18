@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
 
 import 'recipe_model.dart';
@@ -16,6 +20,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
   int currentTab = 0;
   final RecipeService _recipeService = RecipeService();
+  final ProfileService _profileService = ProfileService();
   final _logger = getLogger();
 
   late List<bool> checkedIngredients;
@@ -245,12 +250,51 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            actions: [
+              // Favorite button in top right
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: Icon(
+                    widget.recipe.isFavorite
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: widget.recipe.isFavorite ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () async {
+                    try {
+                      if (!widget.recipe.isFavorite) {
+                        await _profileService.addFavouriteRecipe(widget.recipe);
+                        setState(() {
+                          widget.recipe.isFavorite = true;
+                        });
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to add to favorites: $e'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(
+                left: 56,
+                bottom: 16,
+                right: 56,
+              ),
               title: Text(
                 widget.recipe.title,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 16,
                   shadows: [
                     Shadow(
                       offset: Offset(0, 1),
@@ -259,6 +303,8 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                     ),
                   ],
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               background: Stack(
                 fit: StackFit.expand,
@@ -266,20 +312,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                   // Hero Image
                   widget.recipe.imageURL != null &&
                           widget.recipe.imageURL!.isNotEmpty
-                      ? Image.network(
-                        widget.recipe.imageURL!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              Icons.restaurant,
-                              size: 80,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      )
+                      ? _buildImage(widget.recipe.imageURL!, fit: BoxFit.cover)
                       : Container(
                         color: colorScheme.surfaceContainerHighest,
                         child: Icon(
@@ -395,5 +428,59 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         ),
       ),
     );
+  }
+
+  /// Builds an image widget that supports both base64 data URLs and HTTP URLs
+  Widget _buildImage(String imageUrl, {required BoxFit fit}) {
+    // Check if the image is a base64 data URL
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        // Extract the base64 string after the comma
+        final base64String = imageUrl.split(',')[1];
+        // Decode the base64 string
+        final Uint8List bytes = base64Decode(base64String);
+        // Return Image.memory for base64 data
+        return Image.memory(
+          bytes,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.restaurant,
+                size: 80,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            );
+          },
+        );
+      } catch (e) {
+        _logger.e('Error decoding base64 image: $e');
+        return Container(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.restaurant,
+            size: 80,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        );
+      }
+    } else {
+      // Regular HTTP/HTTPS URL
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.restaurant,
+              size: 80,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          );
+        },
+      );
+    }
   }
 }

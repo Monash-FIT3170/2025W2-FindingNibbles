@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nibbles/service/recipe/recipe_service.dart';
 import 'package:intl/intl.dart' show toBeginningOfSentenceCase;
+import 'package:nibbles/service/recipe/recipe_service.dart';
 
 class RecipeDifficultySelector extends StatelessWidget {
   final RecipeDifficulty selectedDifficulty;
@@ -19,22 +19,28 @@ class RecipeDifficultySelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recipe Difficulty', style: textTheme.titleMedium),
-        Wrap(
-          spacing: 8,
-          children:
-              RecipeDifficulty.values.map((difficulty) {
-                return ChoiceChip(
-                  label: Text(toBeginningOfSentenceCase(difficulty.name)),
-                  selected: selectedDifficulty == difficulty,
-                  showCheckmark: false,
-                  onSelected: (bool selected) {
-                    if (selected) {
-                      onDifficultySelected(difficulty);
-                    }
-                  },
-                );
-              }).toList(),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text('Recipe Difficulty', style: textTheme.titleMedium),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Wrap(
+            spacing: 8,
+            children:
+                RecipeDifficulty.values.map((difficulty) {
+                  return ChoiceChip(
+                    label: Text(toBeginningOfSentenceCase(difficulty.name)),
+                    selected: selectedDifficulty == difficulty,
+                    showCheckmark: false,
+                    onSelected: (bool selected) {
+                      if (selected) {
+                        onDifficultySelected(difficulty);
+                      }
+                    },
+                  );
+                }).toList(),
+          ),
         ),
       ],
     );

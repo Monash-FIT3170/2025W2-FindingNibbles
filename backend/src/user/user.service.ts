@@ -1,8 +1,8 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { Prisma, Restaurant } from '@prisma/client';
 import { DatabaseService } from 'src/database/database.service';
@@ -11,10 +11,10 @@ import {
   CreateDietaryRequirementDto,
   DietaryRequirementDto,
 } from 'src/dietary-requirement/dto/create-dietary-requirement.dto';
-import { CreateUserLocationDto } from './dto/create-user-location.dto';
-import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 import { RecipeDto } from 'src/recipe/dto/recipe-response.dto';
 import { CalorieLogResponseDto } from './dto/calorie-log-response.dto';
+import { CreateUserLocationDto } from './dto/create-user-location.dto';
+import { UpdateUserLocationDto } from './dto/update-user-location.dto';
 
 @Injectable()
 export class UserService {
@@ -360,6 +360,7 @@ export class UserService {
       cuisine: fav.recipe.cuisine?.name || 'Other',
       cuisineId: fav.recipe.cuisine?.id ?? 0, // Default to 0 if null
       dietaryTags: fav.recipe.dietaryTags || [],
+      imageURL: fav.recipe.imageURL,
     }));
   }
 
