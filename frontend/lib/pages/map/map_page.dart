@@ -6,12 +6,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/directions/directions_service.dart';
 import 'package:nibbles/service/map/map_service.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
@@ -28,7 +30,9 @@ class RestaurantMarker extends Marker {
 }
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
+  final RestaurantDto? targetRestaurant;
+
+  const MapPage({super.key, this.targetRestaurant});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -42,6 +46,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   bool _isLoading = false;
   final bool useCurrentLocation = true;
   static const double _minimumZoomForRestaurants = 12.0;
+
+  // Services
+  final ProfileService _profileService = ProfileService();
+  Set<int> _favoriteRestaurantIds = {};
 
   // Optimization variables
   Timer? _debounceTimer; // For map movement debouncing
@@ -62,6 +70,9 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   final DirectionsService _directionsService = DirectionsService();
   double? _routeDuration; // in seconds
   double? _routeDistance; // in meters
+  bool _isInDirectionsMode = false; // Track if we're showing directions
+  RestaurantDto?
+  _directionsTargetRestaurant; // The restaurant we're getting directions to
   // Search variables
   final TextEditingController _searchController = TextEditingController();
   String get _searchQuery => _searchController.text.trim();
@@ -76,6 +87,22 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     _isLoading = true; // Start with loading screen
     _initializeMapAndData();
     _fetchCuisines();
+    _loadFavoriteRestaurants();
+  }
+
+  // Load user's favorite restaurants
+  Future<void> _loadFavoriteRestaurants() async {
+    try {
+      final favorites = await _profileService.getFavouriteRestaurants();
+      if (mounted) {
+        setState(() {
+          _favoriteRestaurantIds = favorites.map((r) => r.id).toSet();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading favorite restaurants: $e');
+      // Non-critical error, continue without favorites
+    }
   }
 
   // Single initialization method that handles everything
@@ -88,6 +115,85 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
       // Then fetch restaurants once
       await _fetchRestaurantsInitial();
+
+      // If a target restaurant was provided, load directions to it
+      if (widget.targetRestaurant != null) {
+        // Add target restaurant to the restaurants list to ensure it shows
+        setState(() {
+          _restaurants = [widget.targetRestaurant!];
+        });
+
+        await _getDirectionsToRestaurant(widget.targetRestaurant!);
+
+        // Center map to show the route with better bounds calculation
+        if (_currentPosition != null && _isMapControllerReady()) {
+          // Wait a bit for the route to be rendered
+          await Future.delayed(const Duration(milliseconds: 200));
+
+          // If we have route points, use them for bounds calculation
+          if (_routePoints.isNotEmpty) {
+            // Find the actual bounds of the entire route
+            double minLat = _routePoints.first.latitude;
+            double maxLat = _routePoints.first.latitude;
+            double minLng = _routePoints.first.longitude;
+            double maxLng = _routePoints.first.longitude;
+
+            for (final point in _routePoints) {
+              if (point.latitude < minLat) minLat = point.latitude;
+              if (point.latitude > maxLat) maxLat = point.latitude;
+              if (point.longitude < minLng) minLng = point.longitude;
+              if (point.longitude > maxLng) maxLng = point.longitude;
+            }
+
+            // Add generous padding (15% of the range)
+            final latRange = maxLat - minLat;
+            final lngRange = maxLng - minLng;
+            final latPadding = latRange * 0.15;
+            final lngPadding = lngRange * 0.15;
+
+            final bounds = LatLngBounds(
+              LatLng(minLat - latPadding, minLng - lngPadding),
+              LatLng(maxLat + latPadding, maxLng + lngPadding),
+            );
+
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: bounds,
+                padding: const EdgeInsets.all(50), // Additional screen padding
+              ),
+            );
+          } else {
+            // Fallback if route wasn't loaded: use start and end points
+            final targetLat = widget.targetRestaurant!.latitude;
+            final targetLng = widget.targetRestaurant!.longitude;
+            final currentLat = _currentPosition!.latitude;
+            final currentLng = _currentPosition!.longitude;
+
+            final minLat = math.min(currentLat, targetLat);
+            final maxLat = math.max(currentLat, targetLat);
+            final minLng = math.min(currentLng, targetLng);
+            final maxLng = math.max(currentLng, targetLng);
+
+            // Add generous padding
+            final latRange = maxLat - minLat;
+            final lngRange = maxLng - minLng;
+            final latPadding = math.max(latRange * 0.15, 0.01);
+            final lngPadding = math.max(lngRange * 0.15, 0.01);
+
+            final bounds = LatLngBounds(
+              LatLng(minLat - latPadding, minLng - lngPadding),
+              LatLng(maxLat + latPadding, maxLng + lngPadding),
+            );
+
+            _mapController.fitCamera(
+              CameraFit.bounds(
+                bounds: bounds,
+                padding: const EdgeInsets.all(50),
+              ),
+            );
+          }
+        }
+      }
     } catch (e) {
       debugPrint('Error initializing: $e');
     } finally {
@@ -952,6 +1058,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     setState(() {
       _isLoadingDirections = true;
+      _isInDirectionsMode = true;
+      _directionsTargetRestaurant = restaurant;
     });
 
     try {
@@ -1130,7 +1238,12 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       _routePoints = [];
       _routeDuration = null;
       _routeDistance = null;
+      _isInDirectionsMode = false;
+      _directionsTargetRestaurant = null;
     });
+
+    // Restore all restaurants by re-fetching them
+    _forceFetchRestaurants();
   }
 
   // Center map on user's current location
@@ -1557,170 +1670,110 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                 ),
                               ),
                             ),
-                          // Restaurant markers (red) - show in search mode or when zoom is sufficient
+                          // Restaurant markers (red) - show in search mode, when zoom is sufficient, or if it's the target restaurant
                           if (_isSearchMode ||
                               !_isMapControllerReady() ||
                               _mapController.camera.zoom >=
                                   _minimumZoomForRestaurants)
-                            ..._restaurants.map((restaurant) {
-                              return Marker(
-                                point: LatLng(
-                                  restaurant.latitude,
-                                  restaurant.longitude,
-                                ),
-                                width: 40,
-                                height: 40,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              restaurant.name,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.titleLarge,
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                RichText(
-                                                  text: TextSpan(
-                                                    style:
-                                                        DefaultTextStyle.of(
-                                                          context,
-                                                        ).style,
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Rating: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.rating}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(height: 8),
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Total reviews: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.userRatingsTotal}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                // Removed phone number row and empty widget
-                                                SizedBox(height: 8),
-                                                // Add cuisines
-                                                if (restaurant
-                                                    .getFormattedCuisineNames()
-                                                    .isNotEmpty) ...[
-                                                  Text.rich(
-                                                    TextSpan(
-                                                      children: [
-                                                        TextSpan(
-                                                          text: 'Cuisines: ',
-                                                          style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                        TextSpan(
-                                                          text: restaurant
-                                                              .getFormattedCuisineNames(
-                                                                priorityCuisineId:
-                                                                    _selectedCuisine
-                                                                        ?.id,
-                                                                maxLength: 50,
+                            ..._restaurants
+                                .where((restaurant) {
+                                  // If in directions mode, only show the target restaurant
+                                  if (_isInDirectionsMode &&
+                                      _directionsTargetRestaurant != null) {
+                                    return restaurant.id ==
+                                        _directionsTargetRestaurant!.id;
+                                  }
+                                  // Otherwise show all restaurants
+                                  return true;
+                                })
+                                .map((restaurant) {
+                                  return Marker(
+                                    point: LatLng(
+                                      restaurant.latitude,
+                                      restaurant.longitude,
+                                    ),
+                                    width: 40,
+                                    height: 40,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigate to restaurant details page
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) =>
+                                                    RestaurantDetailsPage(
+                                                      restaurant: restaurant,
+                                                      isFavorite:
+                                                          _favoriteRestaurantIds
+                                                              .contains(
+                                                                restaurant.id,
                                                               ),
-                                                        ),
-                                                      ],
                                                     ),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                ],
-                                                Text.rich(
-                                                  TextSpan(
-                                                    children: [
-                                                      TextSpan(
-                                                        text: 'Address: ',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      TextSpan(
-                                                        text:
-                                                            '${restaurant.address}',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    _isLoadingDirections
-                                                        ? null
-                                                        : () {
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                          _getDirectionsToRestaurant(
-                                                            restaurant,
-                                                          );
-                                                        },
-                                                child:
-                                                    _isLoadingDirections
-                                                        ? const SizedBox(
-                                                          width: 16,
-                                                          height: 16,
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                              ),
-                                                        )
-                                                        : const Text(
-                                                          'Get Directions',
-                                                        ),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                                child: const Text('Close'),
-                                              ),
-                                            ],
                                           ),
-                                    );
-                                  },
-                                  child: const Icon(
-                                    Icons.location_pin,
-                                    color: Colors.red,
-                                    size: 40,
-                                  ),
+                                        ).then((_) {
+                                          // Refresh favorite status when returning
+                                          _loadFavoriteRestaurants();
+                                        });
+                                      },
+                                      child: const Icon(
+                                        Icons.location_pin,
+                                        color: Colors.red,
+                                        size: 40,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                          // Always show the target restaurant marker if one was provided from widget or directions
+                          if ((widget.targetRestaurant != null &&
+                                  !_restaurants.any(
+                                    (r) => r.id == widget.targetRestaurant!.id,
+                                  )) ||
+                              (_isInDirectionsMode &&
+                                  _directionsTargetRestaurant != null &&
+                                  !_restaurants.any(
+                                    (r) =>
+                                        r.id == _directionsTargetRestaurant!.id,
+                                  )))
+                            Marker(
+                              point: LatLng(
+                                (_directionsTargetRestaurant ??
+                                        widget.targetRestaurant)!
+                                    .latitude,
+                                (_directionsTargetRestaurant ??
+                                        widget.targetRestaurant)!
+                                    .longitude,
+                              ),
+                              width: 40,
+                              height: 40,
+                              child: GestureDetector(
+                                onTap: () {
+                                  final restaurant =
+                                      _directionsTargetRestaurant ??
+                                      widget.targetRestaurant!;
+                                  // Navigate to restaurant details page
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => RestaurantDetailsPage(
+                                            restaurant: restaurant,
+                                            isFavorite: _favoriteRestaurantIds
+                                                .contains(restaurant.id),
+                                          ),
+                                    ),
+                                  ).then((_) {
+                                    // Refresh favorite status when returning
+                                    _loadFavoriteRestaurants();
+                                  });
+                                },
+                                child: const Icon(
+                                  Icons.location_pin,
+                                  color: Colors.red,
+                                  size: 40,
                                 ),
-                              );
-                            }),
+                              ),
+                            ),
                         ],
                       ),
                     ],

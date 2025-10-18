@@ -52,7 +52,12 @@ class _RestaurantDetailsPageState extends State<RestaurantDetailsPage> {
   }
 
   void _navigateToMap() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPage(targetRestaurant: widget.restaurant),
+      ),
+    );
   }
 
   void _navigateToMenuScanner() async {
