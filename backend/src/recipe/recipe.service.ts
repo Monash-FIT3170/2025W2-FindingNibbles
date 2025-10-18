@@ -470,6 +470,7 @@ export class RecipeService {
           },
         },
         calories: recipeData.calories,
+        imageURL: recipeData.imageURL, // Include the image URL
         // Add any other fields needed by the database schema
       };
 

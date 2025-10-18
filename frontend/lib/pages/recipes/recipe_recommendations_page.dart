@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'package:nibbles/pages/recipes/widgets/recipe_recommendation_card.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
 
@@ -73,20 +74,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         );
       },
     );
-  }
-
-  Color _getDifficultyColor(
-    recipe_service.RecipeDifficulty diff,
-    ColorScheme cs,
-  ) {
-    switch (diff) {
-      case recipe_service.RecipeDifficulty.hard:
-        return cs.error; // Using semantic color
-      case recipe_service.RecipeDifficulty.medium:
-        return cs.tertiary; // Using semantic color
-      default:
-        return cs.primary;
-    }
   }
 
   Future<void> _toggleFavorite(int index) async {
@@ -208,9 +195,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recipe Recommendations'),
@@ -232,170 +216,23 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         itemCount: widget.recipes.length,
         itemBuilder: (context, index) {
           final recipe = widget.recipes[index];
-          return _buildRecipeCard(recipe, index, textTheme, colorScheme);
+          return RecipeRecommendationCard(
+            recipe: recipe,
+            isFavorite: recipe.isFavorite,
+            onFavoriteTap: () => _toggleFavorite(index),
+            onTap: () async {
+              // Navigate to recipe ingredients page and wait for result
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RecipeIngredientsPage(recipe: recipe),
+                ),
+              );
+              // Refresh the UI when coming back to reflect any changes
+              setState(() {});
+            },
+          );
         },
-      ),
-    );
-  }
-
-  Widget _buildRecipeCard(
-    RecipeModel recipe,
-    int index,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RecipeIngredientsPage(recipe: recipe),
-          ),
-        );
-      },
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        margin: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          children: [
-            _buildRecipeImage(recipe, textTheme, colorScheme),
-            _buildRecipeDetails(recipe, index, textTheme, colorScheme),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecipeImage(
-    RecipeModel recipe,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return Stack(
-      children: [
-        // Hero Image
-        SizedBox(
-          height: 200,
-          width: double.infinity,
-          child:
-              recipe.imageURL != null && recipe.imageURL!.isNotEmpty
-                  ? Image.network(
-                    recipe.imageURL!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: colorScheme.surfaceContainerHighest,
-                        child: Icon(
-                          Icons.restaurant,
-                          size: 60,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      );
-                    },
-                  )
-                  : Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.restaurant,
-                      size: 60,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-        ),
-        // Difficulty badge
-        Positioned(
-          right: 8,
-          top: 8,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _getDifficultyColor(
-                recipe_service.RecipeDifficulty.values.firstWhere(
-                  (e) => e.name == recipe.difficultyLevel.name,
-                ),
-                colorScheme,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              recipe.difficultyLevel.name[0].toUpperCase() +
-                  recipe.difficultyLevel.name.substring(1),
-              style: textTheme.labelMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecipeDetails(
-    RecipeModel recipe,
-    int index,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  recipe.title,
-                  style: textTheme.titleLarge?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  size: 28,
-                  color:
-                      recipe.isFavorite
-                          ? colorScheme.error
-                          : colorScheme.onSurfaceVariant,
-                ),
-                onPressed: () => _toggleFavorite(index),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 20, color: colorScheme.primary),
-              const SizedBox(width: 6),
-              Text(
-                '${recipe.estimatedTimeMinutes} min',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(width: 20),
-              Icon(
-                Icons.local_fire_department,
-                size: 20,
-                color: colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${recipe.calories} cal',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
