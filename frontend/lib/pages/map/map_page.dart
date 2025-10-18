@@ -66,7 +66,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Directions variables
   List<LatLng> _routePoints = [];
-  bool _isLoadingDirections = false;
   final DirectionsService _directionsService = DirectionsService();
   double? _routeDuration; // in seconds
   double? _routeDistance; // in meters
@@ -821,133 +820,23 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   void _onSearchResultSelected(RestaurantDto restaurant) async {
-    // Clear search results and update UI first
-    // Only show the selected restaurant marker
+    // Clear search results
     setState(() {
       _searchResults = [];
       _searchController.text = restaurant.name;
-      _isSearchMode = true; // Keep in search mode to show only this marker
-
-      // Replace restaurants list with just the selected one
-      _restaurants = [restaurant];
     });
 
-    // Wait for UI to update
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    // Snap map to restaurant location
-    if (_isMapControllerReady()) {
-      _mapController.move(
-        LatLng(restaurant.latitude, restaurant.longitude),
-        16.0, // Zoom level to show the restaurant clearly
-      );
-    }
-
-    // Wait for the map to move and render before showing dialog
-    // This prevents the white flash on Chrome
-    await Future.delayed(const Duration(milliseconds: 600));
-
-    if (mounted) {
-      // Show restaurant details dialog
-      _showRestaurantDetails(restaurant);
-    }
-  }
-
-  // Helper method to show restaurant details dialog
-  void _showRestaurantDetails(RestaurantDto restaurant) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              restaurant.name,
-              style: Theme.of(context).textTheme.titleLarge,
+    // Navigate to restaurant details page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => RestaurantDetailsPage(
+              restaurant: restaurant,
+              isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+              selectedCuisineName: _selectedCuisine?.name,
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: [
-                      TextSpan(
-                        text: 'Rating: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: '${restaurant.rating}'),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Total reviews: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: '${restaurant.userRatingsTotal}'),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 8),
-                if (restaurant.getFormattedCuisineNames().isNotEmpty) ...[
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Cuisines: ',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: restaurant.getFormattedCuisineNames(
-                            priorityCuisineId: _selectedCuisine?.id,
-                            maxLength: 50,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                ],
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Address: ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(text: '${restaurant.address}'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    _isLoadingDirections
-                        ? null
-                        : () {
-                          Navigator.pop(context);
-                          _getDirectionsToRestaurant(restaurant);
-                        },
-                child:
-                    _isLoadingDirections
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Text('Get Directions'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
+      ),
     );
   }
 
@@ -1057,7 +946,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     }
 
     setState(() {
-      _isLoadingDirections = true;
       _isInDirectionsMode = true;
       _directionsTargetRestaurant = restaurant;
     });
@@ -1225,10 +1113,6 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           ),
         );
       }
-    } finally {
-      setState(() {
-        _isLoadingDirections = false;
-      });
     }
   }
 
@@ -1306,19 +1190,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
   // Build the active filters chip
   Widget _buildActiveFiltersChip() {
-    // Hide filter tag when directions are active
-    if (_routePoints.isNotEmpty) {
+    // Hide filter tag when directions are active or in search mode
+    if (_routePoints.isNotEmpty || _isSearchMode) {
       return const SizedBox.shrink();
     }
 
     List<Widget> filterWidgets = [];
 
-    // Safe check for search mode
-    if (_isSearchMode && _searchQuery.isNotEmpty) {
-      filterWidgets.add(Text('Search: "$_searchQuery"'));
-    }
-
-    if (!_isSearchMode && _selectedCuisine != null) {
+    if (_selectedCuisine != null) {
       filterWidgets.add(Text(_selectedCuisine!.name));
     }
 
