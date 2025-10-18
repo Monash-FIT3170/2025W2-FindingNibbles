@@ -1058,7 +1058,17 @@ class _HomePageState extends State<HomePage> {
                                           try {
                                             await HistoryService().addToHistory(
                                               restaurant,
-                                            ),
+                                            );
+                                            debugPrint(
+                                              'Added ${restaurant.name} to browsing history.',
+                                            );
+                                          } catch (e) {
+                                            debugPrint(
+                                              'Failed to log history: $e',
+                                            );
+                                          }
+                                          _openRestaurantDetails(restaurant);
+                                        },
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -1068,25 +1078,6 @@ class _HomePageState extends State<HomePage> {
                                               flex: 3,
                                               child: Stack(
                                                 fit: StackFit.expand,
-                                            );
-                                            debugPrint(
-                                              '✅ Added ${restaurant.name} to browsing history.',
-                                            );
-                                          } catch (e) {
-                                            debugPrint(
-                                              '⚠️ Failed to log history: $e',
-                                            );
-                                          }
-                                          _openRestaurantDetails(restaurant);
-                                        },
-
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(12.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
                                                 children: [
                                                   restaurant.imageUrl != null
                                                       ? Image.network(
@@ -1099,13 +1090,19 @@ class _HomePageState extends State<HomePage> {
                                                         ) {
                                                           return Container(
                                                             color:
-                                                                colorScheme
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
                                                                     .surfaceContainerHighest,
                                                             child: Icon(
                                                               Icons.restaurant,
                                                               size: 40,
                                                               color:
-                                                                  colorScheme
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
                                                                       .onSurfaceVariant,
                                                             ),
                                                           );
@@ -1113,13 +1110,15 @@ class _HomePageState extends State<HomePage> {
                                                       )
                                                       : Container(
                                                         color:
-                                                            colorScheme
+                                                            Theme.of(context)
+                                                                .colorScheme
                                                                 .surfaceContainerHighest,
                                                         child: Icon(
                                                           Icons.restaurant,
                                                           size: 40,
                                                           color:
-                                                              colorScheme
+                                                              Theme.of(context)
+                                                                  .colorScheme
                                                                   .onSurfaceVariant,
                                                         ),
                                                       ),
