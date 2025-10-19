@@ -132,7 +132,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
           _favoriteRestaurantIds.remove(restaurantId);
         }
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -888,233 +888,320 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Drag handle
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(16),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setModalState) => DraggableScrollableSheet(
+                  initialChildSize: 0.5,
+                  minChildSize: 0.3,
+                  maxChildSize: 0.9,
+                  builder: (context, scrollController) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Restaurant image with heart overlay
-                          if (restaurant.imageUrl != null) ...[
-                            Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    restaurant.imageUrl!,
-                                    height: 150,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        height: 150,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[300],
-                                          borderRadius: BorderRadius.circular(12),
+                          // Drag handle
+                          Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              controller: scrollController,
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Restaurant image with heart overlay
+                                  if (restaurant.imageUrl != null) ...[
+                                    Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: Image.network(
+                                            restaurant.imageUrl!,
+                                            height: 150,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
+                                              return Container(
+                                                height: 150,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.grey[300],
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.restaurant,
+                                                  size: 48,
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                        child: const Icon(
-                                          Icons.restaurant,
-                                          size: 48,
-                                          color: Colors.grey,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                // Heart icon overlay
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(51),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
+                                        // Heart icon overlay
+                                        Positioned(
+                                          top: 8,
+                                          right: 8,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withAlpha(
+                                                    51,
+                                                  ),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: IconButton(
+                                              iconSize: 20,
+                                              padding: const EdgeInsets.all(8),
+                                              constraints:
+                                                  const BoxConstraints(),
+                                              icon: Icon(
+                                                _favoriteRestaurantIds.contains(
+                                                      restaurant.id,
+                                                    )
+                                                    ? Icons.favorite
+                                                    : Icons.favorite_border,
+                                                color:
+                                                    _favoriteRestaurantIds
+                                                            .contains(
+                                                              restaurant.id,
+                                                            )
+                                                        ? Colors.red
+                                                        : Colors.grey[700],
+                                              ),
+                                              onPressed: () async {
+                                                await _toggleFavoriteRestaurant(
+                                                  restaurant.id,
+                                                );
+                                                // Update the modal state to reflect the change
+                                                setModalState(() {});
+                                              },
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    child: IconButton(
-                                      iconSize: 20,
-                                      padding: const EdgeInsets.all(8),
-                                      constraints: const BoxConstraints(),
-                                      icon: Icon(
-                                        _favoriteRestaurantIds.contains(restaurant.id)
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color: _favoriteRestaurantIds.contains(restaurant.id)
-                                            ? Colors.red
-                                            : Colors.grey[700],
-                                      ),
-                                      onPressed: () async {
-                                        await _toggleFavoriteRestaurant(restaurant.id);
-                                        // Update the modal state to reflect the change
-                                        setModalState(() {});
-                                      },
+                                    const SizedBox(height: 12),
+                                  ],
+
+                                  // Restaurant name (always show)
+                                  Text(
+                                    restaurant.name,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                          
-                          // Restaurant name (always show)
-                          Text(
-                            restaurant.name,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        
-                        // Rating
-                        Row(
-                          children: [
-                            Icon(Icons.star, color: Colors.amber, size: 18),
-                            const SizedBox(width: 4),
-                            Text(
-                              restaurant.rating?.toStringAsFixed(1) ?? 'N/A',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '(${restaurant.userRatingsTotal ?? 0} reviews)',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        
-                        // Cuisines
-                        if (restaurant.getFormattedCuisineNames().isNotEmpty) ...[
-                          Row(
-                            children: [
-                              Icon(Icons.restaurant_menu, size: 18, color: Colors.grey[600]),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  restaurant.getFormattedCuisineNames(
-                                    priorityCuisineId: _selectedCuisine?.id,
-                                    maxLength: 100,
+                                  const SizedBox(height: 10),
+
+                                  // Rating
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        restaurant.rating?.toStringAsFixed(1) ??
+                                            'N/A',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '(${restaurant.userRatingsTotal ?? 0} reviews)',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(color: Colors.grey[600]),
+                                      ),
+                                    ],
                                   ),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
+                                  const SizedBox(height: 8),
+
+                                  // Cuisines
+                                  if (restaurant
+                                      .getFormattedCuisineNames()
+                                      .isNotEmpty) ...[
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.restaurant_menu,
+                                          size: 18,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            restaurant.getFormattedCuisineNames(
+                                              priorityCuisineId:
+                                                  _selectedCuisine?.id,
+                                              maxLength: 100,
+                                            ),
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+
+                                  // Address
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.location_on,
+                                        size: 18,
+                                        color: Colors.grey[600],
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          restaurant.address ??
+                                              'Address not available',
+                                          style:
+                                              Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Action buttons
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () {
+                                            Navigator.pop(
+                                              context,
+                                            ); // Close bottom sheet
+                                            _getDirectionsToRestaurant(
+                                              restaurant,
+                                            );
+                                          },
+                                          icon: const Icon(
+                                            Icons.directions,
+                                            size: 16,
+                                          ),
+                                          label: const Text(
+                                            'Get Directions',
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                              horizontal: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 2,
+                                        child: OutlinedButton(
+                                          onPressed: () {
+                                            Navigator.pop(
+                                              context,
+                                            ); // Close bottom sheet
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (
+                                                      context,
+                                                    ) => RestaurantDetailsPage(
+                                                      restaurant: restaurant,
+                                                      isFavorite:
+                                                          _favoriteRestaurantIds
+                                                              .contains(
+                                                                restaurant.id,
+                                                              ),
+                                                      selectedCuisineName:
+                                                          _selectedCuisine
+                                                              ?.name,
+                                                    ),
+                                              ),
+                                            ).then((_) {
+                                              // Refresh favorite status when returning
+                                              _loadFavoriteRestaurants();
+                                            });
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            side: BorderSide(
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 10,
+                                              horizontal: 12,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Full Details',
+                                            style: TextStyle(fontSize: 13),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 8),
                         ],
-                        
-                        // Address
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                restaurant.address ?? 'Address not available',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // Action buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.pop(context); // Close bottom sheet
-                                  _getDirectionsToRestaurant(restaurant);
-                                },
-                                icon: const Icon(Icons.directions, size: 16),
-                                label: const Text('Get Directions', style: TextStyle(fontSize: 13)),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 2,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.pop(context); // Close bottom sheet
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => RestaurantDetailsPage(
-                                        restaurant: restaurant,
-                                        isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
-                                        selectedCuisineName: _selectedCuisine?.name,
-                                      ),
-                                    ),
-                                  ).then((_) {
-                                    // Refresh favorite status when returning
-                                    _loadFavoriteRestaurants();
-                                  });
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Theme.of(context).colorScheme.primary,
-                                  side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                ),
-                                child: const Text('Full Details', style: TextStyle(fontSize: 13)),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-          );
-        },
-      ),
-        ),
+          ),
     );
   }
 
@@ -1719,165 +1806,169 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                     child: FlutterMap(
                       mapController: _mapController,
                       options: MapOptions(
-                      initialCenter:
-                          _currentPosition ?? LatLng(37.9111, 145.1367),
-                      initialZoom: 13,
-                      minZoom: 10,
-                      maxZoom: 18,
-                      // Add smooth interaction settings
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all,
-                        enableMultiFingerGestureRace: true,
-                        rotationThreshold: 20.0,
-                        pinchZoomThreshold: 0.5,
-                        pinchMoveThreshold: 40.0,
-                        scrollWheelVelocity:
-                            0.002, // Reduced from 0.005 for slower scrolling
-                      ),
-                      keepAlive: true,
-                      backgroundColor: Colors.grey[100]!,
-                      onMapReady: () {
-                        // Map is ready - no action needed since we handle loading in initState
-                      },
-                      onPositionChanged: (MapCamera camera, bool hasGesture) {
-                        if (hasGesture && !_isLoading && !_isSearchMode) {
-                          // Check if zoom level is sufficient, if not clear restaurants
-                          if (camera.zoom < _minimumZoomForRestaurants) {
-                            setState(() {
-                              _restaurants = [];
-                            });
-                          } else {
-                            // Use debounced fetching to prevent excessive API calls
-                            _debouncedFetchRestaurants();
+                        initialCenter:
+                            _currentPosition ?? LatLng(37.9111, 145.1367),
+                        initialZoom: 13,
+                        minZoom: 10,
+                        maxZoom: 18,
+                        // Add smooth interaction settings
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.all,
+                          enableMultiFingerGestureRace: true,
+                          rotationThreshold: 20.0,
+                          pinchZoomThreshold: 0.5,
+                          pinchMoveThreshold: 40.0,
+                          scrollWheelVelocity:
+                              0.002, // Reduced from 0.005 for slower scrolling
+                        ),
+                        keepAlive: true,
+                        backgroundColor: Colors.grey[100]!,
+                        onMapReady: () {
+                          // Map is ready - no action needed since we handle loading in initState
+                        },
+                        onPositionChanged: (MapCamera camera, bool hasGesture) {
+                          if (hasGesture && !_isLoading && !_isSearchMode) {
+                            // Check if zoom level is sufficient, if not clear restaurants
+                            if (camera.zoom < _minimumZoomForRestaurants) {
+                              setState(() {
+                                _restaurants = [];
+                              });
+                            } else {
+                              // Use debounced fetching to prevent excessive API calls
+                              _debouncedFetchRestaurants();
+                            }
                           }
-                        }
-                      },
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.nibbles.findingnibbles',
-                        maxNativeZoom: 19,
-                        maxZoom: 22,
-                        keepBuffer: 8,
-                        panBuffer: 2,
-                        tileDisplay: const TileDisplay.fadeIn(
-                          duration: Duration(milliseconds: 200),
-                        ),
+                        },
                       ),
-                      if (_routePoints.isNotEmpty)
-                        PolylineLayer(
-                          polylines: [
-                            Polyline(
-                              points: _routePoints,
-                              strokeWidth: 4.0,
-                              color: Colors.blue,
-                            ),
-                          ],
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.nibbles.findingnibbles',
+                          maxNativeZoom: 19,
+                          maxZoom: 22,
+                          keepBuffer: 8,
+                          panBuffer: 2,
+                          tileDisplay: const TileDisplay.fadeIn(
+                            duration: Duration(milliseconds: 200),
+                          ),
                         ),
-                      MarkerLayer(
-                        markers: [
-                          // Current location marker (grey)
-                          if (_currentPosition != null)
-                            Marker(
-                              point: _currentPosition!,
-                              width: 30,
-                              height: 30,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[600],
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
+                        if (_routePoints.isNotEmpty)
+                          PolylineLayer(
+                            polylines: [
+                              Polyline(
+                                points: _routePoints,
+                                strokeWidth: 4.0,
+                                color: Colors.blue,
+                              ),
+                            ],
+                          ),
+                        MarkerLayer(
+                          markers: [
+                            // Current location marker (grey)
+                            if (_currentPosition != null)
+                              Marker(
+                                point: _currentPosition!,
+                                width: 30,
+                                height: 30,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[600],
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.person,
                                     color: Colors.white,
-                                    width: 3,
+                                    size: 16,
                                   ),
                                 ),
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
                               ),
-                            ),
-                          // Restaurant markers (red) - show in search mode, when zoom is sufficient, or if it's the target restaurant
-                          if (_isSearchMode ||
-                              !_isMapControllerReady() ||
-                              _mapController.camera.zoom >=
-                                  _minimumZoomForRestaurants)
-                            ..._restaurants
-                                .where((restaurant) {
-                                  // If in directions mode, only show the target restaurant
-                                  if (_isInDirectionsMode &&
-                                      _directionsTargetRestaurant != null) {
-                                    return restaurant.id ==
-                                        _directionsTargetRestaurant!.id;
-                                  }
-                                  // Otherwise show all restaurants
-                                  return true;
-                                })
-                                .map((restaurant) {
-                                  return Marker(
-                                    point: LatLng(
-                                      restaurant.latitude,
-                                      restaurant.longitude,
-                                    ),
-                                    width: 40,
-                                    height: 40,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // Show restaurant bottom sheet instead of navigating
-                                        _showRestaurantBottomSheet(restaurant);
-                                      },
-                                      child: const Icon(
-                                        Icons.location_pin,
-                                        color: Colors.red,
-                                        size: 40,
+                            // Restaurant markers (red) - show in search mode, when zoom is sufficient, or if it's the target restaurant
+                            if (_isSearchMode ||
+                                !_isMapControllerReady() ||
+                                _mapController.camera.zoom >=
+                                    _minimumZoomForRestaurants)
+                              ..._restaurants
+                                  .where((restaurant) {
+                                    // If in directions mode, only show the target restaurant
+                                    if (_isInDirectionsMode &&
+                                        _directionsTargetRestaurant != null) {
+                                      return restaurant.id ==
+                                          _directionsTargetRestaurant!.id;
+                                    }
+                                    // Otherwise show all restaurants
+                                    return true;
+                                  })
+                                  .map((restaurant) {
+                                    return Marker(
+                                      point: LatLng(
+                                        restaurant.latitude,
+                                        restaurant.longitude,
                                       ),
-                                    ),
-                                  );
-                                }),
-                          // Always show the target restaurant marker if one was provided from widget or directions
-                          if ((widget.targetRestaurant != null &&
-                                  !_restaurants.any(
-                                    (r) => r.id == widget.targetRestaurant!.id,
-                                  )) ||
-                              (_isInDirectionsMode &&
-                                  _directionsTargetRestaurant != null &&
-                                  !_restaurants.any(
-                                    (r) =>
-                                        r.id == _directionsTargetRestaurant!.id,
-                                  )))
-                            Marker(
-                              point: LatLng(
-                                (_directionsTargetRestaurant ??
-                                        widget.targetRestaurant)!
-                                    .latitude,
-                                (_directionsTargetRestaurant ??
-                                        widget.targetRestaurant)!
-                                    .longitude,
-                              ),
-                              width: 40,
-                              height: 40,
-                              child: GestureDetector(
-                                onTap: () {
-                                  final restaurant =
-                                      _directionsTargetRestaurant ??
-                                      widget.targetRestaurant!;
-                                  // Show restaurant bottom sheet instead of navigating
-                                  _showRestaurantBottomSheet(restaurant);
-                                },
-                                child: const Icon(
-                                  Icons.location_pin,
-                                  color: Colors.red,
-                                  size: 40,
+                                      width: 40,
+                                      height: 40,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          // Show restaurant bottom sheet instead of navigating
+                                          _showRestaurantBottomSheet(
+                                            restaurant,
+                                          );
+                                        },
+                                        child: const Icon(
+                                          Icons.location_pin,
+                                          color: Colors.red,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                            // Always show the target restaurant marker if one was provided from widget or directions
+                            if ((widget.targetRestaurant != null &&
+                                    !_restaurants.any(
+                                      (r) =>
+                                          r.id == widget.targetRestaurant!.id,
+                                    )) ||
+                                (_isInDirectionsMode &&
+                                    _directionsTargetRestaurant != null &&
+                                    !_restaurants.any(
+                                      (r) =>
+                                          r.id ==
+                                          _directionsTargetRestaurant!.id,
+                                    )))
+                              Marker(
+                                point: LatLng(
+                                  (_directionsTargetRestaurant ??
+                                          widget.targetRestaurant)!
+                                      .latitude,
+                                  (_directionsTargetRestaurant ??
+                                          widget.targetRestaurant)!
+                                      .longitude,
+                                ),
+                                width: 40,
+                                height: 40,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    final restaurant =
+                                        _directionsTargetRestaurant ??
+                                        widget.targetRestaurant!;
+                                    // Show restaurant bottom sheet instead of navigating
+                                    _showRestaurantBottomSheet(restaurant);
+                                  },
+                                  child: const Icon(
+                                    Icons.location_pin,
+                                    color: Colors.red,
+                                    size: 40,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   // Search Interface with live results
                   _buildSearchInterface(),
