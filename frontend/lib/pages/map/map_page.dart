@@ -1061,13 +1061,14 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                         Row(
                           children: [
                             Expanded(
+                              flex: 3,
                               child: ElevatedButton.icon(
                                 onPressed: () {
                                   Navigator.pop(context); // Close bottom sheet
                                   _getDirectionsToRestaurant(restaurant);
                                 },
-                                icon: const Icon(Icons.directions, size: 18),
-                                label: const Text('Get Directions'),
+                                icon: const Icon(Icons.directions, size: 16),
+                                label: const Text('Get Directions', style: TextStyle(fontSize: 13)),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                 ),
@@ -1075,7 +1076,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: OutlinedButton.icon(
+                              flex: 2,
+                              child: OutlinedButton(
                                 onPressed: () {
                                   Navigator.pop(context); // Close bottom sheet
                                   Navigator.push(
@@ -1087,17 +1089,22 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                         selectedCuisineName: _selectedCuisine?.name,
                                       ),
                                     ),
-                                  );
+                                  ).then((_) {
+                                    // Refresh favorite status when returning
+                                    _loadFavoriteRestaurants();
+                                  });
                                 },
-                                icon: const Icon(Icons.info_outline, size: 18),
-                                label: const Text('Full Details'),
                                 style: OutlinedButton.styleFrom(
+                                  foregroundColor: Theme.of(context).colorScheme.primary,
+                                  side: BorderSide(color: Theme.of(context).colorScheme.primary),
                                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                 ),
+                                child: const Text('Full Details', style: TextStyle(fontSize: 13)),
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -1707,9 +1714,11 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
               )
               : Stack(
                 children: [
-                  FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
+                  MouseRegion(
+                    cursor: SystemMouseCursors.basic,
+                    child: FlutterMap(
+                      mapController: _mapController,
+                      options: MapOptions(
                       initialCenter:
                           _currentPosition ?? LatLng(37.9111, 145.1367),
                       initialZoom: 13,
@@ -1868,6 +1877,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                         ],
                       ),
                     ],
+                  ),
                   ),
                   // Search Interface with live results
                   _buildSearchInterface(),
