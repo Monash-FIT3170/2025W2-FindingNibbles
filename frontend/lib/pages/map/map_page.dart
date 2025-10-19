@@ -104,6 +104,47 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     }
   }
 
+  // Toggle favorite restaurant
+  Future<void> _toggleFavoriteRestaurant(int restaurantId) async {
+    final wasAlreadyFavorite = _favoriteRestaurantIds.contains(restaurantId);
+
+    // Optimistic update
+    setState(() {
+      if (wasAlreadyFavorite) {
+        _favoriteRestaurantIds.remove(restaurantId);
+      } else {
+        _favoriteRestaurantIds.add(restaurantId);
+      }
+    });
+
+    try {
+      if (wasAlreadyFavorite) {
+        await _profileService.removeFavouriteRestaurant(restaurantId);
+      } else {
+        await _profileService.addFavouriteRestaurant(restaurantId);
+      }
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        if (wasAlreadyFavorite) {
+          _favoriteRestaurantIds.add(restaurantId);
+        } else {
+          _favoriteRestaurantIds.remove(restaurantId);
+        }
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorites: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+      debugPrint('Error toggling favorite restaurant: $e');
+    }
+  }
+
   // Single initialization method that handles everything
   Future<void> _initializeMapAndData() async {
     try {
@@ -288,11 +329,7 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
 
     try {
       // Get current position
-      debugPrint('Attempting to get current position...');
       final position = await Geolocator.getCurrentPosition();
-      debugPrint(
-        'Successfully got position: ${position.latitude}, ${position.longitude}',
-      );
       if (mounted) {
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
@@ -820,23 +857,257 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
   }
 
   void _onSearchResultSelected(RestaurantDto restaurant) async {
-    // Clear search results
+    // Clear search results and update search field
     setState(() {
       _searchResults = [];
       _searchController.text = restaurant.name;
+      _isSearchMode = true;
+      // Show only the selected restaurant on the map
+      _restaurants = [restaurant];
     });
 
-    // Navigate to restaurant details page
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => RestaurantDetailsPage(
-              restaurant: restaurant,
-              isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
-              selectedCuisineName: _selectedCuisine?.name,
+    // Snap map to restaurant location
+    if (_isMapControllerReady()) {
+      _mapController.move(
+        LatLng(restaurant.latitude, restaurant.longitude),
+        16.0,
+      );
+    }
+
+    // Wait for map to move before showing bottom sheet
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (!mounted) return;
+
+    // Show restaurant details in bottom sheet
+    _showRestaurantBottomSheet(restaurant);
+  }
+
+  void _showRestaurantBottomSheet(RestaurantDto restaurant) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Restaurant image with heart overlay
+                          if (restaurant.imageUrl != null) ...[
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    restaurant.imageUrl!,
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.restaurant,
+                                          size: 48,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                // Heart icon overlay
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(51),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: IconButton(
+                                      iconSize: 20,
+                                      padding: const EdgeInsets.all(8),
+                                      constraints: const BoxConstraints(),
+                                      icon: Icon(
+                                        _favoriteRestaurantIds.contains(restaurant.id)
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: _favoriteRestaurantIds.contains(restaurant.id)
+                                            ? Colors.red
+                                            : Colors.grey[700],
+                                      ),
+                                      onPressed: () async {
+                                        await _toggleFavoriteRestaurant(restaurant.id);
+                                        // Update the modal state to reflect the change
+                                        setModalState(() {});
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                          
+                          // Restaurant name (always show)
+                          Text(
+                            restaurant.name,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        
+                        // Rating
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.amber, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              restaurant.rating?.toStringAsFixed(1) ?? 'N/A',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '(${restaurant.userRatingsTotal ?? 0} reviews)',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Cuisines
+                        if (restaurant.getFormattedCuisineNames().isNotEmpty) ...[
+                          Row(
+                            children: [
+                              Icon(Icons.restaurant_menu, size: 18, color: Colors.grey[600]),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  restaurant.getFormattedCuisineNames(
+                                    priorityCuisineId: _selectedCuisine?.id,
+                                    maxLength: 100,
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        
+                        // Address
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.location_on, size: 18, color: Colors.grey[600]),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                restaurant.address ?? 'Address not available',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Action buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context); // Close bottom sheet
+                                  _getDirectionsToRestaurant(restaurant);
+                                },
+                                icon: const Icon(Icons.directions, size: 18),
+                                label: const Text('Get Directions'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context); // Close bottom sheet
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RestaurantDetailsPage(
+                                        restaurant: restaurant,
+                                        isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+                                        selectedCuisineName: _selectedCuisine?.name,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.info_outline, size: 18),
+                                label: const Text('Full Details'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        },
       ),
+        ),
     );
   }
 
@@ -951,22 +1222,12 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
     });
 
     try {
-      debugPrint(
-        'Getting directions from ${_currentPosition!.latitude}, ${_currentPosition!.longitude} to ${restaurant.latitude}, ${restaurant.longitude}',
-      );
-
       final directionsData = await _directionsService.getDirections(
         startLat: _currentPosition!.latitude,
         startLon: _currentPosition!.longitude,
         endLat: restaurant.latitude,
         endLon: restaurant.longitude,
       );
-
-      debugPrint('==== FULL DIRECTIONS RESPONSE ====');
-      debugPrint('Response type: ${directionsData.runtimeType}');
-      debugPrint('Response keys: ${directionsData?.keys}');
-      debugPrint('Full response: $directionsData');
-      debugPrint('==================================');
 
       if (directionsData != null) {
         // Check if we have routes
@@ -977,29 +1238,10 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
             final route = routes[0] as Map<String, dynamic>;
             final geometry = route['geometry'];
 
-            debugPrint('==== GEOMETRY DEBUG ====');
-            debugPrint('Geometry type: ${geometry.runtimeType}');
-            debugPrint('Geometry value: $geometry');
-
-            if (geometry is String) {
-              debugPrint('Polyline length: ${geometry.length}');
-              debugPrint(
-                'First 100 chars: ${geometry.substring(0, math.min(100, geometry.length))}',
-              );
-            } else if (geometry is Map) {
-              debugPrint('Geometry is a Map with keys: ${geometry.keys}');
-              debugPrint('Full geometry Map: $geometry');
-            }
-            debugPrint('=======================');
-
             if (geometry != null && geometry is String) {
-              debugPrint('Using google_polyline_algorithm to decode polyline');
-
               try {
                 // Use the proper polyline decoder package
                 final List<List<num>> decodedCoords = decodePolyline(geometry);
-
-                debugPrint('Decoded ${decodedCoords.length} coordinate pairs');
 
                 // Convert to LatLng points
                 final points =
@@ -1575,28 +1817,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                     height: 40,
                                     child: GestureDetector(
                                       onTap: () {
-                                        // Navigate to restaurant details page
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) =>
-                                                    RestaurantDetailsPage(
-                                                      restaurant: restaurant,
-                                                      isFavorite:
-                                                          _favoriteRestaurantIds
-                                                              .contains(
-                                                                restaurant.id,
-                                                              ),
-                                                      selectedCuisineName:
-                                                          _selectedCuisine
-                                                              ?.name,
-                                                    ),
-                                          ),
-                                        ).then((_) {
-                                          // Refresh favorite status when returning
-                                          _loadFavoriteRestaurants();
-                                        });
+                                        // Show restaurant bottom sheet instead of navigating
+                                        _showRestaurantBottomSheet(restaurant);
                                       },
                                       child: const Icon(
                                         Icons.location_pin,
@@ -1633,23 +1855,8 @@ class _MapPageState extends State<MapPage> with TickerProviderStateMixin {
                                   final restaurant =
                                       _directionsTargetRestaurant ??
                                       widget.targetRestaurant!;
-                                  // Navigate to restaurant details page
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => RestaurantDetailsPage(
-                                            restaurant: restaurant,
-                                            isFavorite: _favoriteRestaurantIds
-                                                .contains(restaurant.id),
-                                            selectedCuisineName:
-                                                _selectedCuisine?.name,
-                                          ),
-                                    ),
-                                  ).then((_) {
-                                    // Refresh favorite status when returning
-                                    _loadFavoriteRestaurants();
-                                  });
+                                  // Show restaurant bottom sheet instead of navigating
+                                  _showRestaurantBottomSheet(restaurant);
                                 },
                                 child: const Icon(
                                   Icons.location_pin,
