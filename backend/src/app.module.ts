@@ -5,16 +5,17 @@ import { ThrottlerModule } from '@nestjs/throttler';
 // Do not convert to default import
 import * as Joi from 'joi';
 
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
-import { MailerModule } from './mailer/mailer.module';
-import { RecipeModule } from './recipe/recipe.module';
-import { DietaryRequirementModule } from './dietary-requirement/dietary-requirement.module';
-import { RestaurantModule } from './restaurant/restaurant.module';
-import { CuisineModule } from './cuisine/cuisine.module';
 import { ApplianceModule } from './appliance/appliance.module';
-import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
+import { AuthModule } from './auth/auth.module';
+import { CuisineModule } from './cuisine/cuisine.module';
+import { DietaryRequirementModule } from './dietary-requirement/dietary-requirement.module';
 import { DirectionsModule } from './directions/directions.module';
+import { MailerModule } from './mailer/mailer.module';
+import { PrivacyModule } from './privacy/privacy.module';
+import { RecipeModule } from './recipe/recipe.module';
+import { RestaurantMenuModule } from './restaurant-menu/restaurant-menu.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { DirectionsModule } from './directions/directions.module';
     ApplianceModule,
     RestaurantMenuModule,
     DirectionsModule,
+    PrivacyModule,
   ],
 })
 export class AppModule {}
