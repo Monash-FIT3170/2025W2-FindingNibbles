@@ -146,6 +146,16 @@ npm run db:seed
 
 We are using the [Flutter Native Splash](https://pub.dev/packages/flutter_native_splash) and [Flutter Launcher Icons](https://pub.dev/packages/flutter_launcher_icons) packages to make the app launcher icon and splash screens easily. For an in-depth guide to these packages, we recommend following the documented guides provided on their respective pages. As a simple process for changing the current app icon:
 
+1. Replace the `launcher_icon.png` located in `/frontend/assets` with the new desired launcher icon or `branding.png` to change to the Splash Screen
+2. When in `/frontend` run the commands:
+
+   ```
+   dart run flutter_launcher_icons
+   dart run flutter_native_splash:create
+   ```
+
+This will complete the process of changing the launcher icon and splash screen. If you want to modify these images then it is very important that you read and understand the intricacies behind the behaviour of splash screens and app launchers before and after Android 12. 
+
 ### Day to day development process
 
 1. Start your Docker containers built during the environment setup
