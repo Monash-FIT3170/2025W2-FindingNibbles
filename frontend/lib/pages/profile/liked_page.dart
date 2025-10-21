@@ -1,14 +1,18 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/profile/widgets/restaurant_card.dart';
+import 'package:nibbles/pages/recipes/recipe_ingredients_page.dart';
+import 'package:nibbles/pages/recipes/recipe_model.dart';
 import 'package:nibbles/pages/recipes/widgets/recipe_card.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
-import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -70,6 +74,145 @@ class _LikedPageState extends State<LikedPage> {
                 .toList();
       }
     });
+  }
+
+  Future<void> _showAddCuisineDialog() async {
+    // Get available cuisines (all cuisines minus user's current favorites)
+    final availableCuisines =
+        _allCuisines
+            .where(
+              (cuisine) =>
+                  !_favoriteCuisines.any((fav) => fav.id == cuisine.id),
+            )
+            .toList();
+
+    if (availableCuisines.isEmpty) {
+      // Show a message if user already has all cuisines
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You already have all available cuisines!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    await showDialog<CuisineDto>(
+      context: context,
+      builder:
+          (context) => CuisineSelectionDialog(
+            availableCuisines:
+                _allCuisines, // Show all cuisines, not just available
+            favoriteCuisines:
+                _favoriteCuisines, // Pass favorite cuisines for star icons
+            allowSelectingFavorited:
+                false, // Prevent selecting already favorited cuisines
+            onCuisineSelected: (cuisine) async {
+              await _addCuisinePreference(cuisine);
+            },
+          ),
+    );
+  }
+
+  Future<void> _addCuisinePreference(CuisineDto cuisine) async {
+    try {
+      await _profileService.addCuisinePreference(cuisine.id);
+      setState(() {
+        _favoriteCuisines.add(cuisine);
+      });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added ${cuisine.name} to your preferences!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      _logger.e('Failed to add ${cuisine.name} to preferences: $e');
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add ${cuisine.name}: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeCuisinePreference(CuisineDto cuisine) async {
+    try {
+      await _profileService.removeCuisinePreference(cuisine.id);
+      setState(() {
+        _favoriteCuisines.remove(cuisine);
+      });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Removed ${cuisine.name} from your preferences'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      _logger.e('Failed to remove ${cuisine.name} from favourites: $e');
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove ${cuisine.name}: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  // Helper method to convert RecipeDto to RecipeModel
+  RecipeModel _convertToRecipeModel(RecipeDto dto) {
+    // Parse difficulty level
+    RecipeDifficulty difficulty;
+    switch (dto.difficultyLevel.toLowerCase()) {
+      case 'easy':
+        difficulty = RecipeDifficulty.easy;
+        break;
+      case 'medium':
+        difficulty = RecipeDifficulty.medium;
+        break;
+      case 'hard':
+        difficulty = RecipeDifficulty.hard;
+        break;
+      default:
+        difficulty = RecipeDifficulty.any;
+    }
+
+    return RecipeModel(
+      title: dto.title,
+      description: dto.description,
+      ingredients: dto.ingredients,
+      instructions: dto.instructions,
+      estimatedTimeMinutes: dto.estimatedTimeMinutes,
+      servings: dto.servings,
+      dietaryTags: dto.dietaryTags,
+      nutritionalInfo: dto.nutritionalInfo,
+      difficultyLevel: difficulty,
+      cuisine: dto.cuisine,
+      calories: 0, // RecipeDto doesn't have calories, using default
+      imageURL: dto.imageURL,
+      isFavorite: true, // It's in favorites list
+    );
   }
 
   @override
@@ -162,7 +305,25 @@ class _LikedPageState extends State<LikedPage> {
                                                     restaurant: restaurant,
                                                     isLiked: true,
                                                     height: 80.0,
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                context,
+                                                              ) => RestaurantDetailsPage(
+                                                                restaurant:
+                                                                    restaurant,
+                                                                isFavorite:
+                                                                    true,
+                                                              ),
+                                                        ),
+                                                      ).then((_) {
+                                                        // Refresh the favorites list when returning
+                                                        _loadFavorites();
+                                                      });
+                                                    },
                                                     onFavoriteTap: () async {
                                                       try {
                                                         await _profileService
@@ -273,7 +434,28 @@ class _LikedPageState extends State<LikedPage> {
                                                     recipe: recipe,
                                                     isLiked: true,
                                                     height: 80.0,
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      // Convert RecipeDto to RecipeModel and navigate
+                                                      final recipeModel =
+                                                          _convertToRecipeModel(
+                                                            recipe,
+                                                          );
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                context,
+                                                              ) => RecipeIngredientsPage(
+                                                                recipe:
+                                                                    recipeModel,
+                                                              ),
+                                                        ),
+                                                      ).then((_) {
+                                                        // Refresh favorites when returning
+                                                        _loadFavorites();
+                                                      });
+                                                    },
                                                     onFavoriteTap: () async {
                                                       try {
                                                         await _profileService
@@ -317,13 +499,27 @@ class _LikedPageState extends State<LikedPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Favourite Cuisines',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppTheme.colorScheme.primary,
-                                    ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Favourite Cuisines',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.colorScheme.primary,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: _showAddCuisineDialog,
+                                        icon: Icon(
+                                          Icons.add_circle_outline,
+                                          color: AppTheme.colorScheme.primary,
+                                        ),
+                                        tooltip: 'Add cuisine preference',
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 12),
                                   _favoriteCuisines.isEmpty
@@ -341,21 +537,9 @@ class _LikedPageState extends State<LikedPage> {
                                               return Chip(
                                                 label: Text(cuisine.name),
                                                 onDeleted: () async {
-                                                  try {
-                                                    await _profileService
-                                                        .removeCuisinePreference(
-                                                          cuisine.id,
-                                                        );
-                                                    setState(() {
-                                                      _favoriteCuisines.remove(
-                                                        cuisine,
-                                                      );
-                                                    });
-                                                  } catch (e) {
-                                                    _logger.e(
-                                                      'Failed to remove ${cuisine.name} from favourites: $e',
-                                                    );
-                                                  }
+                                                  await _removeCuisinePreference(
+                                                    cuisine,
+                                                  );
                                                 },
                                               );
                                             }).toList(),

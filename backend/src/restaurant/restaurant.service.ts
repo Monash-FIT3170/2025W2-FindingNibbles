@@ -63,6 +63,77 @@ export class RestaurantService {
     });
   }
 
+  // Fetch restaurants by name within bounds using quadrant system
+  async findByNameInBounds(
+    name: string,
+    swLat: number,
+    swLng: number,
+    neLat: number,
+    neLng: number,
+  ) {
+    // Calculate the center point to divide into quadrants
+    const centerLat = (swLat + neLat) / 2;
+    const centerLng = (swLng + neLng) / 2;
+
+    // Define the 4 quadrants with clear boundaries
+    const quadrants = [
+      // Southwest quadrant (bottom-left)
+      { swLat: swLat, swLng: swLng, neLat: centerLat, neLng: centerLng },
+      // Southeast quadrant (bottom-right)
+      { swLat: swLat, swLng: centerLng, neLat: centerLat, neLng: neLng },
+      // Northwest quadrant (top-left)
+      { swLat: centerLat, swLng: swLng, neLat: neLat, neLng: centerLng },
+      // Northeast quadrant (top-right)
+      { swLat: centerLat, swLng: centerLng, neLat: neLat, neLng: neLng },
+    ];
+
+    // Fetch exactly 10 restaurants from each quadrant that match the name exactly
+    const restaurantPromises = quadrants.map(async (quadrant) => {
+      const restaurants = await this.db.restaurant.findMany({
+        where: {
+          latitude: {
+            gte: quadrant.swLat,
+            lte: quadrant.neLat,
+          },
+          longitude: {
+            gte: quadrant.swLng,
+            lte: quadrant.neLng,
+          },
+          name: {
+            startsWith: name, // Restaurant name starts with the search term
+            mode: 'insensitive', // Case insensitive
+          },
+        },
+        take: 10, // Strict limit of 10 per quadrant
+        orderBy: {
+          rating: 'desc',
+        },
+        include: {
+          restaurantCuisines: {
+            include: {
+              cuisine: true,
+            },
+          },
+          photos: true,
+        },
+      });
+      return restaurants;
+    });
+
+    // Wait for all quadrant queries to complete
+    const quadrantResults = await Promise.all(restaurantPromises);
+
+    // Flatten the results and remove any duplicates
+    const allRestaurants = quadrantResults.flat();
+    const uniqueRestaurants = allRestaurants.filter(
+      (restaurant, index, self) =>
+        index === self.findIndex((r) => r.id === restaurant.id),
+    );
+
+    // Return maximum of 40 restaurants (10 per quadrant)
+    return uniqueRestaurants.slice(0, 40);
+  }
+
   // Fetch restaurants by cuisine ID
   findByCuisine(
     cuisineId: number,
@@ -113,25 +184,62 @@ export class RestaurantService {
     neLat: number,
     neLng: number,
   ) {
-    return this.db.restaurant.findMany({
-      where: {
-        latitude: {
-          gte: swLat,
-          lte: neLat,
-        },
-        longitude: {
-          gte: swLng,
-          lte: neLng,
-        },
-      },
-      include: {
-        restaurantCuisines: {
-          include: {
-            cuisine: true,
+    // Calculate the center point to divide into quadrants
+    const centerLat = (swLat + neLat) / 2;
+    const centerLng = (swLng + neLng) / 2;
+
+    // Define the 4 quadrants with clear boundaries
+    const quadrants = [
+      // Southwest quadrant (bottom-left)
+      { swLat: swLat, swLng: swLng, neLat: centerLat, neLng: centerLng },
+      // Southeast quadrant (bottom-right)
+      { swLat: swLat, swLng: centerLng, neLat: centerLat, neLng: neLng },
+      // Northwest quadrant (top-left)
+      { swLat: centerLat, swLng: swLng, neLat: neLat, neLng: centerLng },
+      // Northeast quadrant (top-right)
+      { swLat: centerLat, swLng: centerLng, neLat: neLat, neLng: neLng },
+    ];
+
+    // Fetch exactly 10 restaurants from each quadrant
+    const restaurantPromises = quadrants.map(async (quadrant) => {
+      const restaurants = await this.db.restaurant.findMany({
+        where: {
+          latitude: {
+            gte: quadrant.swLat,
+            lte: quadrant.neLat,
+          },
+          longitude: {
+            gte: quadrant.swLng,
+            lte: quadrant.neLng,
           },
         },
-      },
+        take: 10, // Strict limit of 10 per quadrant
+        orderBy: {
+          rating: 'desc',
+        },
+        include: {
+          restaurantCuisines: {
+            include: {
+              cuisine: true,
+            },
+          },
+        },
+      });
+      return restaurants;
     });
+
+    // Wait for all quadrant queries to complete
+    const quadrantResults = await Promise.all(restaurantPromises);
+
+    // Flatten the results and remove any duplicates
+    const allRestaurants = quadrantResults.flat();
+    const uniqueRestaurants = allRestaurants.filter(
+      (restaurant, index, self) =>
+        index === self.findIndex((r) => r.id === restaurant.id),
+    );
+
+    // Return maximum of 40 restaurants (10 per quadrant)
+    return uniqueRestaurants.slice(0, 40);
   }
 
   // Fetch restaurants within bounds and filtered by cuisine
@@ -142,29 +250,86 @@ export class RestaurantService {
     neLng: number,
     cuisineId: number,
   ) {
-    return this.db.restaurant.findMany({
-      where: {
-        latitude: {
-          gte: swLat,
-          lte: neLat,
-        },
-        longitude: {
-          gte: swLng,
-          lte: neLng,
-        },
-        restaurantCuisines: {
-          some: {
-            cuisineId,
+    // Calculate the center point to divide into quadrants
+    const centerLat = (swLat + neLat) / 2;
+    const centerLng = (swLng + neLng) / 2;
+
+    // Define the 4 quadrants with clear boundaries
+    const quadrants = [
+      // Southwest quadrant (bottom-left)
+      { 
+        swLat: swLat, 
+        swLng: swLng, 
+        neLat: centerLat, 
+        neLng: centerLng 
+      },
+      // Southeast quadrant (bottom-right)
+      { 
+        swLat: swLat, 
+        swLng: centerLng, 
+        neLat: centerLat, 
+        neLng: neLng 
+      },
+      // Northwest quadrant (top-left)
+      { 
+        swLat: centerLat, 
+        swLng: swLng, 
+        neLat: neLat, 
+        neLng: centerLng 
+      },
+      // Northeast quadrant (top-right)
+      { 
+        swLat: centerLat, 
+        swLng: centerLng, 
+        neLat: neLat, 
+        neLng: neLng 
+      },
+    ];
+
+    // Fetch exactly 10 restaurants from each quadrant with cuisine filter
+    const restaurantPromises = quadrants.map(async (quadrant) => {
+      const restaurants = await this.db.restaurant.findMany({
+        where: {
+          latitude: {
+            gte: quadrant.swLat,
+            lte: quadrant.neLat,
+          },
+          longitude: {
+            gte: quadrant.swLng,
+            lte: quadrant.neLng,
+          },
+          restaurantCuisines: {
+            some: {
+              cuisineId: cuisineId,
+            },
           },
         },
-      },
-      include: {
-        restaurantCuisines: {
-          include: {
-            cuisine: true,
+        take: 10, // Strict limit of 10 per quadrant
+        orderBy: {
+          rating: 'desc',
+        },
+        include: {
+          restaurantCuisines: {
+            include: {
+              cuisine: true,
+            },
           },
         },
-      },
+      });
+      return restaurants;
     });
+
+    // Wait for all quadrant queries to complete
+    const quadrantResults = await Promise.all(restaurantPromises);
+
+    // Flatten the results and remove any duplicates
+    const allRestaurants = quadrantResults.flat();
+    const uniqueRestaurants = allRestaurants.filter(
+      (restaurant, index, self) =>
+        index === self.findIndex((r) => r.id === restaurant.id),
+    );
+
+    // Return maximum of 40 restaurants (10 per quadrant)
+    return uniqueRestaurants.slice(0, 40);
   }
 }

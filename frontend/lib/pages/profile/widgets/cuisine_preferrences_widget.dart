@@ -3,6 +3,7 @@ import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/widgets/search_decoration.dart';
 
 class CuisinePreferencesWidget extends StatefulWidget {
   final List<CuisineDto> cuisinePreferences;
@@ -184,31 +185,6 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
                 child: Column(
                   children: [
                     TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(color: colorScheme.primary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: colorScheme.primary,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
@@ -222,6 +198,10 @@ class CuisinePreferencesWidgetState extends State<CuisinePreferencesWidget> {
                                   .toList();
                         });
                       },
+                      decoration: buildSearchDecoration(
+                        colorScheme: Theme.of(context).colorScheme,
+                        hintText: 'Search cuisines...',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(

@@ -3,18 +3,20 @@ import {
   IsString,
   IsNumber,
   IsOptional,
-  ArrayNotEmpty,
   IsNotEmpty,
 } from 'class-validator';
 
-export class GetRandomDishDto {
+export type BestDishErrorType =
+  | 'NO_SUITABLE_DISHES'
+  | 'DATABASE_ERROR';
+
+export class GetBestDishDto {
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   dietaryRequirements: string[];
 }
 
-export class RandomDishResponseDto {
+export class BestDishResponseDto {
   @IsNumber()
   @IsNotEmpty()
   id: number;
@@ -48,19 +50,19 @@ export class RandomDishResponseDto {
   restaurantName: string;
 }
 
-export class GetRandomDishSuccessResponseDto {
+export class GetBestDishSuccessResponseDto {
   @IsNotEmpty()
   success: true;
 
   @IsNotEmpty()
-  dish: RandomDishResponseDto;
+  dish: BestDishResponseDto;
 
   @IsString()
   @IsNotEmpty()
   message: string;
 }
 
-export class GetRandomDishErrorResponseDto {
+export class GetBestDishErrorResponseDto {
   @IsNotEmpty()
   success: false;
 
@@ -75,4 +77,8 @@ export class GetRandomDishErrorResponseDto {
   @IsArray()
   @IsString({ each: true })
   requestedDietaryRequirements: string[];
+
+  @IsNumber()
+  @IsNotEmpty()
+  restaurantId: number;
 }

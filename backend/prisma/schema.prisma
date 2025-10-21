@@ -110,6 +110,7 @@ model Restaurant {
   website           String?
   openingHours      Json?
   photos            Photo[]
+  imageUrl          String? // Random food/restaurant image URL
 
   // Menu Information
   dishes             Dish[]
@@ -220,8 +221,9 @@ model MealPlanDish {
 model UserCalorieLog {
   id        Int      @id @default(autoincrement())
   userId    Int
-  recipeId  Int
-  recipe    Recipe  @relation(fields: [recipeId], references: [id])
+  recipeId  Int?
+  mealName  String?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
   date      DateTime
   calories  Int

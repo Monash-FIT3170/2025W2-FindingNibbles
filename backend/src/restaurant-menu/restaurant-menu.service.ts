@@ -11,10 +11,11 @@ import {
   MenuItemDto,
 } from './dto/analyse-restaurant-menu.dto';
 import {
-  GetRandomDishSuccessResponseDto,
-  GetRandomDishErrorResponseDto,
-  RandomDishResponseDto,
-} from './dto/random-dish.dto';
+  GetBestDishSuccessResponseDto,
+  GetBestDishErrorResponseDto,
+  BestDishResponseDto,
+} from './dto/get-best-dish.dto';
+
 import { basicMenuSchema, menuAnalysisSchema } from './schemas';
 
 @Injectable()
@@ -22,7 +23,7 @@ export class RestaurantMenuService {
   constructor(
     private db: DatabaseService,
     private geminiService: GeminiService,
-  ) {}
+  ) { }
 
   async analyseAndStoreMenu(
     menu: Express.Multer.File,
@@ -77,6 +78,12 @@ export class RestaurantMenuService {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const storedDishes = await this.storeMenuItems(menuItems, restaurantId);
 
+        // Update restaurant menuUrl to indicate menu has been analyzed
+        await this.db.restaurant.update({
+          where: { id: restaurantId },
+          data: { menuUrl: 'menu-analysed' },
+        });
+
         // Calculate summary statistics
         const categories = [
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
@@ -128,9 +135,19 @@ export class RestaurantMenuService {
 
     for (const item of menuItems) {
       try {
-        // Create dish record
-        const dish = await this.db.dish.create({
-          data: {
+        // Upsert dish record (create or update if exists)
+        const dish = await this.db.dish.upsert({
+          where: {
+            name_restaurantId: {
+              name: item.name,
+              restaurantId: restaurantId,
+            },
+          },
+          update: {
+            description: item.description || null,
+            price: item.price || null,
+          },
+          create: {
             name: item.name,
             description: item.description || null,
             price: item.price || null,
@@ -142,6 +159,13 @@ export class RestaurantMenuService {
         const dietaryTagsStored: string[] = [];
         if (item.dietaryTags && item.dietaryTags.length > 0) {
           try {
+            // Delete existing dietary relationships for this dish
+            await this.db.dishDietary.deleteMany({
+              where: {
+                dishId: dish.id,
+              },
+            });
+
             // Get dietary requirement IDs
             const dietaryRequirements =
               await this.db.dietaryRequirement.findMany({
@@ -381,46 +405,45 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
     return menuResponse.menu_items;
   }
 
-  async getRandomDishByDietaryRequirements(
+  async getBestDishForRestaurant(
+    restaurantId: number,
     dietaryRequirements: string[],
-  ): Promise<GetRandomDishSuccessResponseDto | GetRandomDishErrorResponseDto> {
+  ): Promise<GetBestDishSuccessResponseDto | GetBestDishErrorResponseDto> {
     try {
-      // Validate that dietary requirements exist in the database
-      const validDietaryRequirements =
-        await this.db.dietaryRequirement.findMany({
+      // Get restaurant name for response messages
+      const restaurant = await this.db.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { name: true },
+      });
+
+      // Get valid dietary requirement IDs from the provided names
+      // Handle empty dietary requirements array to avoid database query issues
+      const validDietaryRequirements = dietaryRequirements.length > 0
+        ? await this.db.dietaryRequirement.findMany({
           where: {
             name: { in: dietaryRequirements },
           },
           select: { id: true, name: true },
-        });
-
-      if (validDietaryRequirements.length === 0) {
-        return {
-          success: false,
-          error: 'INVALID_DIETARY_REQUIREMENTS',
-          message: 'None of the provided dietary requirements are valid.',
-          requestedDietaryRequirements: dietaryRequirements,
-        };
-      }
+        })
+        : [];
 
       const validDietaryIds = validDietaryRequirements.map((dr) => dr.id);
 
-      // Find dishes that match ALL the provided dietary requirements
-      const matchingDishes = await this.db.dish.findMany({
+      // Find dishes from this restaurant
+      // If user has no dietary requirements, get all dishes
+      // If user has dietary requirements, filter by those requirements
+      const dishQuery = {
         where: {
-          dishDietaries: {
-            every: {
-              dietaryId: { in: validDietaryIds },
-            },
-          },
-          // Ensure the dish has dietary relationships for ALL required dietaries
-          AND: validDietaryIds.map((dietaryId) => ({
-            dishDietaries: {
-              some: {
-                dietaryId: dietaryId,
+          restaurantId: restaurantId,
+          ...(validDietaryIds.length > 0 && {
+            AND: validDietaryIds.map((dietaryId) => ({
+              dishDietaries: {
+                some: {
+                  dietaryId: dietaryId,
+                },
               },
-            },
-          })),
+            })),
+          }),
         },
         include: {
           restaurant: {
@@ -439,14 +462,17 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
             },
           },
         },
-      });
+      };
+
+      const matchingDishes = await this.db.dish.findMany(dishQuery);
 
       if (matchingDishes.length === 0) {
         return {
           success: false,
-          error: 'NO_MATCHING_DISHES',
-          message: `No dishes found that satisfy all dietary requirements: ${dietaryRequirements.join(', ')}.`,
+          error: 'NO_SUITABLE_DISHES',
+          message: 'Unfortunately no items on the menu meet your dietary requirements',
           requestedDietaryRequirements: dietaryRequirements,
+          restaurantId,
         };
       }
 
@@ -455,7 +481,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       const selectedDish = matchingDishes[randomIndex];
 
       // Format the response
-      const dishResponse: RandomDishResponseDto = {
+      const dishResponse: BestDishResponseDto = {
         id: selectedDish.id,
         name: selectedDish.name,
         description: selectedDish.description || undefined,
@@ -469,7 +495,7 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
       return {
         success: true,
         dish: dishResponse,
-        message: `Found a random dish matching your dietary requirements: ${dietaryRequirements.join(', ')}.`,
+        message: `Found a perfect dish for you at ${restaurant?.name || 'this restaurant'}!`,
       };
     } catch (error) {
       const errorMessage = getErrorMessage(error);
@@ -478,7 +504,43 @@ Return items with final "dietaryTags" array (remove explicit_dietary_tags and me
         error: 'DATABASE_ERROR',
         message: errorMessage,
         requestedDietaryRequirements: dietaryRequirements,
+        restaurantId,
       };
+    }
+  }
+
+  async getDishesByRestaurant(restaurantId: number) {
+    try {
+      const dishes = await this.db.dish.findMany({
+        where: {
+          restaurantId: restaurantId,
+        },
+        include: {
+          dishDietaries: {
+            include: {
+              dietary: true,
+            },
+          },
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
+
+      // Format the response
+      return dishes.map((dish) => ({
+        id: dish.id,
+        name: dish.name,
+        description: dish.description || undefined,
+        price: dish.price || undefined,
+        category: dish.category || undefined,
+        calories: dish.calories || undefined,
+        dietaryTags: dish.dishDietaries.map((dd) => dd.dietary.name),
+      }));
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to fetch dishes: ${getErrorMessage(error)}`,
+      );
     }
   }
 }

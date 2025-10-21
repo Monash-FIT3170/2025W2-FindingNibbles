@@ -37,7 +37,20 @@ class RecipeService {
       }
     } catch (e) {
       _logger.e('Failed to generate recipes: ${e.toString()}');
-      throw Exception('Failed to generate recipes: ${e.toString()}');
+      if (e is DioException && e.response != null) {
+        final data = e.response!.data;
+        String errorMessage = 'Unknown error';
+        if (data is Map<String, dynamic> && data.containsKey('message')) {
+          errorMessage = data['message'];
+        } else if (data is String) {
+          errorMessage = data;
+        } else {
+          errorMessage = data.toString();
+        }
+        throw Exception('Failed to generate recipes: $errorMessage');
+      } else {
+        throw Exception('Failed to generate recipes: ${e.toString()}');
+      }
     }
   }
 

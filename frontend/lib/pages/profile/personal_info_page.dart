@@ -244,11 +244,8 @@ class PersonalInfoPageState extends State<PersonalInfoPage> {
                       'Email',
                       email,
                       Icons.email_outlined,
-                      onEdit:
-                          _personalInfo != null
-                              ? (value) => _handleFieldUpdate('email', value)
-                              : (value) {},
-                      enabled: _personalInfo != null,
+                      onEdit: (value) {}, // Do nothing
+                      enabled: false, // Disable editing
                     ),
                     _buildLocationField(context),
 

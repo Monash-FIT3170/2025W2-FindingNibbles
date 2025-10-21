@@ -1,11 +1,12 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
-import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { getErrorMessage } from 'src/utils';
+import { Prisma } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { Prisma } from '@prisma/client';
+import { DatabaseService } from 'src/database/database.service';
+import { GeminiService } from 'src/gemini/gemini.service';
+import { getErrorMessage } from 'src/utils';
+import { CreateRecipeDto, RecipeDifficulty } from './dto/create-recipe.dto';
 import {
   RecipeFromFrontEnd,
   RecipeResponseDto,
@@ -23,6 +24,7 @@ type RecipeGenerated = {
   difficultyLevel: RecipeDifficulty;
   cuisine: string;
   calories: number;
+  imageURL?: string | null;
 };
 
 const responseSchema = {
@@ -70,6 +72,7 @@ export class RecipeService {
   constructor(
     private db: DatabaseService,
     private configService: ConfigService,
+    private geminiService: GeminiService,
   ) {}
   async generate(recipe: CreateRecipeDto): Promise<RecipeGenerated[]> {
     try {
@@ -97,6 +100,11 @@ export class RecipeService {
       });
       const kitchenAppliances = appliances.map((app) => app.appliance.name);
 
+      const applianceLine =
+        kitchenAppliances.length > 0
+          ? `- Must be cookable using: ${kitchenAppliances.join(', ')}.`
+          : '';
+
       const requestedDifficulty = recipe.difficultyLevel;
       const difficultyLine =
         requestedDifficulty === RecipeDifficulty.ANY
@@ -113,7 +121,7 @@ export class RecipeService {
         - Use British English and the metric system.
         - Dietary restrictions: ${dietaryRequirements.join(', ') || 'none'}.
         - Use the following ingredients: ${recipe.ingredients.join(', ') || 'none'}.
-        - Must be cookable using: ${kitchenAppliances.join(', ') || 'any tools'}.
+        ${applianceLine}
         ${difficultyLine}
         ${calorieLine}
         Return the recipes in a JSON object with a 'recipes' key containing a list of three recipes.
@@ -163,7 +171,8 @@ export class RecipeService {
         responseJson = (await response.json()) as typeof responseJson;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to get response from LLM: ' + errorMessage);
+        console.error('Error fetching from LLM:', errorMessage);
+        throw new Error('Failed to generate the recipe due to an LLM failure');
       }
 
       let responseContent: string;
@@ -171,12 +180,13 @@ export class RecipeService {
         const textContent =
           responseJson.candidates?.[0]?.content?.parts[0]?.text;
         if (!textContent) {
-          throw new Error('No text content found in LLM response');
+          throw new Error('No text content found in the LLM response');
         }
         responseContent = textContent;
       } catch (error) {
         const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to extract response from LLM: ' + errorMessage);
+        console.error('Error extracting response from LLM:', errorMessage);
+        throw new Error('Failed to extract a response from the LLM');
       }
 
       let parsed: unknown;
@@ -184,7 +194,8 @@ export class RecipeService {
         parsed = JSON.parse(responseContent);
       } catch (error: any) {
         const errorMessage = getErrorMessage(error);
-        throw new Error('Failed to parse LLM recipe response: ' + errorMessage);
+        console.error('Error parsing LLM response JSON:', errorMessage);
+        throw new Error('Failed to parse LLM recipe response');
       }
 
       const recipeResponse = plainToInstance(RecipeResponseDto, parsed);
@@ -197,9 +208,8 @@ export class RecipeService {
             return `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`;
           })
           .join('; ');
-        throw new BadRequestException(
-          `LLM response validation failed: ${errorDetails}`,
-        );
+        console.error(`Validation errors: ${errorDetails}`);
+        throw new BadRequestException(`LLM response validation failed`);
       }
 
       const recipes = recipeResponse.recipes.map((recipeData) => ({
@@ -216,12 +226,36 @@ export class RecipeService {
         calories: recipeData.calories,
       }));
 
-      return recipes as RecipeGenerated[];
+      // Generate images for each recipe
+      const recipesWithImages = await Promise.all(
+        recipes.map(async (recipe) => {
+          try {
+            const imagePrompt = `A professional, appetizing food photography image of ${recipe.title}. The dish should look delicious and well-presented on a clean, modern plate. Natural lighting, high quality, realistic style.`;
+            const imageDataUrl =
+              await this.geminiService.generateImage(imagePrompt);
+            return {
+              ...recipe,
+              imageURL: imageDataUrl,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to generate image for recipe ${recipe.title}:`,
+              error,
+            );
+            // Return recipe without image if generation fails
+            return {
+              ...recipe,
+              imageURL: null,
+            };
+          }
+        }),
+      );
+
+      return recipesWithImages as RecipeGenerated[];
     } catch (error) {
       const errorMessage = getErrorMessage(error);
-      throw new Error(
-        'An error occurred while generating recipes: ' + errorMessage,
-      );
+      console.error('Error in generate method:', errorMessage);
+      throw new Error('An error occurred while generating recipes');
     }
   }
 
@@ -245,13 +279,7 @@ export class RecipeService {
         },
       });
 
-      // If found, return it
-      if (existingCuisine) {
-        console.log(
-          `Found existing cuisine: ${existingCuisine.name} with ID ${existingCuisine.id}`,
-        );
-        return existingCuisine;
-      }
+      if (existingCuisine) return existingCuisine;
 
       // If not found, create it with proper capitalization
       // Capitalize first letter of each word
@@ -263,18 +291,14 @@ export class RecipeService {
         )
         .join(' ');
 
-      console.log(`Creating new cuisine: ${capitalizedName}`);
       return await this.db.cuisine.create({
         data: {
           name: capitalizedName,
         },
       });
     } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Error in validateAndGetCuisine: ${error.message}`);
-      } else {
-        console.error('Error in validateAndGetCuisine: Unknown error');
-      }
+      const errorMessage = getErrorMessage(error);
+      console.error(`Error in validateAndGetCuisine: ${errorMessage}`);
 
       // If there was an error (likely a duplicate), try to find the cuisine again
       if ((error as { code?: string }).code === 'P2002') {
@@ -304,9 +328,7 @@ export class RecipeService {
         },
       });
 
-      if (defaultCuisine) {
-        return defaultCuisine;
-      }
+      if (defaultCuisine) return defaultCuisine;
 
       // If no default cuisine exists, create it
       return await this.db.cuisine.create({
@@ -349,10 +371,6 @@ export class RecipeService {
     recipeData: RecipeFromFrontEnd,
   ): Promise<Prisma.RecipeCreateInput> {
     try {
-      console.log('Recipe data received in prepareRecipeForCreation:');
-      console.log(JSON.stringify(recipeData, null, 2));
-
-      // Check for required fields with better error messages
       if (!recipeData.title) {
         throw new BadRequestException('Missing required field: title');
       }
@@ -408,7 +426,6 @@ export class RecipeService {
         recipeData.cuisine = 'Other';
       }
 
-      // Ensure proper enum values for difficultyLevel
       let validatedDifficultyLevel: RecipeDifficulty;
       try {
         validatedDifficultyLevel = Object.values(RecipeDifficulty).includes(
@@ -453,39 +470,25 @@ export class RecipeService {
           },
         },
         calories: recipeData.calories,
+        imageURL: recipeData.imageURL, // Include the image URL
         // Add any other fields needed by the database schema
       };
 
-      // Log the recipe data being created
-      console.log('Recipe data prepared for creation:');
-      console.log(JSON.stringify(recipeToCreate, null, 2));
-
       return recipeToCreate;
     } catch (error) {
-      // More detailed error logging
-      console.error('Error in prepareRecipeForCreation:');
-      console.error(error);
       const errorMessage = getErrorMessage(error);
-      throw new BadRequestException(
-        `Failed to prepare recipe for creation: ${errorMessage}`,
-      );
+      console.error(`Error in prepareRecipeForCreation: ${errorMessage}`);
+      throw new BadRequestException(`Failed to prepare recipe for creation`);
     }
   }
 
   async createFromDto(recipeDto: RecipeFromFrontEnd): Promise<number> {
-    console.log('Recipe data received for creation:');
-
-    // Prepare the recipe data with proper validation and transformations
     const recipeData = await this.prepareRecipeForCreation(recipeDto);
-
-    console.log(JSON.stringify(recipeData, null, 2));
 
     // Create the recipe in the database
     const newRecipe = await this.db.recipe.create({
       data: recipeData,
     });
-
-    console.log(`Recipe created with ID: ${newRecipe.id}`);
 
     return newRecipe.id;
   }

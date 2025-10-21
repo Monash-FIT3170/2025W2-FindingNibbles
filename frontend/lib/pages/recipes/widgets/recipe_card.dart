@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 
@@ -34,20 +37,7 @@ class RecipeCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child:
                   (recipe.imageURL != null && recipe.imageURL!.isNotEmpty)
-                      ? Image.network(
-                        recipe.imageURL!,
-                        height: adjustedHeight,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Image.asset(
-                            'assets/images/default_recipe.jpg',
-                            height: adjustedHeight,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          );
-                        },
-                      )
+                      ? _buildImage(recipe.imageURL!, adjustedHeight)
                       : Image.asset(
                         'assets/images/default_recipe.jpg',
                         height: adjustedHeight,
@@ -119,5 +109,49 @@ class RecipeCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Builds an image widget that supports both base64 data URLs and HTTP URLs
+  Widget _buildImage(String imageUrl, double adjustedHeight) {
+    // Check if the image is a base64 data URL
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        // Extract the base64 string after the comma
+        final base64String = imageUrl.split(',')[1];
+        // Decode the base64 string
+        final Uint8List bytes = base64Decode(base64String);
+        // Return Image.memory for base64 data
+        return Image.memory(
+          bytes,
+          height: adjustedHeight,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        );
+      } catch (e) {
+        // If decoding fails, return default image
+        return Image.asset(
+          'assets/images/default_recipe.jpg',
+          height: adjustedHeight,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        );
+      }
+    } else {
+      // Regular HTTP/HTTPS URL
+      return Image.network(
+        imageUrl,
+        height: adjustedHeight,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            'assets/images/default_recipe.jpg',
+            height: adjustedHeight,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          );
+        },
+      );
+    }
   }
 }

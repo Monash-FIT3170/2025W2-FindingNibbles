@@ -1,13 +1,13 @@
+import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsNumber,
+  ArrayNotEmpty,
   IsArray,
   IsEnum,
-  ValidateNested,
   IsNotEmpty,
-  ArrayNotEmpty,
+  IsNumber,
+  IsString,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { RecipeDifficulty } from './create-recipe.dto';
 
 export class RecipeDataDto {
@@ -95,6 +95,8 @@ export class RecipeFromFrontEnd {
   cuisine: string;
 
   calories: number;
+
+  imageURL?: string;
 }
 
 export class RecipeDto {

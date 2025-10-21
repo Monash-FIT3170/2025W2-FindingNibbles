@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant-menu/menu_analysis_tracker.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class MenuScannerPage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
   bool _isMenuAnalyzed = false; // Track if menu has been successfully analyzed
   final ImagePicker _picker = ImagePicker();
   final RestaurantMenuService _menuService = RestaurantMenuService();
+  final MenuAnalysisTracker _analysisTracker = MenuAnalysisTracker();
 
   Future<bool> _requestCameraPermission() async {
     final status = await Permission.camera.request();
@@ -124,17 +126,69 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
       _errorMessage = null;
     });
 
+    // Mark analysis as started in the tracker
+    _analysisTracker.startAnalysis(
+      widget.restaurantId!,
+      widget.restaurantName ?? 'Restaurant',
+    );
+
+    // Show message that analysis started - BLACK background
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Menu analysis started! You can navigate away and come back later.',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // Start the upload and wait for it
     try {
       final result = await _menuService.uploadMenuImage(
         _imageFile!,
         widget.restaurantId!,
       );
+
       setState(() {
         _analysisResult = result;
         _isUploading = false;
-        _isMenuAnalyzed = true; // Mark menu as successfully analyzed
+        _isMenuAnalyzed = true;
       });
+
+      // Show success message
+      if (mounted) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Menu successfully analyzed! Found ${result.length} items.',
+              style: TextStyle(color: colorScheme.onPrimary),
+            ),
+            backgroundColor: colorScheme.primary,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Navigate back after showing success
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(context).pop(true);
+
+            // Mark analysis as complete AFTER navigation (triggers notification on restaurant page)
+            Future.delayed(const Duration(milliseconds: 300), () {
+              _analysisTracker.completeAnalysis(widget.restaurantId!);
+            });
+          }
+        });
+      }
     } catch (e) {
+      // Mark analysis as failed
+      _analysisTracker.failAnalysis(widget.restaurantId!, e.toString());
+
       setState(() {
         _errorMessage = 'Failed to analyze menu: $e';
         _isUploading = false;
@@ -175,275 +229,6 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _chooseBestDish() async {
-    try {
-      // For now, use some common dietary requirements as a test
-      // In a real app, these would come from user preferences
-      const testDietaryRequirements = ['VEGETARIAN', 'GLUTEN-FREE'];
-
-      final randomDish = await _menuService.getRandomDishByDietaryRequirements(
-        testDietaryRequirements,
-      );
-
-      if (mounted) {
-        _showDishPopup(randomDish);
-      }
-    } catch (e) {
-      if (mounted) {
-        // Check if it's specifically a "no matching dishes" error
-        if (e.toString().contains(
-              'No dishes found that satisfy all dietary requirements',
-            ) ||
-            e.toString().contains('No matching dishes found')) {
-          _showNoDishesFoundPopup();
-        } else {
-          // Show generic error for other issues (network, server, etc.)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to find a suitable dish: $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  void _showNoDishesFoundPopup() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.sentiment_dissatisfied,
-                color: colorScheme.error,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Oh no!',
-                  style: textTheme.titleLarge?.copyWith(
-                    color: colorScheme.error,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Container(
-            constraints: const BoxConstraints(maxWidth: 300),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'No items on the menu meet your dietary requirements!',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline,
-                        color: colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Try adjusting your dietary preferences or check a different restaurant\'s menu.',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Got it',
-                style: TextStyle(color: colorScheme.primary),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDishPopup(Map<String, dynamic> dish) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.restaurant_menu, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Your Perfect Dish!',
-                  style: textTheme.titleLarge?.copyWith(
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Container(
-            constraints: const BoxConstraints(maxWidth: 300),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Dish card with same styling as menu items
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.secondary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colorScheme.outline),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              dish['name'] ?? 'Unnamed Dish',
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          if (dish['price'] != null)
-                            Text(
-                              '\$${dish['price'].toStringAsFixed(2)}',
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (dish['category'] != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          dish['category'],
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.secondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                      if (dish['description'] != null) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          dish['description'],
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                      if (dish['dietaryTags'] != null &&
-                          (dish['dietaryTags'] as List).isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children:
-                              (dish['dietaryTags'] as List<dynamic>)
-                                  .map(
-                                    (tag) => Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.12,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        tag.toString(),
-                                        style: textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.primary,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      Text(
-                        'From: ${dish['restaurantName'] ?? 'Unknown Restaurant'}',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.secondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Close',
-                style: TextStyle(color: colorScheme.primary),
-              ),
-            ),
-          ],
         );
       },
     );
@@ -712,23 +497,35 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child:
                   _isMenuAnalyzed
-                      ? // Show "Choose best dish for me!" button after analysis
-                      SizedBox(
+                      ? // Show message after analysis instead of button
+                      Container(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _chooseBestDish,
-                          icon: const Icon(Icons.restaurant_menu),
-                          label: const Text('Choose best dish for me!'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: colorScheme.onPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(28),
-                            ),
-                            elevation: 0,
-                            textStyle: textTheme.labelLarge,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.3),
                           ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: colorScheme.primary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Menu analysis complete! Review the items below.',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       )
                       : // Show original upload buttons before analysis

@@ -3,6 +3,7 @@ import 'multer';
 import {
   Controller,
   Post,
+  Get,
   UseInterceptors,
   UploadedFile,
   Param,
@@ -10,26 +11,11 @@ import {
 } from '@nestjs/common';
 import { RestaurantMenuService } from './restaurant-menu.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { GetRandomDishDto } from './dto/random-dish.dto';
-
-/**
- * CONTROLLER UPDATES NEEDED:
- *
- * Input Changes:
- * - Add restaurant ID parameter to menu upload endpoint
- * - Validate restaurant exists before processing menu
- * - Enhanced error responses for missing/invalid restaurant
- *
- * Response Format:
- * - Return saved dish records with database IDs
- * - Include dietary classifications and timestamps
- * - Provide summary of stored vs skipped items
- * - Clear error messages for validation failures
- */
+import { GetBestDishDto } from './dto/get-best-dish.dto';
 
 @Controller('restaurant-menu')
 export class RestaurantMenuController {
-  constructor(private readonly restaurantMenuService: RestaurantMenuService) {}
+  constructor(private readonly restaurantMenuService: RestaurantMenuService) { }
 
   @Post(':restaurantId')
   @UseInterceptors(FileInterceptor('file'))
@@ -47,12 +33,24 @@ export class RestaurantMenuController {
     return result;
   }
 
-  @Post('random-dish')
-  async getRandomDish(@Body() getRandomDishDto: GetRandomDishDto) {
-    const result =
-      await this.restaurantMenuService.getRandomDishByDietaryRequirements(
-        getRandomDishDto.dietaryRequirements,
-      );
+  @Post(':restaurantId/best-dish')
+  async getBestDish(
+    @Param('restaurantId') restaurantId: string,
+    @Body() getBestDishDto: GetBestDishDto,
+  ) {
+    const restaurantIdNum = parseInt(restaurantId, 10);
+    const result = await this.restaurantMenuService.getBestDishForRestaurant(
+      restaurantIdNum,
+      getBestDishDto.dietaryRequirements,
+    );
     return result;
+  }
+
+  @Get(':restaurantId/dishes')
+  async getDishes(@Param('restaurantId') restaurantId: string) {
+    const restaurantIdNum = parseInt(restaurantId, 10);
+    const dishes =
+      await this.restaurantMenuService.getDishesByRestaurant(restaurantIdNum);
+    return dishes;
   }
 }

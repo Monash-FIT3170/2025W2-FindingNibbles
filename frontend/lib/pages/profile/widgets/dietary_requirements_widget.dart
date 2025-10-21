@@ -3,6 +3,7 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/widgets/search_decoration.dart';
 
 class DietaryRequirementsWidget extends StatefulWidget {
   final List<DietaryRequirementDto> dietaryRequirements;
@@ -176,14 +177,6 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                 child: Column(
                   children: [
                     TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(color: colorScheme.primary),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: colorScheme.primary,
-                        ),
-                      ),
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
@@ -197,7 +190,12 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                   .toList();
                         });
                       },
+                      decoration: buildSearchDecoration(
+                        colorScheme: Theme.of(context).colorScheme,
+                        hintText: 'Search dietary requirements...',
+                      ),
                     ),
+
                     const SizedBox(height: 16),
                     Expanded(
                       child:
@@ -212,8 +210,20 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                 itemCount: localFiltered.length,
                                 itemBuilder: (context, index) {
                                   final item = localFiltered[index];
+                                  final isAlreadyAdded = widget
+                                      .dietaryRequirements
+                                      .any((d) => d.id == item.id);
                                   return ListTile(
-                                    title: Text(item.name),
+                                    enabled: !isAlreadyAdded,
+                                    title: Text(
+                                      item.name,
+                                      style: TextStyle(
+                                        color:
+                                            isAlreadyAdded
+                                                ? Colors.grey
+                                                : Colors.black,
+                                      ),
+                                    ),
                                     tileColor:
                                         index % 2 == 0
                                             ? Colors.grey.shade50
@@ -221,11 +231,18 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    onTap: () async {
-                                      await _addDietaryRequirement(item.id);
-                                      if (!dialogContext.mounted) return;
-                                      Navigator.of(dialogContext).pop();
-                                    },
+                                    onTap:
+                                        isAlreadyAdded
+                                            ? null
+                                            : () async {
+                                              await _addDietaryRequirement(
+                                                item.id,
+                                              );
+                                              if (!dialogContext.mounted) {
+                                                return;
+                                              }
+                                              Navigator.of(dialogContext).pop();
+                                            },
                                   );
                                 },
                               ),
@@ -286,8 +303,10 @@ class DietaryRequirementsWidgetState extends State<DietaryRequirementsWidget> {
             Row(
               children: [
                 Text('Dietary Requirements', style: theme.textTheme.titleSmall),
-                const Spacer(),
-                IconButton(icon: Icon(Icons.add), onPressed: _openAddDialog),
+                IconButton(
+                  icon: Icon(Icons.add, color: AppTheme.colorScheme.primary),
+                  onPressed: _openAddDialog,
+                ),
               ],
             ),
             const SizedBox(height: 8),

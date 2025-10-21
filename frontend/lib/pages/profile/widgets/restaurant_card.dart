@@ -31,32 +31,73 @@ class RestaurantCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         child: Stack(
           children: [
-            // Always show the default image as background
+            // Use restaurant's imageUrl from database, fallback to default asset
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                'assets/images/default_restaurant.jpg',
-                height: adjustedHeight,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  debugPrint("Error loading default restaurant image: $error");
-                  return Container(
-                    height: adjustedHeight,
-                    width: double.infinity,
-                    color: Colors.grey[300],
-                    child: Center(
-                      child:
-                          placeholder ??
-                          Icon(
-                            Icons.restaurant,
-                            size: 50,
-                            color: Colors.grey[700],
-                          ),
-                    ),
-                  );
-                },
-              ),
+              child:
+                  restaurant.imageUrl != null
+                      ? Image.network(
+                        restaurant.imageUrl!,
+                        height: adjustedHeight,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint(
+                            "Error loading restaurant image from URL: $error",
+                          );
+                          // Fallback to default asset image if network image fails
+                          return Image.asset(
+                            'assets/images/default_restaurant.jpg',
+                            height: adjustedHeight,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint(
+                                "Error loading default restaurant image: $error",
+                              );
+                              return Container(
+                                height: adjustedHeight,
+                                width: double.infinity,
+                                color: Colors.grey[300],
+                                child: Center(
+                                  child:
+                                      placeholder ??
+                                      Icon(
+                                        Icons.restaurant,
+                                        size: 50,
+                                        color: Colors.grey[700],
+                                      ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      )
+                      : Image.asset(
+                        'assets/images/default_restaurant.jpg',
+                        height: adjustedHeight,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint(
+                            "Error loading default restaurant image: $error",
+                          );
+                          return Container(
+                            height: adjustedHeight,
+                            width: double.infinity,
+                            color: Colors.grey[300],
+                            child: Center(
+                              child:
+                                  placeholder ??
+                                  Icon(
+                                    Icons.restaurant,
+                                    size: 50,
+                                    color: Colors.grey[700],
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
             ),
 
             // Overlay layer for darkening

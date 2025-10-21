@@ -15,6 +15,13 @@ class VerificationCodePage extends StatefulWidget {
 class VerificationCodePageState extends State<VerificationCodePage> {
   final _codeController = TextEditingController();
   final AuthService _authService = AuthService();
+  late String _email;
+
+  @override
+  void initState() {
+    super.initState();
+    _email = widget.email;
+  }
 
   void _verifyCode() async {
     final code = _codeController.text.trim();
@@ -25,7 +32,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       return;
     }
 
-    final success = await _authService.verifyEmail(widget.email, code);
+    final success = await _authService.verifyEmail(_email, code);
     if (!mounted) return; // Check if widget is still mounted
 
     if (success) {
@@ -41,7 +48,7 @@ class VerificationCodePageState extends State<VerificationCodePage> {
   }
 
   void _resendCode() async {
-    final success = await _authService.newVerification(widget.email);
+    final success = await _authService.newVerification(_email);
     if (!mounted) return; // Check if widget is still mounted
 
     if (success) {
@@ -61,27 +68,66 @@ class VerificationCodePageState extends State<VerificationCodePage> {
       backgroundColor: AppTheme.colorScheme.primary,
       body: Column(
         children: [
-          // Top section with title
+          // Top section with back button and title
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 150, bottom: 60),
-            alignment: Alignment.center,
-            child: Column(
+            padding: const EdgeInsets.only(
+              top: 70,
+              bottom: 60,
+              left: 16,
+              right: 16,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Verify Your Email',
-                  style: AppTheme.textTheme.headlineMedium,
-                  textAlign: TextAlign.center,
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    Navigator.of(context).maybePop();
+                  },
                 ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    'We sent a code to ${widget.email}',
-                    style: AppTheme.textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Verify Your Email',
+                        style: AppTheme.textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            Text(
+                              'We sent a code to',
+                              style: AppTheme.textTheme.bodyLarge?.copyWith(
+                                color: Colors.white70,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _email,
+                              style: AppTheme.textTheme.bodyLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                // Dummy box to keep title centered
+                const SizedBox(width: 48),
               ],
             ),
           ),

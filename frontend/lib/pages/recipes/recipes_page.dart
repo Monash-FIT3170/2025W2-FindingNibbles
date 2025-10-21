@@ -10,6 +10,7 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
 import 'package:nibbles/pages/recipes/recipe_recommendations_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -41,8 +42,8 @@ class _RecipesPageState extends State<RecipesPage> {
     super.initState();
     isLoading = true;
 
-    // Use Future.wait to wait for both async operations to complete
-    Future.wait([_fetchDietaries(), _fetchAppliances()])
+    // Use Future.wait to wait for all async operations to complete
+    Future.wait([_fetchDietaries(), _fetchAppliances(), _loadIngredients()])
         .then((_) {
           if (mounted) {
             setState(() {
@@ -106,16 +107,42 @@ class _RecipesPageState extends State<RecipesPage> {
     }
   }
 
+  // Load ingredients from local storage
+  Future<void> _loadIngredients() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedIngredients = prefs.getStringList('saved_ingredients') ?? [];
+      if (mounted) {
+        setState(() {
+          ingredients.clear();
+          ingredients.addAll(savedIngredients);
+        });
+      }
+    } catch (e) {
+      _logger.e('Failed to load ingredients from storage: ${e.toString()}');
+    }
+  }
+
+  // Save ingredients to local storage
+  Future<void> _saveIngredients() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('saved_ingredients', ingredients);
+    } catch (e) {
+      _logger.e('Failed to save ingredients to storage: ${e.toString()}');
+    }
+  }
+
   Future<void> _generateRecipes() async {
-    // Check if at least one appliance is selected
+    // Validate that at least one appliance is selected
     if (selectedAppliances.isEmpty) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Missing Kitchen Appliances'),
+            title: const Text('No Appliances Selected'),
             content: const Text(
-              'Please select at least one kitchen appliance to generate recipes.',
+              'Please select at least one appliance to generate recipes.',
             ),
             actions: [
               TextButton(
@@ -129,7 +156,10 @@ class _RecipesPageState extends State<RecipesPage> {
       return;
     }
 
-    // Show loading dialog
+    // Flag to track if the operation was cancelled
+    bool isCancelled = false;
+
+    // Show loading dialog with cancel button
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -151,6 +181,15 @@ class _RecipesPageState extends State<RecipesPage> {
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                isCancelled = true;
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
         );
       },
     );
@@ -167,9 +206,11 @@ class _RecipesPageState extends State<RecipesPage> {
         calorieCount: calorieCount,
       );
 
+      // Check if operation was cancelled before proceeding
+      if (isCancelled || !mounted) return;
+
       _logger.d(recipeResults);
 
-      if (!mounted) return;
       // Close loading dialog
       Navigator.pop(context);
 
@@ -188,7 +229,8 @@ class _RecipesPageState extends State<RecipesPage> {
         ),
       );
     } catch (e) {
-      if (!mounted) return;
+      // Check if operation was cancelled before showing error
+      if (isCancelled || !mounted) return;
 
       // Close loading dialog
       Navigator.pop(context);
@@ -218,11 +260,16 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   void _addIngredient(String ingredient) {
-    if (ingredient.isNotEmpty) {
+    final trimmedIngredient = ingredient.trim();
+    if (trimmedIngredient.isNotEmpty &&
+        !ingredients.any(
+          (ing) => ing.toLowerCase() == trimmedIngredient.toLowerCase(),
+        )) {
       setState(() {
-        ingredients.add(ingredient);
+        ingredients.add(trimmedIngredient);
         _ingredientInputController.clear();
       });
+      _saveIngredients(); // Save to local storage
     }
   }
 
@@ -230,6 +277,7 @@ class _RecipesPageState extends State<RecipesPage> {
     setState(() {
       ingredients.remove(ingredient);
     });
+    _saveIngredients(); // Save to local storage
   }
 
   void _toggleAppliance(Appliance appliance) {
@@ -353,95 +401,83 @@ class _RecipesPageState extends State<RecipesPage> {
                   : Column(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16.0),
-                              child: Text(
-                                'Ingredients',
-                                style: Theme.of(context).textTheme.titleMedium,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16.0),
+                                child: Text(
+                                  'Ingredients',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: IngredientsInput(
+                              IngredientsInput(
                                 ingredients: ingredients,
                                 controller: _ingredientInputController,
                                 onAddIngredient: _addIngredient,
                                 onRemoveIngredient: _removeIngredient,
                               ),
-                            ),
-                            TextFormField(
-                              decoration: const InputDecoration(
-                                labelText: 'Calorie Count (Optional)',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
+                              const SizedBox(height: 16),
+                              TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Calorie Count (Optional)',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
+                                keyboardType: TextInputType.number,
+                                inputFormatters: <TextInputFormatter>[
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    calorieCount = int.tryParse(value);
+                                  });
+                                },
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  calorieCount = int.tryParse(value);
-                                });
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          DietaryRequirements(
-                            useDietaryRequirements: useDietaryRequirements,
-                            availableDietaries: availableDietaries,
-                            selectedDietaries: selectedDietaries,
-                            onToggleDietaryRequirements:
-                                _toggleDietaryRequirements,
-                            onToggleDietary: _toggleDietary,
-                            onToggleAll: _toggleAllDietaries,
-                            isDietarySelected: _isDietarySelected,
-                            areAllDietariesSelected: _areAllDietariesSelected,
-                          ),
-                          SizedBox(height: 8),
-                          RecipeDifficultySelector(
-                            selectedDifficulty: selectedDifficulty,
-                            onDifficultySelected: _setDifficulty,
-                          ),
-                          SizedBox(height: 8),
-                          AppliancesSelection(
-                            availableAppliances: availableAppliances,
-                            selectedAppliances: selectedAppliances,
-                            onToggleAppliance: _toggleAppliance,
-                            isApplianceSelected: _isApplianceSelected,
-                            areAllAppliancesSelected: _areAllAppliancesSelected,
-                            onToggleAll: _toggleAllAppliances,
-                          ),
-                          SizedBox(height: 16),
-                        ],
+                      const SizedBox(height: 16),
+                      DietaryRequirements(
+                        useDietaryRequirements: useDietaryRequirements,
+                        availableDietaries: availableDietaries,
+                        selectedDietaries: selectedDietaries,
+                        onToggleDietaryRequirements: _toggleDietaryRequirements,
+                        onToggleDietary: _toggleDietary,
+                        onToggleAll: _toggleAllDietaries,
+                        isDietarySelected: _isDietarySelected,
+                        areAllDietariesSelected: _areAllDietariesSelected,
                       ),
+                      SizedBox(height: 8),
+                      RecipeDifficultySelector(
+                        selectedDifficulty: selectedDifficulty,
+                        onDifficultySelected: _setDifficulty,
+                      ),
+                      SizedBox(height: 8),
+                      AppliancesSelection(
+                        availableAppliances: availableAppliances,
+                        selectedAppliances: selectedAppliances,
+                        onToggleAppliance: _toggleAppliance,
+                        isApplianceSelected: _isApplianceSelected,
+                        areAllAppliancesSelected: _areAllAppliancesSelected,
+                        onToggleAll: _toggleAllAppliances,
+                      ),
+                      SizedBox(height: 16),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 16.0),
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed:
-                                selectedAppliances.isNotEmpty
-                                    ? _generateRecipes
-                                    : null,
+                            onPressed: _generateRecipes,
                             icon: Icon(Icons.restaurant_menu),
                             label: Text('Generate Recipes'),
-                            style:
-                                selectedAppliances.isEmpty
-                                    ? ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey.shade300,
-                                      foregroundColor: Colors.grey.shade600,
-                                    )
-                                    : null,
+                            style: null,
                           ),
                         ),
                       ),
