@@ -7,15 +7,15 @@ Unlike generic food applications, FindingNibbles combines AI-driven menu analysi
 ## Overview
 
 ### Core Features
-
-- Map-based restaurant discovery with customised recommendations
-- Interactive cuisine selection tool
-- AI-curated dish suggestions and menu analysis
-- Comprehensive dietary and nutritional filters
-- AI Integration with external reviews and users for data-driven recommendations based on collaborative filtering
-- Meal planning and calorie tracking
-- Recipe generation for home cooking
-- Enhanced travel plans in regards to dining suggestions
+- Nearby restaurant suggestions – Discover dining options close to your location.
+- Interactive map exploration – Find restaurants using an integrated map with built-in directions.
+- Randomised discovery – Get spontaneous recommendations for cuisines, restaurants, and recipes.
+- Menu scanning and analysis – Scan restaurant menus to view detailed nutritional insights.
+- Restaurant details and ratings – Access reviews, ratings, and essential location information.
+- Advanced search and filters – Easily find restaurants based on cuisine, price, or dietary preferences.
+- AI-powered recipe generation – Create personalised recipes for home cooking using your chosen ingredients.
+- Calorie and nutrition tracking – Monitor your daily intake for healthier dining and cooking habits.
+- Favourites management – Save and revisit your preferred restaurants and recipes anytime.
 
 ### Key Beneficiaries
 
