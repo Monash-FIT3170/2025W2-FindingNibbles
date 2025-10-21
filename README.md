@@ -73,7 +73,7 @@ Our project leverages a modern, scalable technology stack:
 - **Google Cloud Platform (GCP)**: Cloud provider
   - A Compute Engine E2 Medium VM with 20GB disk, 1-2 vCPUS, 4GB memory on Ubuntu 24.04 LTS x86/64
   - The VM runs the database, backend, and object storage.
-  - There is a DNS A record setup from the `nibbles` subdomain of `lachlanmacphee.com` to the IP address `34.129.60.144`
+  - There is a DNS A record setup from the`nibbles` subdomain of`lachlanmacphee.com` to the IP address`34.129.60.144`
 
 ### CI/CD Pipeline
 
@@ -81,10 +81,10 @@ Our project leverages a modern, scalable technology stack:
   - Continuous Integration with automated formatting checks, linting, and testing
   - Continuous Deployment to the production environment
   - Code quality checks and linting
-  - For frontend deployment, we followed this guide [here](https://medium.com/@colonal/automating-flutter-builds-and-releases-with-github-actions-77ccf4a1ccdd).
+  - For frontend deployment, we followed this guide[here](https://medium.com/@colonal/automating-flutter-builds-and-releases-with-github-actions-77ccf4a1ccdd).
   - The base-64 encoded keystore for frontend deploy is included in the GitHub repository's secrets, and a backup is stored on one of the contributors' laptop.
 - **Manual Deployments**: Use this as a backup to GitHub actions if the pipeline is ffailing.
-  - You can find a video guide on how to deploy the backend [here](https://drive.google.com/file/d/19m-NTtxg_W-4Dw40WJ4UpveQXae9S_FS/view?usp=drive_link)
+  - You can find a video guide on how to deploy the backend[here](https://drive.google.com/file/d/19m-NTtxg_W-4Dw40WJ4UpveQXae9S_FS/view?usp=drive_link)
 
 ### AI/ML
 
@@ -106,7 +106,7 @@ This will act as documentation on how to get the project up and running for new 
 **Required technology is as follows:**
 
 - **NestJS** for scalable backend development (Node.js + Typescript)
-- **Prisma** as the ORM with **PostgreSQL** for relational data persistence
+- **Prisma** as the ORM with**PostgreSQL** for relational data persistence
 - **Docker** for containerised database services (PostgreSQL + pgAdmin)
 - **Flutter** for the cross-platform frontend (written in Dart)
 - **Dio** as the HTTP client on the frontend
@@ -117,11 +117,11 @@ A thorough installation guide and steps to setting up the environment for both W
 
 Here are the steps required to setup the environment on your local machine.
 
-1. Start by cloning: `git clone https://github.com/Monash-FIT3170/2025W2-FindingNibbles.git`
-2. You may rename the folder if you'd like, otherwise run `cd 2025W2-FindingNibbles`
+1. Start by cloning:`git clone https://github.com/Monash-FIT3170/2025W2-FindingNibbles.git`
+2. You may rename the folder if you'd like, otherwise run`cd 2025W2-FindingNibbles`
 3. `cd backend` to set that up first.
-4. Run the command `cp .env.example .env` to create a copy of the example environment variables file into an actual one. This file is not committed to the repository due to security purposes.
-5. Run `docker compose up -d` in a terminal to create your Docker containers in detached mode (i.e. in the background).
+4. Run the command`cp .env.example .env` to create a copy of the example environment variables file into an actual one. This file is not committed to the repository due to security purposes.
+5. Run`docker compose up -d` in a terminal to create your Docker containers in detached mode (i.e. in the background).
 6. Install dependencies and seed the database with the following set of commands. You may wish to copy and paste them all at once, then hit enter.
 
 ```
@@ -132,38 +132,40 @@ npm run db:push
 npm run db:seed
 ```
 
-7. **Optional:** to view data, use `npm run db:studio` in a new terminal.
-8. Start up the NestJS backend: `npm run start:dev`
-9. Run `cd ../frontend` to switch to the frontend.
-10. Run `flutter doctor` to ensure Flutter is installed and setup correctly and run any suggested commands to fix issues.
-11. Run `flutter pub get` to download dio dependencies.
-12. Install Android Studio using the instructions [here](https://developer.android.com/studio/install) and setup a virtual device.
-13. Run `flutter run` to start the frontend.
+7. **Optional:** to view data, use`npm run db:studio` in a new terminal.
+8. Start up the NestJS backend:`npm run start:dev`
+9. Run`cd ../frontend` to switch to the frontend.
+10. Run`flutter doctor` to ensure Flutter is installed and setup correctly and run any suggested commands to fix issues.
+11. Run`flutter pub get` to download dio dependencies.
+12. Install Android Studio using the instructions[here](https://developer.android.com/studio/install) and setup a virtual device.
+13. Run`flutter run` to start the frontend.
 14. When prompted to select a device, select virtual mobile device.
 15. **Ready to go!!**
 
-### Day to day development processor
+### Updating or Modifying App launcher Icon or Splash Screen
+
+We are using the [Flutter Native Splash](https://pub.dev/packages/flutter_native_splash) and [Flutter Launcher Icons](https://pub.dev/packages/flutter_launcher_icons) packages to make the app launcher icon and splash screens easily. For an in-depth guide to these packages, we recommend following the documented guides provided on their respective pages. As a simple process for changing the current app icon:
+
+### Day to day development process
 
 1. Start your Docker containers built during the environment setup
 2. cd to `/backend` and run `npm run start:dev`
 3. For the frontend, f you are using an emulator start it with the the command `flutter emulators --launch EmulatorNameHere`
 
-   1. You can use the command `flutter emulators` to see the available emulators
+   1. You can use the command`flutter emulators` to see the available emulators
    2. Note if you aren't using the emulator you can still debug the app using the web view of the application
-
 4. Once the emulator has launched you can cd to `/frontend` and run `flutter run`
 
    1. This will start flutter in debug mode allowing you to hot-reload (restart the app after making changes to the code in development).
-
 5. **Ready to start coding !!**.
 
 ## Common issues faced & solutions
 
 Below is a list of solutions or FAQ of sorts for issues that are commonly faced when working on the project.
 
-| Description                                                                                                                                                                                                                                                                       | Solutions                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Prisma Studio wont connect after running `npx prisma studio`                                                                                                                                                                                                                      | Close the emulator if you have it running, for some reason this can cause conficts with the prisma studio and cause it to fail when it attempts to connect.                                                                                                                                                                                                                                                                      |
+| Description                                                                                                                                                                                                                                                                             | Solutions                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prisma Studio wont connect after running `npx prisma studio`                                                                                                                                                                                                                          | Close the emulator if you have it running, for some reason this can cause conficts with the prisma studio and cause it to fail when it attempts to connect.                                                                                                                                                                                                                                                                            |
 | After running `npm run start:dev` recieve an error message that looks like this: `Cannot find module '@googlemaps/google-maps-services-js' or its corresponding type declarations.` or more generally: `Cannot find module '@moduleName' or its corresponding type declarations.` | This ussually means that you have not correctly installed that package/module, this can be done by using `npm install @googlemaps/google-maps-services-js` or more generally `npm install moduleName` . Alternatively using something like `npm install` when in the backend directory should install all the necessary packages / modules, but manually installing those that are missing may be required if this doesn't work. |
-| After running `npm run start:dev` receive an error message that looks like this: `[Nest] ERROR [ExceptionHandler] Error: SOME_NAME_API_KEY is required but not provided` or `SOME_NAME_MODEL_NAME is required but not provided`                                                   | This means that you have not correctly updated your `.env` file with the appropriate API key or model name, please follow the instructions within the `.env.example` to solve this issue.                                                                                                                                                                                                                                        |
-| Local copy of Postgres conflicts with the Docker containerised version                                                                                                                                                                                                            | Run in cmd as admin: `net stop postgresql-x64-17`                                                                                                                                                                                                                                                                                                                                                                                |
+| After running `npm run start:dev` receive an error message that looks like this: `[Nest] ERROR [ExceptionHandler] Error: SOME_NAME_API_KEY is required but not provided` or `SOME_NAME_MODEL_NAME is required but not provided`                                                   | This means that you have not correctly updated your `.env` file with the appropriate API key or model name, please follow the instructions within the `.env.example` to solve this issue.                                                                                                                                                                                                                                          |
+| Local copy of Postgres conflicts with the Docker containerised version                                                                                                                                                                                                                  | Run in cmd as admin:`net stop postgresql-x64-17`                                                                                                                                                                                                                                                                                                                                                                                     |
