@@ -51,6 +51,10 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // Enable native crash reporting with debug symbols
+            ndk {
+                debugSymbolLevel = "FULL"
+            }
         }
     }
 }
