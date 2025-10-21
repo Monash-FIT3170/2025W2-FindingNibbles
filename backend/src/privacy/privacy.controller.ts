@@ -1,35 +1,14 @@
 import { Controller, Get, Header, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { Public } from '../types';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { marked } = require('marked') as {
-  marked: (src: string) => Promise<string>;
-};
 
 @Controller('privacy')
 export class PrivacyController {
   @Public()
   @Get()
   @Header('Content-Type', 'text/html')
-  async getPrivacyPolicy(@Res() res: Response) {
-    try {
-      // Read the markdown file
-      const privacyPath = join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'PRIVACY_POLICY.md',
-      );
-      const markdown = readFileSync(privacyPath, 'utf-8');
-
-      // Convert markdown to HTML
-      const html = await marked(markdown);
-      // Wrap in a nice HTML template
-      const fullHtml = `
+  getPrivacyPolicy(@Res() res: Response) {
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -111,47 +90,281 @@ export class PrivacyController {
 </head>
 <body>
     <div class="container">
-        ${html}
+        <h1>Privacy Policy for Finding Nibbles</h1>
+        
+        <p><strong>Last Updated:</strong> October 21, 2025</p>
+        <p><strong>Effective Date:</strong> October 21, 2025</p>
+        
+        <hr>
+        
+        <h2>Introduction</h2>
+        <p>Finding Nibbles ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application Finding Nibbles (the "App").</p>
+        
+        <hr>
+        
+        <h2>Information We Collect</h2>
+        
+        <h3>1. Personal Information</h3>
+        <p>When you create an account using Google Sign-In, we collect:</p>
+        <ul>
+            <li>Name</li>
+            <li>Email address</li>
+            <li>Profile picture (optional)</li>
+            <li>Google account ID</li>
+        </ul>
+        
+        <h3>2. Location Data</h3>
+        <p>We collect approximate location data to:</p>
+        <ul>
+            <li>Show nearby restaurants on the map</li>
+            <li>Provide location-based restaurant recommendations</li>
+            <li>Calculate distances to restaurants</li>
+        </ul>
+        <p><strong>You can control location access through your device settings.</strong></p>
+        
+        <h3>3. Photos and Media</h3>
+        <p>When you use the camera or photo library features:</p>
+        <ul>
+            <li>We access your device camera to allow you to take photos of recipes</li>
+            <li>We access your photo library to allow you to select existing photos</li>
+            <li>Photos you upload are stored on our servers and associated with your account</li>
+        </ul>
+        <p><strong>We only access photos when you explicitly use these features.</strong></p>
+        
+        <h3>4. Usage Data</h3>
+        <p>We automatically collect:</p>
+        <ul>
+            <li>Recipes you view and save</li>
+            <li>Restaurants you favorite</li>
+            <li>Dietary preferences you set</li>
+            <li>Cuisine preferences</li>
+            <li>Calorie logs and meal tracking data</li>
+            <li>Search queries within the app</li>
+            <li>App interactions and navigation patterns</li>
+        </ul>
+        
+        <h3>5. Device Information</h3>
+        <p>We may collect:</p>
+        <ul>
+            <li>Device type and model</li>
+            <li>Operating system version</li>
+            <li>Unique device identifiers</li>
+            <li>App version</li>
+            <li>Crash reports and performance data</li>
+        </ul>
+        
+        <hr>
+        
+        <h2>How We Use Your Information</h2>
+        <p>We use the collected information to:</p>
+        
+        <h3>1. Provide Core Functionality:</h3>
+        <ul>
+            <li>Manage your account and authentication</li>
+            <li>Display recipes and restaurants</li>
+            <li>Save your preferences and favorites</li>
+            <li>Track your calorie intake</li>
+            <li>Show nearby restaurants on the map</li>
+        </ul>
+        
+        <h3>2. Personalization:</h3>
+        <ul>
+            <li>Provide AI-powered recipe recommendations via Google Gemini</li>
+            <li>Customize content based on your preferences</li>
+            <li>Suggest meals based on your dietary requirements</li>
+        </ul>
+        
+        <h3>3. Improve Our Services:</h3>
+        <ul>
+            <li>Analyze app usage patterns</li>
+            <li>Fix bugs and crashes</li>
+            <li>Enhance user experience</li>
+            <li>Develop new features</li>
+        </ul>
+        
+        <h3>4. Communication:</h3>
+        <ul>
+            <li>Send important updates about the app</li>
+            <li>Respond to your inquiries and support requests</li>
+        </ul>
+        
+        <hr>
+        
+        <h2>Data Sharing and Disclosure</h2>
+        
+        <h3>Third-Party Services</h3>
+        <p>We use the following third-party services that may collect information:</p>
+        
+        <ol>
+            <li><strong>Google Sign-In</strong>
+                <ul>
+                    <li>Used for: Account authentication</li>
+                    <li>Data shared: Email, name, profile picture</li>
+                    <li>Privacy Policy: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></li>
+                </ul>
+            </li>
+            <li><strong>Google Gemini AI</strong>
+                <ul>
+                    <li>Used for: AI-powered recipe recommendations</li>
+                    <li>Data shared: Recipe preferences, dietary requirements</li>
+                    <li>Privacy Policy: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></li>
+                </ul>
+            </li>
+            <li><strong>LocationIQ (OpenStreetMap)</strong>
+                <ul>
+                    <li>Used for: Map display and geocoding</li>
+                    <li>Data shared: Location coordinates, search queries</li>
+                    <li>Privacy Policy: <a href="https://locationiq.com/privacy">https://locationiq.com/privacy</a></li>
+                </ul>
+            </li>
+            <li><strong>Google Play Services</strong>
+                <ul>
+                    <li>Used for: Core Android functionality</li>
+                    <li>Privacy Policy: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h3>We Do NOT:</h3>
+        <ul>
+            <li>Sell your personal information to third parties</li>
+            <li>Share your data for advertising purposes</li>
+            <li>Use your data for marketing without consent</li>
+        </ul>
+        
+        <hr>
+        
+        <h2>Data Security</h2>
+        <p>We implement appropriate technical and organizational measures to protect your information:</p>
+        <ul>
+            <li><strong>Encryption in Transit:</strong> All data is encrypted using HTTPS/TLS</li>
+            <li><strong>Secure Storage:</strong> Data is stored on secure servers</li>
+            <li><strong>Password Security:</strong> Passwords are hashed using industry-standard algorithms (Argon2)</li>
+            <li><strong>Access Controls:</strong> Limited access to personal data</li>
+        </ul>
+        <p>However, no method of transmission over the internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security.</p>
+        
+        <hr>
+        
+        <h2>Data Retention</h2>
+        <p>We retain your information for as long as your account is active or as needed to provide services. When you delete your account, we will delete or anonymize your personal information within 30 days, except where we are required to retain it for legal purposes.</p>
+        
+        <hr>
+        
+        <h2>Your Rights and Choices</h2>
+        <p>You have the right to:</p>
+        <ol>
+            <li><strong>Access Your Data:</strong> Request a copy of your personal information</li>
+            <li><strong>Correct Your Data:</strong> Update inaccurate or incomplete information</li>
+            <li><strong>Delete Your Data:</strong> Request deletion of your account and data</li>
+            <li><strong>Opt-Out of Location Tracking:</strong> Disable location permissions in device settings</li>
+            <li><strong>Control Camera Access:</strong> Disable camera permissions in device settings</li>
+            <li><strong>Export Your Data:</strong> Request a copy of your data in a portable format</li>
+        </ol>
+        
+        <h3>To Exercise Your Rights:</h3>
+        <p>Email us at: <strong>findingnibbles@gmail.com</strong></p>
+        <p>We will respond to your request within 30 days.</p>
+        
+        <hr>
+        
+        <h2>Children's Privacy</h2>
+        <p>Finding Nibbles is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you believe we have collected information from a child under 13, please contact us immediately.</p>
+        
+        <hr>
+        
+        <h2>Permissions Used</h2>
+        <p>Our app requests the following permissions:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Permission</th>
+                    <th>Purpose</th>
+                    <th>Required?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Location (ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION)</strong></td>
+                    <td>Find nearby restaurants, show your location on map</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>Camera</strong></td>
+                    <td>Take photos of recipes</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>Storage (READ_MEDIA_IMAGES)</strong></td>
+                    <td>Select photos from gallery</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>Internet</strong></td>
+                    <td>Access recipes, restaurants, and backend services</td>
+                    <td>Required</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <p>You can manage permissions in your device settings at any time.</p>
+        
+        <hr>
+        
+        <h2>Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify you of any changes by:</p>
+        <ul>
+            <li>Posting the new Privacy Policy in the app</li>
+            <li>Updating the "Last Updated" date at the top</li>
+            <li>Sending an in-app notification for significant changes</li>
+        </ul>
+        <p>Your continued use of the app after changes constitutes acceptance of the updated policy.</p>
+        
+        <hr>
+        
+        <h2>International Data Transfers</h2>
+        <p>Your information may be transferred to and stored on servers located outside your country of residence. By using the app, you consent to such transfers. We ensure appropriate safeguards are in place to protect your data.</p>
+        
+        <hr>
+        
+        <h2>Contact Us</h2>
+        <p>If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+        <p><strong>Email:</strong> findingnibbles@gmail.com<br>
+        <strong>App:</strong> Finding Nibbles<br>
+        <strong>Website:</strong> <a href="https://nibbles.lachlanmacphee.com">https://nibbles.lachlanmacphee.com</a></p>
+        
+        <hr>
+        
+        <h2>Legal Basis for Processing (GDPR)</h2>
+        <p>If you are in the European Economic Area (EEA), our legal basis for collecting and using your information includes:</p>
+        <ul>
+            <li><strong>Consent:</strong> You have given us permission (e.g., for location access, camera access)</li>
+            <li><strong>Contract:</strong> Processing is necessary to provide the app services</li>
+            <li><strong>Legitimate Interests:</strong> To improve our services and prevent fraud</li>
+        </ul>
+        
+        <hr>
+        
+        <h2>California Privacy Rights (CCPA)</h2>
+        <p>If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA):</p>
+        <ul>
+            <li>Right to know what personal information is collected</li>
+            <li>Right to delete personal information</li>
+            <li>Right to opt-out of the sale of personal information (we do not sell your information)</li>
+            <li>Right to non-discrimination for exercising your rights</li>
+        </ul>
+        <p>To exercise these rights, contact us at findingnibbles@gmail.com</p>
+        
+        <hr>
+        
+        <p style="text-align: center; margin-top: 40px;"><strong>By using Finding Nibbles, you acknowledge that you have read and understood this Privacy Policy.</strong></p>
     </div>
 </body>
 </html>
-      `;
-      res.send(fullHtml);
-    } catch {
-      res.status(500).send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Finding Nibbles</title>
-</head>
-<body>
-    <h1>Error Loading Privacy Policy</h1>
-    <p>We're sorry, but there was an error loading the privacy policy. Please contact findingnibbles@gmail.com for assistance.</p>
-</body>
-</html>
-      `);
-    }
-  }
+    `;
 
-  @Public()
-  @Get('raw')
-  @Header('Content-Type', 'text/plain')
-  getPrivacyPolicyRaw(@Res() res: Response) {
-    try {
-      const privacyPath = join(
-        __dirname,
-        '..',
-        '..',
-        '..',
-        'PRIVACY_POLICY.md',
-      );
-      const markdown = readFileSync(privacyPath, 'utf-8');
-      res.send(markdown);
-    } catch {
-      res.status(500).send('Error loading privacy policy');
-    }
+    res.send(html);
   }
 
   @Public()
