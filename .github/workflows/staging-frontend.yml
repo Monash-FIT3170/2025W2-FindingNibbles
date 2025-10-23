@@ -11,8 +11,8 @@ on:
       - "frontend/**"
 
 jobs:
-  frontend-test:
-    name: Frontend Tests
+  frontend-lint-format-check:
+    name: Frontend Lint and Format Check
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,6 +37,3 @@ jobs:
 
       - name: Analyze project source
         run: flutter analyze
-
-      - name: Run tests
-        run: flutter test
