@@ -2,11 +2,12 @@
 
 At a time when we are spoiled for dining or cooking options, even a simple decision like “What should we eat tonight?” can feel overwhelming. FindingNibbles is a mobile application powered by artificial intelligence, designed to eliminate decision fatigue by delivering hyper-personalised restaurant and dish recommendations – tailored to your location, dietary restrictions, and cravings – so you can spend less time searching and more time savouring.
 
-Unlike generic food applications, FindingNibbles combines AI-driven menu analysis, real-time review aggregation from Google, and collaborative filtering to act as your personal dining concierge. With the ability to input ingredients you have on hand, FindingNibbles generates quick recipes that match your pantry – turning leftovers into culinary wins. It doesn’t just provide a list of options, it understands your preferences, deciphers murky menu items for dietary restrictions (e.g. “Is this vegan-friendly?”), and even aids in planning meals for when you are next travelling or have a special occasion – all while tracking nutritional goals with the help of a calorie tracker. By automating the research process and grounding recommendations in data, we turn indecision into confidence, one bite at a time.
+Unlike generic food applications, FindingNibbles combines AI-driven menu analysis, real-time review aggregation, and collaborative filtering to act as your personal dining concierge. With the ability to input ingredients you have on hand, FindingNibbles generates quick recipes that match your pantry – turning leftovers into culinary wins. It doesn’t just provide a list of options, it understands your preferences, deciphers murky menu items for dietary restrictions (e.g. “Is this vegan-friendly?”), and even aids in planning meals for when you are next travelling or have a special occasion – all while tracking nutritional goals with the help of a calorie tracker.
 
 ## Overview
 
 ### Core Features
+
 - Nearby restaurant suggestions – Discover dining options close to your location.
 - Interactive map exploration – Find restaurants using an integrated map with built-in directions.
 - Randomised discovery – Get spontaneous recommendations for cuisines, restaurants, and recipes.
@@ -93,6 +94,112 @@ Our project leverages a modern, scalable technology stack:
   - Recipe generation and recommendations
   - User query understanding
 
+## Versioning Strategy
+
+FindingNibbles follows **Semantic Versioning (SemVer)** for all releases. Version numbers are structured as `MAJOR.MINOR.PATCH`:
+
+- **MAJOR** version (X.0.0): Incremented for incompatible API changes or significant architectural updates
+  - Example: Major database schema changes that aren't backwards compatible
+- **MINOR** version (0.X.0): Incremented for new features that are backwards-compatible
+  - Example: Adding new AI-powered recommendation algorithms, new search filters
+- **PATCH** version (0.0.X): Incremented for backwards-compatible bug fixes
+  - Example: Fixing map rendering issues, correcting calorie calculations
+
+## Pull Request Strategy
+
+All contributions to FindingNibbles must follow this Pull Request (PR) workflow to maintain code quality and consistency.
+
+### Branch Naming Convention
+
+Create feature branches following this pattern:
+
+- **Features**: `feature/short-description` (e.g., `feature/calorie-tracker`)
+- **Bug fixes**: `bugfix/issue-number-description` (e.g., `bugfix/123-map-crash`)
+- **Hotfixes**: `hotfix/critical-issue` (e.g., `hotfix/security-patch`)
+- **Documentation**: `docs/description` (e.g., `docs/api-endpoints`)
+- **Refactoring**: `refactor/description` (e.g., `refactor/auth-module`)
+
+### Creating a Pull Request
+
+1. **Fork or branch**: Create a new branch from `main` or fork the repository
+2. **Make changes**: Implement your feature or fix following our coding standards
+3. **Write tests**: Ensure adequate test coverage for new functionality
+4. **Update documentation**: Update relevant documentation in code and README if needed
+5. **Commit messages**: Use clear, descriptive commit messages following Conventional Commits format:
+   - `feat: add calorie tracking to recipe generation`
+   - `fix: resolve map marker rendering issue`
+   - `docs: update installation instructions`
+   - `refactor: simplify authentication logic`
+6. **Push changes**: Push your branch to the remote repository
+7. **Open PR**: Create a pull request to merge into `main`
+
+### Pull Request Template
+
+When opening a PR, include:
+
+```markdown
+## Title
+
+Begin with either feat/fix/docs depending on the type, then a colon, then a short description.
+
+## Description
+
+One to two paragraph description of what this PR does with any necessary details. Visuals are welcome, especially for frontend changes (e.g. images or videos).
+
+## Related Issues
+
+Closes #(issue number)
+
+## Testing
+
+Describe the tests you ran (if applicable) and how to reproduce them
+
+## Checklist
+
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Comments added for complex code
+- [ ] Documentation updated
+- [ ] No new warnings generated
+- [ ] Tests added/updated and passing
+- [ ] Dependent changes merged
+```
+
+### Review Process
+
+1. **Automated checks**: All PRs must pass CI/CD pipeline checks (linting, tests, build)
+2. **Code review**: At least one approving review required from a project maintainer
+3. **Address feedback**: Respond to reviewer comments and make necessary changes
+4. **Merge**: Once approved and all checks pass, PRs can be rebased and merged into the dev branch
+5. **Delete branch**: Feature branches should be deleted after a successful merge
+
+### Code Review Guidelines
+
+**For Reviewers:**
+
+- Check for code quality, readability, and maintainability
+- Verify tests are comprehensive and passing
+- Ensure documentation is updated
+- Confirm adherence to project architecture and patterns
+- Provide constructive, actionable feedback
+
+**For Contributors:**
+
+- Keep PRs focused and reasonably sized (< 400 lines changed when possible)
+- Respond to feedback promptly and professionally
+- Request re-review after addressing comments
+
+### Merge Conflicts
+
+If your PR has merge conflicts:
+
+1. Fetch latest changes from `dev`
+2. Rebase your feature branch onto `dev` locally
+3. Resolve conflicts
+4. Test thoroughly
+5. Check code changes from the `HEAD` of `dev` branch using something like `Git Graph`
+6. Force push your branch with `git push --force-with-lease`
+
 ## Handover Documentation
 
 This will act as documentation on how to get the project up and running for new developers. It will cover:
@@ -154,28 +261,30 @@ We are using the [Flutter Native Splash](https://pub.dev/packages/flutter_native
    dart run flutter_native_splash:create
    ```
 
-This will complete the process of changing the launcher icon and splash screen. If you want to modify these images then it is very important that you read and understand the intricacies behind the behaviour of splash screens and app launchers before and after Android 12. 
+This will complete the process of changing the launcher icon and splash screen. If you want to modify these images then it is very important that you read and understand the intricacies behind the behaviour of splash screens and app launchers before and after Android 12.
 
 ### Day to day development process
 
 1. Start your Docker containers built during the environment setup
 2. cd to `/backend` and run `npm run start:dev`
-3. For the frontend, f you are using an emulator start it with the the command `flutter emulators --launch EmulatorNameHere`
+3. For the frontend, if you are using an emulator start it with the the command `flutter emulators --launch EmulatorNameHere`
 
    1. You can use the command`flutter emulators` to see the available emulators
    2. Note if you aren't using the emulator you can still debug the app using the web view of the application
+
 4. Once the emulator has launched you can cd to `/frontend` and run `flutter run`
 
    1. This will start flutter in debug mode allowing you to hot-reload (restart the app after making changes to the code in development).
+
 5. **Ready to start coding !!**.
 
 ## Common issues faced & solutions
 
 Below is a list of solutions or FAQ of sorts for issues that are commonly faced when working on the project.
 
-| Description                                                                                                                                                                                                                                                                             | Solutions                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Prisma Studio wont connect after running `npx prisma studio`                                                                                                                                                                                                                          | Close the emulator if you have it running, for some reason this can cause conficts with the prisma studio and cause it to fail when it attempts to connect.                                                                                                                                                                                                                                                                            |
+| Description                                                                                                                                                                                                                                                                       | Solutions                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prisma Studio wont connect after running `npx prisma studio`                                                                                                                                                                                                                      | Close the emulator if you have it running, for some reason this can cause conficts with the prisma studio and cause it to fail when it attempts to connect.                                                                                                                                                                                                                                                                      |
 | After running `npm run start:dev` recieve an error message that looks like this: `Cannot find module '@googlemaps/google-maps-services-js' or its corresponding type declarations.` or more generally: `Cannot find module '@moduleName' or its corresponding type declarations.` | This ussually means that you have not correctly installed that package/module, this can be done by using `npm install @googlemaps/google-maps-services-js` or more generally `npm install moduleName` . Alternatively using something like `npm install` when in the backend directory should install all the necessary packages / modules, but manually installing those that are missing may be required if this doesn't work. |
-| After running `npm run start:dev` receive an error message that looks like this: `[Nest] ERROR [ExceptionHandler] Error: SOME_NAME_API_KEY is required but not provided` or `SOME_NAME_MODEL_NAME is required but not provided`                                                   | This means that you have not correctly updated your `.env` file with the appropriate API key or model name, please follow the instructions within the `.env.example` to solve this issue.                                                                                                                                                                                                                                          |
-| Local copy of Postgres conflicts with the Docker containerised version                                                                                                                                                                                                                  | Run in cmd as admin:`net stop postgresql-x64-17`                                                                                                                                                                                                                                                                                                                                                                                     |
+| After running `npm run start:dev` receive an error message that looks like this: `[Nest] ERROR [ExceptionHandler] Error: SOME_NAME_API_KEY is required but not provided` or `SOME_NAME_MODEL_NAME is required but not provided`                                                   | This means that you have not correctly updated your `.env` file with the appropriate API key or model name, please follow the instructions within the `.env.example` to solve this issue.                                                                                                                                                                                                                                        |
+| Local copy of Postgres conflicts with the Docker containerised version                                                                                                                                                                                                            | Run in cmd as admin: `net stop postgresql-x64-17`                                                                                                                                                                                                                                                                                                                                                                                |
