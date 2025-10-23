@@ -21,7 +21,10 @@ class TravelPlanSectionWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 8,
+              ),
               leading: CircleAvatar(
                 radius: 22,
                 backgroundColor: cs.primary.withOpacity(0.12),

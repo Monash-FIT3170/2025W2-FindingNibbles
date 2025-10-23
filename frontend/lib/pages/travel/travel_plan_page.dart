@@ -18,28 +18,31 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 12,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
-        child: _CreateTripForm(onSave: (tripName, start, end) {
-          setState(() {
-            service.addTrip({
-              'name': tripName,
-              'start': start,
-              'end': end,
-              'restaurants': <Map<String, dynamic>>[],
-            });
-          });
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Trip created')),
-          );
-        }),
-      ),
+      builder:
+          (ctx) => Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: _CreateTripForm(
+              onSave: (tripName, start, end) {
+                setState(() {
+                  service.addTrip({
+                    'name': tripName,
+                    'start': start,
+                    'end': end,
+                    'restaurants': <Map<String, dynamic>>[],
+                  });
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Trip created')));
+              },
+            ),
+          ),
     );
   }
 
@@ -49,47 +52,47 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
     final colorScheme = AppTheme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Travel plan'),
-      ),
-      body: trips.isEmpty
-          ? const Center(
-              child: Text(
-                'No trips yet.\nTap + to create your first travel plan.',
-                textAlign: TextAlign.center,
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: trips.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, idx) {
-                final trip = trips[idx];
-                return ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  tileColor: colorScheme.surfaceContainerHighest,
-                  leading: const Icon(Icons.flight_takeoff),
-                  title: Text(trip['name']),
-                  subtitle: Text(
-                    '${trip['start']?.toString().split(' ').first ?? '-'} → ${trip['end']?.toString().split(' ').first ?? '-'}',
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TripDetailsPage(
-                          tripName: trip['name'],
-                          restaurants: trip['restaurants'] ?? [],
+      appBar: AppBar(title: const Text('Travel plan')),
+      body:
+          trips.isEmpty
+              ? const Center(
+                child: Text(
+                  'No trips yet.\nTap + to create your first travel plan.',
+                  textAlign: TextAlign.center,
+                ),
+              )
+              : ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: trips.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, idx) {
+                  final trip = trips[idx];
+                  return ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    tileColor: colorScheme.surfaceContainerHighest,
+                    leading: const Icon(Icons.flight_takeoff),
+                    title: Text(trip['name']),
+                    subtitle: Text(
+                      '${trip['start']?.toString().split(' ').first ?? '-'} → ${trip['end']?.toString().split(' ').first ?? '-'}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => TripDetailsPage(
+                                tripName: trip['name'],
+                                restaurants: trip['restaurants'] ?? [],
+                              ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                      );
+                    },
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: colorScheme.primary,
         onPressed: () => _showCreateTripSheet(context),
@@ -141,8 +144,11 @@ class _CreateTripFormState extends State<_CreateTripForm> {
               labelText: 'Trip name',
               hintText: 'e.g. Japan spring 2025',
             ),
-            validator: (v) =>
-                v == null || v.trim().isEmpty ? 'Please enter a trip name' : null,
+            validator:
+                (v) =>
+                    v == null || v.trim().isEmpty
+                        ? 'Please enter a trip name'
+                        : null,
           ),
           spacer,
           Row(
@@ -150,7 +156,8 @@ class _CreateTripFormState extends State<_CreateTripForm> {
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.grey[200], // button background color
+                    backgroundColor:
+                        Colors.grey[200], // button background color
                     foregroundColor: Colors.black, // text and border colour
                   ),
                   icon: const Icon(Icons.calendar_today),
@@ -175,12 +182,15 @@ class _CreateTripFormState extends State<_CreateTripForm> {
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.grey[200], // button background color
+                    backgroundColor:
+                        Colors.grey[200], // button background color
                     foregroundColor: Colors.black, // text and border colour
                   ),
                   icon: const Icon(Icons.calendar_today),
                   label: Text(
-                    _end == null ? 'End date' : _end!.toString().split(' ').first,
+                    _end == null
+                        ? 'End date'
+                        : _end!.toString().split(' ').first,
                   ),
                   onPressed: () async {
                     final base = _start ?? DateTime.now();
@@ -202,7 +212,8 @@ class _CreateTripFormState extends State<_CreateTripForm> {
               Expanded(
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.grey[200], // button background color
+                    backgroundColor:
+                        Colors.grey[200], // button background color
                     foregroundColor: Colors.black, // text and border colour
                     minimumSize: const Size.fromHeight(40),
                   ),
