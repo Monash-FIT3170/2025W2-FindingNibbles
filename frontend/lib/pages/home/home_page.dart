@@ -8,6 +8,7 @@ import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
+import 'package:nibbles/service/profile/history_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
 import 'package:nibbles/service/restaurant-menu/best_dish_dto.dart';
@@ -1063,10 +1064,21 @@ class _HomePageState extends State<HomePage> {
                                     return Card(
                                       clipBehavior: Clip.antiAlias,
                                       child: InkWell(
-                                        onTap:
-                                            () => _openRestaurantDetails(
+                                        onTap: () async {
+                                          try {
+                                            await HistoryService().addToHistory(
                                               restaurant,
-                                            ),
+                                            );
+                                            debugPrint(
+                                              'Added ${restaurant.name} to browsing history.',
+                                            );
+                                          } catch (e) {
+                                            debugPrint(
+                                              'Failed to log history: $e',
+                                            );
+                                          }
+                                          _openRestaurantDetails(restaurant);
+                                        },
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -1088,13 +1100,19 @@ class _HomePageState extends State<HomePage> {
                                                         ) {
                                                           return Container(
                                                             color:
-                                                                colorScheme
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
                                                                     .surfaceContainerHighest,
                                                             child: Icon(
                                                               Icons.restaurant,
                                                               size: 40,
                                                               color:
-                                                                  colorScheme
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
                                                                       .onSurfaceVariant,
                                                             ),
                                                           );
@@ -1102,13 +1120,15 @@ class _HomePageState extends State<HomePage> {
                                                       )
                                                       : Container(
                                                         color:
-                                                            colorScheme
+                                                            Theme.of(context)
+                                                                .colorScheme
                                                                 .surfaceContainerHighest,
                                                         child: Icon(
                                                           Icons.restaurant,
                                                           size: 40,
                                                           color:
-                                                              colorScheme
+                                                              Theme.of(context)
+                                                                  .colorScheme
                                                                   .onSurfaceVariant,
                                                         ),
                                                       ),

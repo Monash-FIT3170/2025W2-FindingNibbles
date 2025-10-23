@@ -8,6 +8,7 @@ import 'package:nibbles/service/profile/dietary_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/pages/profile/history_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,7 +18,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> {
-  List<ApplianceRequirementDto> appliances = [];
   final ProfileService _profileService = ProfileService();
   List<DietaryRequirementDto> _dietaryRequirements = [];
   List<ApplianceRequirementDto> _appliances = [];
@@ -31,37 +31,26 @@ class ProfilePageState extends State<ProfilePage> {
   }
 
   void _addDietaryRequirement(DietaryRequirementDto requirement) {
-    setState(() {
-      _dietaryRequirements.add(requirement);
-    });
+    setState(() => _dietaryRequirements.add(requirement));
   }
 
   void _removeDietaryRequirement(DietaryRequirementDto requirement) {
-    setState(() {
-      _dietaryRequirements.removeWhere((r) => r.id == requirement.id);
-    });
+    setState(
+      () => _dietaryRequirements.removeWhere((r) => r.id == requirement.id),
+    );
   }
 
   void _addAppliance(ApplianceRequirementDto appliance) {
-    setState(() {
-      _appliances.add(appliance);
-    });
+    setState(() => _appliances.add(appliance));
   }
 
   void _removeAppliance(ApplianceRequirementDto appliance) {
-    setState(() {
-      _appliances.removeWhere((r) => r.id == appliance.id);
-    });
+    setState(() => _appliances.removeWhere((r) => r.id == appliance.id));
   }
 
-  /*
-   * Loading user specific dietary requirments
-   */
   Future<void> _loadDietaryRequirements() async {
     if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
     try {
       final requirements = await _profileService.getDietaryRequirements();
       if (mounted) {
@@ -72,19 +61,13 @@ class ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       debugPrint('Error fetching dietary requirements: $e');
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> _loadAppliances() async {
     if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
     try {
       final appliances = await _profileService.getUserAppliances();
       if (mounted) {
@@ -94,12 +77,8 @@ class ProfilePageState extends State<ProfilePage> {
         });
       }
     } catch (e) {
-      debugPrint('Error fetching dietary requirements: $e');
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      debugPrint('Error fetching appliances: $e');
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -118,13 +97,12 @@ class ProfilePageState extends State<ProfilePage> {
                 : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
                       child: Center(
-                        // 👈 centers the text horizontally
                         child: Text(
                           'Profile',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -132,7 +110,6 @@ class ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     ),
-                    // Use Expanded with SingleChildScrollView to prevent overflow
                     Expanded(
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -149,8 +126,17 @@ class ProfilePageState extends State<ProfilePage> {
                                   ),
                                 );
                               },
+                              onBrowsingHistory: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HistoryPage(),
+                                  ),
+                                );
+                              },
                               onMyReviews: () {},
                             ),
+
                             DietaryRequirementsWidget(
                               dietaryRequirements: _dietaryRequirements,
                               onAdd: _addDietaryRequirement,
@@ -162,7 +148,6 @@ class ProfilePageState extends State<ProfilePage> {
                               onRemove: _removeAppliance,
                             ),
                             LogoutWidget(onLogout: () {}),
-                            // Add padding at the bottom to ensure content doesn't get cut off
                             const SizedBox(height: 80),
                           ],
                         ),

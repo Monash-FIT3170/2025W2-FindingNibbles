@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:nibbles/pages/profile/liked_page.dart';
 import 'package:nibbles/pages/profile/personal_info_page.dart';
 import 'package:nibbles/pages/profile/calorie_log_page.dart';
+import 'package:nibbles/pages/profile/history_page.dart';
 
 class PersonalMenuWidget extends StatelessWidget {
   final VoidCallback onPersonalInfo;
   final VoidCallback onFavourites;
+  final VoidCallback onBrowsingHistory;
   final VoidCallback?
   onMyReviews; // Nullable for now, as my reviews feature is not implemented yet
 
@@ -13,6 +15,7 @@ class PersonalMenuWidget extends StatelessWidget {
     super.key,
     required this.onPersonalInfo,
     required this.onFavourites,
+    required this.onBrowsingHistory,
     required this.onMyReviews,
   });
 
@@ -47,6 +50,18 @@ class PersonalMenuWidget extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const LikedPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.history, color: primary),
+            title: const Text('Browsing History'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // Navigate to HistoryPage when tapped
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HistoryPage()),
               );
             },
           ),
