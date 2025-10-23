@@ -97,3 +97,5 @@ jobs:
         with:
           artifacts: "frontend/build/app/outputs/flutter-apk/app-release.apk,frontend/build/app/outputs/bundle/release/app-release.aab"
           tag: v${{ env.VERSION }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generateReleaseNotes: true
