@@ -1,17 +1,20 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/menu_scanner/menu_scanner_page.dart';
+import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
 import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
-import 'package:nibbles/service/restaurant/restaurant_service.dart';
-import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
 import 'package:nibbles/service/restaurant-menu/best_dish_dto.dart';
+import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant/restaurant_service.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
-import 'package:nibbles/pages/shared/widgets/restaurant_filter_dialog.dart';
-import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
-import 'dart:math';
+import 'package:nibbles/widgets/search_decoration.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   static const int _pageSize = 20;
   List<CuisineDto> _availableCuisines = [];
   List<CuisineDto> _favoriteCuisines = []; // track liked cuisines
+  List<int> _favoriteRestaurantIds = [];
   CuisineDto? _selectedCuisine;
   int _minimumRating = 1;
   final TextEditingController _searchController = TextEditingController();
@@ -45,6 +49,7 @@ class _HomePageState extends State<HomePage> {
     _fetchRestaurants();
     _fetchCuisines();
     _loadFavouriteCuisines(); // load favourite cuisines
+    _loadFavoriteRestaurants();
     _setupScrollListener();
   }
 
@@ -57,7 +62,6 @@ class _HomePageState extends State<HomePage> {
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      // Load more when user is near the bottom (within 200 pixels)
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
         _loadMoreRestaurants();
@@ -73,6 +77,76 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       debugPrint("Failed to load favourite cuisines: $e");
+    }
+  }
+
+  Future<void> _loadFavoriteRestaurants() async {
+    try {
+      final favoriteRestaurants =
+          await _profileService.getFavouriteRestaurants();
+      setState(() {
+        _favoriteRestaurantIds =
+            favoriteRestaurants.map((restaurant) => restaurant.id).toList();
+      });
+    } catch (e) {
+      debugPrint("Failed to load favorite restaurants: $e");
+    }
+  }
+
+  Future<void> _toggleFavoriteRestaurant(int restaurantId) async {
+    final wasAlreadyFavorite = _favoriteRestaurantIds.contains(restaurantId);
+
+    // Optimistic update - update UI immediately
+    setState(() {
+      if (wasAlreadyFavorite) {
+        _favoriteRestaurantIds.remove(restaurantId);
+      } else {
+        _favoriteRestaurantIds.add(restaurantId);
+      }
+    });
+
+    try {
+      if (wasAlreadyFavorite) {
+        await _profileService.removeFavouriteRestaurant(restaurantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant removed from favorites'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        await _profileService.addFavouriteRestaurant(restaurantId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restaurant added to favorites'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Revert the optimistic update on error
+      setState(() {
+        if (wasAlreadyFavorite) {
+          _favoriteRestaurantIds.add(restaurantId);
+        } else {
+          _favoriteRestaurantIds.remove(restaurantId);
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorites: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      debugPrint("Failed to toggle favorite restaurant: $e");
     }
   }
 
@@ -102,14 +176,11 @@ class _HomePageState extends State<HomePage> {
     try {
       List<RestaurantDto> newRestaurants;
 
-      // If we're in search mode and have a search query, search by name
       if (_isSearchMode && _searchQuery.isNotEmpty) {
-        // Note: Search doesn't support pagination in the current API
         newRestaurants = await RestaurantService().searchRestaurantsByName(
           _searchQuery,
         );
         if (isLoadMore) {
-          // For search, we don't have pagination, so no more data
           setState(() {
             _hasMoreData = false;
             _isLoadingMore = false;
@@ -117,10 +188,8 @@ class _HomePageState extends State<HomePage> {
           return;
         }
       } else {
-        // Calculate skip value for pagination
         final skip = isLoadMore ? _currentPage * _pageSize : 0;
 
-        // Otherwise, use the existing filtering logic with pagination
         newRestaurants =
             _selectedCuisine != null
                 ? await RestaurantService().getRestaurantsByCuisine(
@@ -147,10 +216,18 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         if (isLoadMore) {
-          _restaurants.addAll(filteredRestaurants);
+          // Get existing restaurant IDs to prevent duplicates
+          final existingIds = _restaurants.map((r) => r.id).toSet();
+
+          // Only add restaurants that aren't already in the list
+          final uniqueRestaurants =
+              filteredRestaurants
+                  .where((restaurant) => !existingIds.contains(restaurant.id))
+                  .toList();
+
+          _restaurants.addAll(uniqueRestaurants);
           _currentPage++;
           _isLoadingMore = false;
-          // Check if we got fewer results than expected (end of data)
           if (filteredRestaurants.length < _pageSize) {
             _hasMoreData = false;
           }
@@ -158,7 +235,6 @@ class _HomePageState extends State<HomePage> {
           _restaurants = filteredRestaurants;
           _currentPage = 1;
           _isLoading = false;
-          // Check if we got fewer results than expected (end of data)
           if (filteredRestaurants.length < _pageSize) {
             _hasMoreData = false;
           }
@@ -186,7 +262,6 @@ class _HomePageState extends State<HomePage> {
       _isSearchMode = _searchQuery.isNotEmpty;
     });
 
-    // Debounce the search to avoid too many API calls
     Future.delayed(const Duration(milliseconds: 500), () {
       if (_searchQuery == query.trim()) {
         _fetchRestaurants();
@@ -214,7 +289,6 @@ class _HomePageState extends State<HomePage> {
           isSearchMode: _isSearchMode,
           searchQuery: _searchQuery,
           onApply: (minimumRating, selectedCuisine) async {
-            // Apply the filter values
             setState(() {
               _selectedCuisine = selectedCuisine;
               _minimumRating = minimumRating;
@@ -236,7 +310,6 @@ class _HomePageState extends State<HomePage> {
                       skipApplyLogic
                           ? null
                           : (cuisine) async {
-                            // Handle the add to favorites logic here if not skipping
                             await _loadFavouriteCuisines();
                             final alreadyLiked = _favoriteCuisines.any(
                               (c) => c.id == cuisine.id,
@@ -428,7 +501,7 @@ class _HomePageState extends State<HomePage> {
 
   void _selectRandomPreferredCuisine() async {
     try {
-      // Ensure we have the latest preferred cuisines
+      // Refresh preferred cuisines to get the latest
       await _loadFavouriteCuisines();
 
       if (!mounted) return;
@@ -551,13 +624,14 @@ class _HomePageState extends State<HomePage> {
               ? '\nCuisine: ${_selectedCuisine!.name}'
               : '';
 
-      // Show result modal with restaurant details
+      // Show result modal with restaurant details and open it after closing
       _showDiceResultModal(
         title: 'Random Restaurant Selected!',
         subtitle:
             '${randomRestaurant.name}\n${randomRestaurant.rating?.toStringAsFixed(1) ?? "No rating"} ⭐$cuisineInfo',
         icon: Icons.restaurant,
         highlightedRestaurant: randomRestaurant,
+        onCloseAction: () => _openRestaurantDetails(randomRestaurant),
       );
     } catch (e) {
       setState(() => _isLoading = false);
@@ -613,6 +687,7 @@ class _HomePageState extends State<HomePage> {
     required String subtitle,
     required IconData icon,
     RestaurantDto? highlightedRestaurant,
+    VoidCallback? onCloseAction,
   }) {
     showDialog(
       context: context,
@@ -624,8 +699,11 @@ class _HomePageState extends State<HomePage> {
           icon: icon,
           onClose: () {
             Navigator.of(context).pop();
-            // If we have a highlighted restaurant, scroll to it after modal closes
-            if (highlightedRestaurant != null) {
+            // Execute custom close action if provided
+            if (onCloseAction != null) {
+              onCloseAction();
+            } else if (highlightedRestaurant != null) {
+              // Default behavior: highlight the restaurant
               _highlightRestaurant(highlightedRestaurant);
             }
           },
@@ -655,6 +733,24 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       }
+    });
+  }
+
+  void _openRestaurantDetails(RestaurantDto restaurant) {
+    // Navigate to the new Restaurant Details Page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => RestaurantDetailsPage(
+              restaurant: restaurant,
+              isFavorite: _favoriteRestaurantIds.contains(restaurant.id),
+              selectedCuisineName: _selectedCuisine?.name,
+            ),
+      ),
+    ).then((_) {
+      // Refresh favorite status when returning from details page
+      _loadFavoriteRestaurants();
     });
   }
 
@@ -695,7 +791,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the initial modal
+                Navigator.of(context).pop();
                 await _chooseBestDish(restaurant);
               },
               child: const Text('Yes, please!'),
@@ -738,7 +834,6 @@ class _HomePageState extends State<HomePage> {
             userDietaryRequirements.map((dietary) => dietary.name).toList();
       } catch (e) {
         debugPrint('Error getting user dietary requirements: $e');
-        // Continue with empty list if we can't get user preferences
       }
 
       final response = await _restaurantMenuService.getBestDish(
@@ -835,7 +930,7 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _chooseBestDish(restaurant); // Try again
+                await _chooseBestDish(restaurant);
               },
               child: const Text('Choose another dish'),
             ),
@@ -875,7 +970,7 @@ class _HomePageState extends State<HomePage> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _chooseBestDish(restaurant); // Try again
+                await _chooseBestDish(restaurant);
               },
               child: const Text('Try again'),
             ),
@@ -897,7 +992,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('All Restaurants'),
-        centerTitle: true, // 👈 this centers the title
+        centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
           DiceRollWidget(
@@ -918,9 +1013,9 @@ class _HomePageState extends State<HomePage> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              decoration: InputDecoration(
+              decoration: buildSearchDecoration(
+                colorScheme: Theme.of(context).colorScheme,
                 hintText: 'Search restaurants by name...',
-                prefixIcon: const Icon(Icons.search),
                 suffixIcon:
                     _searchQuery.isNotEmpty
                         ? IconButton(
@@ -928,13 +1023,6 @@ class _HomePageState extends State<HomePage> {
                           onPressed: _clearSearch,
                         )
                         : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ).copyWith(bottom: 24),
               ),
             ),
           ),
@@ -966,135 +1054,190 @@ class _HomePageState extends State<HomePage> {
                                         crossAxisCount: 2,
                                         mainAxisSpacing: 8,
                                         crossAxisSpacing: 8,
-                                        childAspectRatio: 1,
+                                        childAspectRatio: 0.75,
                                       ),
                                   itemBuilder: (context, index) {
                                     final restaurant = _restaurants[index];
+                                    final isFavorite = _favoriteRestaurantIds
+                                        .contains(restaurant.id);
                                     return Card(
+                                      clipBehavior: Clip.antiAlias,
                                       child: InkWell(
-                                        onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder:
-                                                (context) => AlertDialog(
-                                                  title: Text(
-                                                    restaurant.name,
-                                                    style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color:
-                                                          colorScheme.onSurface,
-                                                    ),
-                                                  ),
-                                                  content: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      RichText(
-                                                        text: TextSpan(
-                                                          style:
-                                                              DefaultTextStyle.of(
-                                                                context,
-                                                              ).style,
-                                                          children: [
-                                                            const TextSpan(
-                                                              text: 'Rating: ',
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            TextSpan(
-                                                              text:
-                                                                  restaurant
-                                                                      .rating
-                                                                      .toString(),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      RichText(
-                                                        text: TextSpan(
-                                                          style:
-                                                              DefaultTextStyle.of(
-                                                                context,
-                                                              ).style,
-                                                          children: [
-                                                            const TextSpan(
-                                                              text:
-                                                                  'Total reviews: ',
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            TextSpan(
-                                                              text:
-                                                                  restaurant
-                                                                      .userRatingsTotal
-                                                                      .toString(),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      // Removed phone number row
-                                                      const SizedBox(height: 8),
-                                                      RichText(
-                                                        text: TextSpan(
-                                                          style:
-                                                              DefaultTextStyle.of(
-                                                                context,
-                                                              ).style,
-                                                          children: [
-                                                            const TextSpan(
-                                                              text: 'Address: ',
-                                                              style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            TextSpan(
-                                                              text:
-                                                                  restaurant
-                                                                      .address,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed:
-                                                          () => Navigator.pop(
-                                                            context,
-                                                          ),
-                                                      child: const Text(
-                                                        'Close',
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                          );
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(12.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
+                                        onTap:
+                                            () => _openRestaurantDetails(
+                                              restaurant,
+                                            ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Restaurant Image
+                                            Expanded(
+                                              flex: 3,
+                                              child: Stack(
+                                                fit: StackFit.expand,
                                                 children: [
-                                                  Expanded(
-                                                    child: Text(
+                                                  restaurant.imageUrl != null
+                                                      ? Image.network(
+                                                        restaurant.imageUrl!,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder: (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return Container(
+                                                            color:
+                                                                colorScheme
+                                                                    .surfaceContainerHighest,
+                                                            child: Icon(
+                                                              Icons.restaurant,
+                                                              size: 40,
+                                                              color:
+                                                                  colorScheme
+                                                                      .onSurfaceVariant,
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                      : Container(
+                                                        color:
+                                                            colorScheme
+                                                                .surfaceContainerHighest,
+                                                        child: Icon(
+                                                          Icons.restaurant,
+                                                          size: 40,
+                                                          color:
+                                                              colorScheme
+                                                                  .onSurfaceVariant,
+                                                        ),
+                                                      ),
+                                                  // Action buttons overlay
+                                                  Positioned(
+                                                    top: 4,
+                                                    right: 4,
+                                                    child: Row(
+                                                      children: [
+                                                        // Heart Icon
+                                                        GestureDetector(
+                                                          onTap:
+                                                              () =>
+                                                                  _toggleFavoriteRestaurant(
+                                                                    restaurant
+                                                                        .id,
+                                                                  ),
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  6,
+                                                                ),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color:
+                                                                      Colors
+                                                                          .black54,
+                                                                  shape:
+                                                                      BoxShape
+                                                                          .circle,
+                                                                ),
+                                                            child: Icon(
+                                                              isFavorite
+                                                                  ? Icons
+                                                                      .favorite
+                                                                  : Icons
+                                                                      .favorite_border,
+                                                              color:
+                                                                  isFavorite
+                                                                      ? Colors
+                                                                          .red
+                                                                      : Colors
+                                                                          .white,
+                                                              size: 18,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 4,
+                                                        ),
+                                                        // QR Code Icon
+                                                        GestureDetector(
+                                                          onTap: () async {
+                                                            if (restaurant
+                                                                    .menuUrl ==
+                                                                'menu-analysed') {
+                                                              _showBestDishModal(
+                                                                restaurant,
+                                                              );
+                                                            } else {
+                                                              final result = await Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder:
+                                                                      (
+                                                                        context,
+                                                                      ) => MenuScannerPage(
+                                                                        restaurantId:
+                                                                            restaurant.id,
+                                                                        restaurantName:
+                                                                            restaurant.name,
+                                                                      ),
+                                                                ),
+                                                              );
+
+                                                              if (result ==
+                                                                  true) {
+                                                                _fetchRestaurants();
+                                                              }
+                                                            }
+                                                          },
+                                                          child: Container(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  6,
+                                                                ),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color:
+                                                                      Colors
+                                                                          .black54,
+                                                                  shape:
+                                                                      BoxShape
+                                                                          .circle,
+                                                                ),
+                                                            child: Icon(
+                                                              restaurant.menuUrl ==
+                                                                      'menu-analysed'
+                                                                  ? Icons
+                                                                      .restaurant
+                                                                  : Icons
+                                                                      .qr_code_scanner,
+                                                              color:
+                                                                  Colors.white,
+                                                              size: 18,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Restaurant Details
+                                            Expanded(
+                                              flex: 2,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8.0,
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
                                                       restaurant.name,
                                                       style: theme
                                                           .textTheme
@@ -1103,88 +1246,110 @@ class _HomePageState extends State<HomePage> {
                                                             color:
                                                                 colorScheme
                                                                     .primary,
+                                                            fontWeight:
+                                                                FontWeight.bold,
                                                           ),
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
-                                                  ),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      restaurant.menuUrl ==
-                                                              'menu-analysed'
-                                                          ? Icons.restaurant
-                                                          : Icons
-                                                              .qr_code_scanner,
-                                                    ),
-                                                    iconSize: 20,
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(),
-                                                    onPressed: () async {
-                                                      if (restaurant.menuUrl ==
-                                                          'menu-analysed') {
-                                                        _showBestDishModal(
-                                                          restaurant,
-                                                        );
-                                                      } else {
-                                                        final result = await Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (
-                                                                  context,
-                                                                ) => MenuScannerPage(
-                                                                  restaurantId:
-                                                                      restaurant
-                                                                          .id,
-                                                                  restaurantName:
-                                                                      restaurant
-                                                                          .name,
-                                                                ),
+                                                    Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.star,
+                                                          color:
+                                                              colorScheme
+                                                                  .secondary,
+                                                          size: 14,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 4,
+                                                        ),
+                                                        Text(
+                                                          restaurant.rating
+                                                                  ?.toStringAsFixed(
+                                                                    1,
+                                                                  ) ??
+                                                              'N/A',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                fontSize: 12,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        Text(
+                                                          formatPriceLevel(
+                                                            restaurant
+                                                                .priceLevel,
                                                           ),
-                                                        );
-
-                                                        // Refresh restaurant list if menu was successfully analyzed
-                                                        if (result == true) {
-                                                          _fetchRestaurants();
-                                                        }
-                                                      }
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.star,
-                                                    color:
-                                                        colorScheme.secondary,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    restaurant.rating
-                                                            ?.toStringAsFixed(
-                                                              1,
-                                                            ) ??
-                                                        '',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w500,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 12,
+                                                              ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                formatPriceLevel(
-                                                  restaurant.priceLevel,
+                                                    // Cuisine tags
+                                                    if (restaurant
+                                                        .cuisineNames
+                                                        .isNotEmpty)
+                                                      Wrap(
+                                                        spacing: 4,
+                                                        runSpacing: 2,
+                                                        children:
+                                                            _sortCuisinesByFilter(
+                                                                  restaurant
+                                                                      .cuisineNames,
+                                                                  _selectedCuisine
+                                                                      ?.name,
+                                                                )
+                                                                .take(
+                                                                  2,
+                                                                ) // Limit to 2 tags to fit in card
+                                                                .map(
+                                                                  (
+                                                                    cuisine,
+                                                                  ) => Container(
+                                                                    padding: const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          6,
+                                                                      vertical:
+                                                                          2,
+                                                                    ),
+                                                                    decoration: BoxDecoration(
+                                                                      color:
+                                                                          colorScheme
+                                                                              .secondaryContainer,
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            8,
+                                                                          ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      cuisine,
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            9,
+                                                                        color:
+                                                                            colorScheme.onSecondaryContainer,
+                                                                        fontWeight:
+                                                                            FontWeight.w500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                )
+                                                                .toList(),
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     );
@@ -1209,5 +1374,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  // Helper method to sort cuisines with selected cuisine first
+  List<String> _sortCuisinesByFilter(
+    List<String> cuisines,
+    String? selectedCuisine,
+  ) {
+    if (selectedCuisine == null || !cuisines.contains(selectedCuisine)) {
+      return cuisines;
+    }
+    return [selectedCuisine, ...cuisines.where((c) => c != selectedCuisine)];
   }
 }

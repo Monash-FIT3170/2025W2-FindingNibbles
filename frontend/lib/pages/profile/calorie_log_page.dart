@@ -93,6 +93,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: AppTheme.colorScheme.primary,
       appBar: AppBar(
         title: const Text('Calorie Log'),
@@ -187,6 +188,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                   TextFormField(
                     controller: mealNameController,
                     decoration: const InputDecoration(labelText: 'Meal Name'),
+                    maxLength: 25,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a meal name';
@@ -199,6 +201,7 @@ class _CalorieLogPageState extends State<CalorieLogPage> {
                     controller: caloriesController,
                     decoration: const InputDecoration(labelText: 'Calories'),
                     keyboardType: TextInputType.number,
+                    maxLength: 6,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter calories';

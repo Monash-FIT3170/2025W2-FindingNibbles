@@ -3,6 +3,7 @@ import 'package:nibbles/service/profile/appliance_dto.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
+import 'package:nibbles/widgets/search_decoration.dart';
 
 class CookingAppliancesWidget extends StatefulWidget {
   final List<ApplianceRequirementDto> appliances;
@@ -45,6 +46,15 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     }
   }
 
+  Future<void> _createCustomAppliance(String name) async {
+    try {
+      final newAppliance = await _profileService.createAppliance(name, null);
+      widget.onAdd(newAppliance);
+    } catch (e) {
+      _logger.e('Error creating custom appliance: $e');
+    }
+  }
+
   Future<void> _addAppliance(int itemId) async {
     try {
       await _profileService.addAppliance(itemId);
@@ -56,6 +66,70 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
     } catch (e) {
       _logger.e('Error adding appliance: $e');
     }
+  }
+
+  void _openCustomCreationDialog() {
+    final TextEditingController nameController = TextEditingController();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Create Custom Appliance',
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Appliance Name'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+
+                if (name.isNotEmpty) {
+                  await _createCustomAppliance(name);
+                  if (!dialogContext.mounted) return;
+                  Navigator.of(dialogContext).pop();
+                } else {
+                  // Optionally, show an error message if fields are empty
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a name')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Create'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _openAddDialog() {
@@ -85,33 +159,6 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 child: Column(
                   children: [
                     TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Search',
-                        labelStyle: TextStyle(
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: AppTheme.colorScheme.primary,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: AppTheme.colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
                       onChanged: (value) {
                         setState(() {
                           localSearchTerm = value.toLowerCase();
@@ -125,6 +172,10 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                                   .toList();
                         });
                       },
+                      decoration: buildSearchDecoration(
+                        colorScheme: Theme.of(context).colorScheme,
+                        hintText: 'Search appliances...',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -179,6 +230,16 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
                 ),
               ),
               actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _openCustomCreationDialog();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.colorScheme.primary,
+                  ),
+                  child: const Text('Create custom'),
+                ),
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
@@ -220,14 +281,9 @@ class CookingAppliancesWidgetState extends State<CookingAppliancesWidget> {
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Cooking Appliances',
-                    style: theme.textTheme.titleSmall,
-                  ),
-                ),
+                Text('Cooking Appliances', style: theme.textTheme.titleSmall),
                 IconButton(
-                  icon: const Icon(Icons.add, color: Colors.black),
+                  icon: Icon(Icons.add, color: AppTheme.colorScheme.primary),
                   onPressed: _openAddDialog,
                 ),
               ],

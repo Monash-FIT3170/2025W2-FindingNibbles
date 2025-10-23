@@ -15,6 +15,7 @@ class RestaurantDto {
   final String? formattedPhoneNum;
   final String? website;
   final String? menuUrl;
+  final String? imageUrl; // Random food/restaurant image URL
   final bool? dineIn;
   final bool? takeout;
   final bool? delivery;
@@ -43,6 +44,7 @@ class RestaurantDto {
     this.formattedPhoneNum,
     this.website,
     this.menuUrl,
+    this.imageUrl,
     this.dineIn,
     this.takeout,
     this.delivery,
@@ -76,6 +78,7 @@ class RestaurantDto {
       formattedPhoneNum: json['formattedPhoneNum'] as String?,
       website: json['website'] as String?,
       menuUrl: json['menuUrl'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       dineIn: json['dineIn'] as bool?,
       takeout: json['takeout'] as bool?,
       delivery: json['delivery'] as bool?,
@@ -113,6 +116,7 @@ class RestaurantDto {
       'formattedPhoneNum': formattedPhoneNum,
       'website': website,
       'menuUrl': menuUrl,
+      'imageUrl': imageUrl,
       'dineIn': dineIn,
       'takeout': takeout,
       'delivery': delivery,
@@ -140,6 +144,50 @@ class RestaurantDto {
   // Helper method to check if restaurant has a specific cuisine
   bool hasCuisine(int cuisineId) {
     return restaurantCuisines?.any((rc) => rc.cuisineId == cuisineId) ?? false;
+  }
+
+  // Helper method to get formatted cuisine names with priority for selected cuisine
+  String getFormattedCuisineNames({
+    int? priorityCuisineId,
+    int maxLength = 30,
+  }) {
+    if (restaurantCuisines == null || restaurantCuisines!.isEmpty) {
+      return '';
+    }
+
+    List<String> cuisineNamesList = [];
+
+    // If there's a priority cuisine, add it first
+    if (priorityCuisineId != null) {
+      final priorityCuisine =
+          restaurantCuisines!
+              .where((rc) => rc.cuisineId == priorityCuisineId)
+              .map((rc) => rc.cuisine?.name ?? '')
+              .firstOrNull;
+
+      if (priorityCuisine != null && priorityCuisine.isNotEmpty) {
+        cuisineNamesList.add(priorityCuisine);
+      }
+    }
+
+    // Add other cuisines (excluding the priority one if it exists)
+    cuisineNamesList.addAll(
+      restaurantCuisines!
+          .where((rc) => rc.cuisineId != priorityCuisineId)
+          .map((rc) => rc.cuisine?.name ?? '')
+          .where((name) => name.isNotEmpty)
+          .toList(),
+    );
+
+    // Join cuisines with separator
+    String result = cuisineNamesList.join(' • ');
+
+    // Truncate if too long
+    if (result.length > maxLength && maxLength > 3) {
+      result = '${result.substring(0, maxLength - 3)}...';
+    }
+
+    return result;
   }
 }
 

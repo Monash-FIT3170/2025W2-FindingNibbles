@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { RecipeService } from './recipe.service';
-import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { DatabaseService } from '../database/database.service';
+import { GeminiService } from '../gemini/gemini.service';
+import { RecipeService } from './recipe.service';
 
 describe('RecipeService', () => {
   let service: RecipeService;
@@ -29,6 +30,16 @@ describe('RecipeService', () => {
     get: jest.fn(),
   };
 
+  const mockGeminiService = {
+    generateImage: jest
+      .fn()
+      .mockResolvedValue('data:image/png;base64,mockImageData'),
+    generateContent: jest.fn(),
+    extractResponseContent: jest.fn(),
+    parseJsonResponse: jest.fn(),
+    generateAndParseJson: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -40,6 +51,10 @@ describe('RecipeService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: GeminiService,
+          useValue: mockGeminiService,
         },
       ],
     }).compile();

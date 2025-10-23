@@ -1,4 +1,4 @@
-package com.example.nibbles
+package com.findingnibbles.nibbles
 
 import io.flutter.embedding.android.FlutterActivity
 

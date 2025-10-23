@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nibbles/service/restaurant-menu/restaurant_menu_service.dart';
+import 'package:nibbles/service/restaurant-menu/menu_analysis_tracker.dart';
 import 'package:nibbles/theme/app_theme.dart';
 
 class MenuScannerPage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
   bool _isMenuAnalyzed = false; // Track if menu has been successfully analyzed
   final ImagePicker _picker = ImagePicker();
   final RestaurantMenuService _menuService = RestaurantMenuService();
+  final MenuAnalysisTracker _analysisTracker = MenuAnalysisTracker();
 
   Future<bool> _requestCameraPermission() async {
     final status = await Permission.camera.request();
@@ -124,18 +126,38 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
       _errorMessage = null;
     });
 
+    // Mark analysis as started in the tracker
+    _analysisTracker.startAnalysis(
+      widget.restaurantId!,
+      widget.restaurantName ?? 'Restaurant',
+    );
+
+    // Show message that analysis started - BLACK background
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Menu analysis started! You can navigate away and come back later.',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // Start the upload and wait for it
     try {
       final result = await _menuService.uploadMenuImage(
         _imageFile!,
         widget.restaurantId!,
       );
+
       setState(() {
         _analysisResult = result;
         _isUploading = false;
-        _isMenuAnalyzed = true; // Mark menu as successfully analyzed
+        _isMenuAnalyzed = true;
       });
 
-      // Show success message and navigate back after a short delay
+      // Show success message
       if (mounted) {
         final theme = Theme.of(context);
         final colorScheme = theme.colorScheme;
@@ -151,16 +173,22 @@ class _MenuScannerPageState extends State<MenuScannerPage> {
           ),
         );
 
-        // Navigate back to previous page after 2 seconds
+        // Navigate back after showing success
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            Navigator.of(
-              context,
-            ).pop(true); // Return true to indicate successful analysis
+            Navigator.of(context).pop(true);
+
+            // Mark analysis as complete AFTER navigation (triggers notification on restaurant page)
+            Future.delayed(const Duration(milliseconds: 300), () {
+              _analysisTracker.completeAnalysis(widget.restaurantId!);
+            });
           }
         });
       }
     } catch (e) {
+      // Mark analysis as failed
+      _analysisTracker.failAnalysis(widget.restaurantId!, e.toString());
+
       setState(() {
         _errorMessage = 'Failed to analyze menu: $e';
         _isUploading = false;

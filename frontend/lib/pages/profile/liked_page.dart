@@ -1,15 +1,18 @@
 // lib/pages/liked_page.dart
 import 'package:flutter/material.dart';
+import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/pages/home/restaurant_details_page.dart';
 import 'package:nibbles/pages/profile/widgets/restaurant_card.dart';
+import 'package:nibbles/pages/recipes/recipe_ingredients_page.dart';
+import 'package:nibbles/pages/recipes/recipe_model.dart';
 import 'package:nibbles/pages/recipes/widgets/recipe_card.dart';
+import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
+import 'package:nibbles/service/cuisine/cuisine_dto.dart';
 import 'package:nibbles/service/cuisine/cuisine_service.dart';
 import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/profile/recipe_dto.dart';
 import 'package:nibbles/service/profile/restaurant_dto.dart';
-import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/theme/app_theme.dart';
-import 'package:nibbles/service/cuisine/cuisine_dto.dart';
-import 'package:nibbles/pages/shared/widgets/cuisine_selection_dialog.dart';
 
 class LikedPage extends StatefulWidget {
   const LikedPage({super.key});
@@ -177,6 +180,41 @@ class _LikedPageState extends State<LikedPage> {
     }
   }
 
+  // Helper method to convert RecipeDto to RecipeModel
+  RecipeModel _convertToRecipeModel(RecipeDto dto) {
+    // Parse difficulty level
+    RecipeDifficulty difficulty;
+    switch (dto.difficultyLevel.toLowerCase()) {
+      case 'easy':
+        difficulty = RecipeDifficulty.easy;
+        break;
+      case 'medium':
+        difficulty = RecipeDifficulty.medium;
+        break;
+      case 'hard':
+        difficulty = RecipeDifficulty.hard;
+        break;
+      default:
+        difficulty = RecipeDifficulty.any;
+    }
+
+    return RecipeModel(
+      title: dto.title,
+      description: dto.description,
+      ingredients: dto.ingredients,
+      instructions: dto.instructions,
+      estimatedTimeMinutes: dto.estimatedTimeMinutes,
+      servings: dto.servings,
+      dietaryTags: dto.dietaryTags,
+      nutritionalInfo: dto.nutritionalInfo,
+      difficultyLevel: difficulty,
+      cuisine: dto.cuisine,
+      calories: 0, // RecipeDto doesn't have calories, using default
+      imageURL: dto.imageURL,
+      isFavorite: true, // It's in favorites list
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -267,7 +305,25 @@ class _LikedPageState extends State<LikedPage> {
                                                     restaurant: restaurant,
                                                     isLiked: true,
                                                     height: 80.0,
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                context,
+                                                              ) => RestaurantDetailsPage(
+                                                                restaurant:
+                                                                    restaurant,
+                                                                isFavorite:
+                                                                    true,
+                                                              ),
+                                                        ),
+                                                      ).then((_) {
+                                                        // Refresh the favorites list when returning
+                                                        _loadFavorites();
+                                                      });
+                                                    },
                                                     onFavoriteTap: () async {
                                                       try {
                                                         await _profileService
@@ -378,7 +434,28 @@ class _LikedPageState extends State<LikedPage> {
                                                     recipe: recipe,
                                                     isLiked: true,
                                                     height: 80.0,
-                                                    onTap: () {},
+                                                    onTap: () {
+                                                      // Convert RecipeDto to RecipeModel and navigate
+                                                      final recipeModel =
+                                                          _convertToRecipeModel(
+                                                            recipe,
+                                                          );
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                context,
+                                                              ) => RecipeIngredientsPage(
+                                                                recipe:
+                                                                    recipeModel,
+                                                              ),
+                                                        ),
+                                                      ).then((_) {
+                                                        // Refresh favorites when returning
+                                                        _loadFavorites();
+                                                      });
+                                                    },
                                                     onFavoriteTap: () async {
                                                       try {
                                                         await _profileService

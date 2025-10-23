@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/dio_client.dart';
 import 'best_dish_dto.dart';
+import 'dish_dto.dart';
 
 class RestaurantMenuService {
   final Dio _dio = DioClient().client;
@@ -128,6 +129,43 @@ class RestaurantMenuService {
       throw Exception('Network error: ${e.message}');
     } catch (e) {
       debugPrint('Error getting best dish: $e');
+      rethrow;
+    }
+  }
+
+  /// Get all dishes for a restaurant
+  Future<List<DishDto>> getDishes(int restaurantId) async {
+    try {
+      final response = await _dio.get(
+        'restaurant-menu/$restaurantId/dishes',
+        options: Options(
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> dishesJson = response.data as List<dynamic>;
+        return dishesJson.map((json) => DishDto.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to fetch dishes: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      debugPrint('DioException: ${e.message}');
+      debugPrint('Response data: ${e.response?.data}');
+
+      if (e.response?.statusCode == 500) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Internal server error';
+        throw Exception('Server error while fetching dishes: $errorMessage');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage = e.response?.data['message'] ?? 'Bad request';
+        throw Exception('Invalid request: $errorMessage');
+      } else {
+        throw Exception('Network error: ${e.message}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching dishes: $e');
       rethrow;
     }
   }

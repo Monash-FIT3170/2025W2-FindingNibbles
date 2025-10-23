@@ -1,4 +1,3 @@
-// lib/pages/create_account_page.dart
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:nibbles/pages/auth/login_page.dart';
@@ -24,6 +23,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   bool _isPasswordValid = true;
   String _passwordErrorMessage = '';
   bool _isPasswordFocused = false; // Track if password field is being edited
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -192,7 +192,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     // Password field
                     TextField(
                       controller: passwordController,
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       onChanged: (value) => _validatePassword(value),
                       onTap: () {
                         setState(() {
@@ -204,7 +204,22 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                           _isPasswordFocused = false;
                         });
                       },
-                      decoration: InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                      ),
                     ),
 
                     // Only show password requirements during typing and only if not valid

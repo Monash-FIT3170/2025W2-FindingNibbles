@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:nibbles/core/logger.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/service/recipe/recipe_service.dart';
+
 import 'recipe_model.dart';
 
 class RecipeIngredientsPage extends StatefulWidget {
@@ -15,6 +20,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   int currentStep = 0;
   int currentTab = 0;
   final RecipeService _recipeService = RecipeService();
+  final ProfileService _profileService = ProfileService();
   final _logger = getLogger();
 
   late List<bool> checkedIngredients;
@@ -29,6 +35,7 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
   }
 
   Future<void> _logCalories() async {
+    final messenger = ScaffoldMessenger.of(context);
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -45,13 +52,13 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         );
         if (!mounted) return;
         _logger.i('Calories logged successfully!');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('Calories logged successfully!')),
         );
       } catch (e) {
         if (!mounted) return;
         _logger.e('Failed to log calories: ${e.toString()}');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Failed to log calories: ${e.toString()}')),
         );
       }
@@ -237,29 +244,105 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.recipe.title)),
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Recipe Image Container
-            Container(
-              height: 150,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
+      body: CustomScrollView(
+        slivers: [
+          // Hero Image Header
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            actions: [
+              // Favorite button in top right
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: Icon(
+                    widget.recipe.isFavorite
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: widget.recipe.isFavorite ? Colors.red : Colors.white,
+                  ),
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      if (!widget.recipe.isFavorite) {
+                        await _profileService.addFavouriteRecipe(widget.recipe);
+                        if (mounted) {
+                          setState(() {
+                            widget.recipe.isFavorite = true;
+                          });
+                        }
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to add to favorites: $e'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
               ),
-              child: Icon(
-                Icons.image,
-                size: 50,
-                color: colorScheme.onSurfaceVariant,
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: false,
+              titlePadding: const EdgeInsets.only(
+                left: 56,
+                bottom: 16,
+                right: 56,
+              ),
+              title: Text(
+                widget.recipe.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 1),
+                      blurRadius: 3.0,
+                      color: Colors.black54,
+                    ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Hero Image
+                  widget.recipe.imageURL != null &&
+                          widget.recipe.imageURL!.isNotEmpty
+                      ? _buildImage(widget.recipe.imageURL!, fit: BoxFit.cover)
+                      : Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 80,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  // Gradient overlay for better text readability
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black87],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Tab Navigation
-            Container(
+          // Tab Navigation
+          SliverToBoxAdapter(
+            child: Container(
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -287,23 +370,31 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
                 ],
               ),
             ),
+          ),
 
-            // Content
-            Expanded(
-              child:
-                  currentTab == 0
-                      ? _buildIngredientsList(textTheme, colorScheme)
-                      : _buildInstructionList(textTheme, colorScheme),
+          // Content
+          SliverFillRemaining(
+            hasScrollBody: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child:
+                      currentTab == 0
+                          ? _buildIngredientsList(textTheme, colorScheme)
+                          : _buildInstructionList(textTheme, colorScheme),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: _logCalories,
+                    child: const Text('Log Calories'),
+                  ),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _logCalories,
-                child: const Text('Log Calories'),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -341,5 +432,59 @@ class _RecipeIngredientsPageState extends State<RecipeIngredientsPage> {
         ),
       ),
     );
+  }
+
+  /// Builds an image widget that supports both base64 data URLs and HTTP URLs
+  Widget _buildImage(String imageUrl, {required BoxFit fit}) {
+    // Check if the image is a base64 data URL
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        // Extract the base64 string after the comma
+        final base64String = imageUrl.split(',')[1];
+        // Decode the base64 string
+        final Uint8List bytes = base64Decode(base64String);
+        // Return Image.memory for base64 data
+        return Image.memory(
+          bytes,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Icon(
+                Icons.restaurant,
+                size: 80,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            );
+          },
+        );
+      } catch (e) {
+        _logger.e('Error decoding base64 image: $e');
+        return Container(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Icon(
+            Icons.restaurant,
+            size: 80,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        );
+      }
+    } else {
+      // Regular HTTP/HTTPS URL
+      return Image.network(
+        imageUrl,
+        fit: fit,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Icon(
+              Icons.restaurant,
+              size: 80,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          );
+        },
+      );
+    }
   }
 }

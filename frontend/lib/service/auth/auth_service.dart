@@ -51,6 +51,7 @@ class AuthService {
       final response = await _dio.post(
         'auth/login',
         data: {'email': email, 'password': password},
+        options: Options(extra: {'skipAuthRedirect': true}),
       );
       _logger.d('Received response: ${response.data}');
       await _saveTokens(response.data);
@@ -84,6 +85,7 @@ class AuthService {
       final response = await _dio.post(
         'auth/google/token',
         data: {'idToken': googleAuth.idToken},
+        options: Options(extra: {'skipAuthRedirect': true}),
       );
 
       _logger.d('Received response: ${response.data}');

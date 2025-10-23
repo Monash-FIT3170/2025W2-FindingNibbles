@@ -1,22 +1,22 @@
-import * as argon2 from 'argon2';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './strategies/jwt/jwt.strategy';
-import { RegisterDto } from 'src/auth/dto/register.dto';
-import { Profile } from 'passport-google-oauth20';
-import { randomInt } from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { MailerService } from '../mailer/mailer.service';
-import { OAuth2Client } from 'google-auth-library';
-import { AuthTokens } from './dto/tokens.dto';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
+import * as argon2 from 'argon2';
+import { randomInt } from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
+import { Profile } from 'passport-google-oauth20';
+import { RegisterDto } from 'src/auth/dto/register.dto';
+import { MailerService } from '../mailer/mailer.service';
+import { UserService } from '../user/user.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { AuthTokens } from './dto/tokens.dto';
+import { JwtPayload } from './strategies/jwt/jwt.strategy';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +37,42 @@ export class AuthService {
       console.log(`Verification code for ${registerDto.email}: ${verifyCode}`);
     }
 
+    // Check if an unverified account already exists with this email
+    const existingUser = await this.userService.findOneByEmail(
+      registerDto.email,
+    );
+
+    if (existingUser) {
+      // If user exists and is verified, they should login instead
+      if (existingUser.isVerified) {
+        throw new BadRequestException(
+          'An account with this email already exists. Please login.',
+        );
+      }
+
+      // If user exists but is not verified, update their information and resend verification code
+      console.log(
+        `User ${registerDto.email} already exists but is unverified. Updating info and resending verification code.`,
+      );
+
+      try {
+        this.mailerService.sendVerificationEmail(registerDto.email, verifyCode);
+      } catch (err) {
+        console.error('Failed to send verification email:', err);
+      }
+
+      // Update the existing unverified user with new information
+      await this.userService.update(existingUser.id, {
+        firstName: registerDto.firstName,
+        lastName: registerDto.lastName,
+        passwordHash,
+        verifyCode,
+      });
+
+      return this.userService.findOneById(existingUser.id) as Promise<User>;
+    }
+
+    // No existing user, create new account
     try {
       this.mailerService.sendVerificationEmail(registerDto.email, verifyCode);
     } catch (err) {

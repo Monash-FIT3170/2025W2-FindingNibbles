@@ -1,11 +1,14 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'recipe_ingredients_page.dart';
-import 'recipe_model.dart';
-import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
-import 'package:nibbles/service/profile/profile_service.dart';
 import 'package:nibbles/core/logger.dart';
 import 'package:nibbles/pages/recipes/widgets/dice_widget.dart';
-import 'dart:math';
+import 'package:nibbles/pages/recipes/widgets/recipe_recommendation_card.dart';
+import 'package:nibbles/service/profile/profile_service.dart';
+import 'package:nibbles/service/recipe/recipe_service.dart' as recipe_service;
+
+import 'recipe_ingredients_page.dart';
+import 'recipe_model.dart';
 
 class RecipeRecommendationsPage extends StatefulWidget {
   final List<RecipeModel> recipes;
@@ -71,20 +74,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         );
       },
     );
-  }
-
-  Color _getDifficultyColor(
-    recipe_service.RecipeDifficulty diff,
-    ColorScheme cs,
-  ) {
-    switch (diff) {
-      case recipe_service.RecipeDifficulty.hard:
-        return cs.error; // Using semantic color
-      case recipe_service.RecipeDifficulty.medium:
-        return cs.tertiary; // Using semantic color
-      default:
-        return cs.primary;
-    }
   }
 
   Future<void> _toggleFavorite(int index) async {
@@ -206,9 +195,6 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recipe Recommendations'),
@@ -230,169 +216,23 @@ class _RecipeRecommendationsPageState extends State<RecipeRecommendationsPage> {
         itemCount: widget.recipes.length,
         itemBuilder: (context, index) {
           final recipe = widget.recipes[index];
-          return _buildRecipeCard(recipe, index, textTheme, colorScheme);
+          return RecipeRecommendationCard(
+            recipe: recipe,
+            isFavorite: recipe.isFavorite,
+            onFavoriteTap: () => _toggleFavorite(index),
+            onTap: () async {
+              // Navigate to recipe ingredients page and wait for result
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RecipeIngredientsPage(recipe: recipe),
+                ),
+              );
+              // Refresh the UI when coming back to reflect any changes
+              setState(() {});
+            },
+          );
         },
-      ),
-    );
-  }
-
-  Widget _buildRecipeCard(
-    RecipeModel recipe,
-    int index,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RecipeIngredientsPage(recipe: recipe),
-          ),
-        );
-      },
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              _buildRecipeImage(recipe, textTheme, colorScheme),
-              _buildRecipeDetails(recipe, index, textTheme, colorScheme),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecipeImage(
-    RecipeModel recipe,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: Container(
-            // Reduce height to half
-            height: 80,
-            width: double.infinity,
-            color: colorScheme.surfaceContainerHighest,
-            child: Icon(
-              Icons.image,
-              // Keep icon size the same
-              size: 50,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Positioned(
-          right: 8,
-          top: 8,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _getDifficultyColor(
-                recipe_service.RecipeDifficulty.values.firstWhere(
-                  (e) => e.name == recipe.difficultyLevel.name,
-                ),
-                colorScheme,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              recipe.difficultyLevel.name[0].toUpperCase() +
-                  recipe.difficultyLevel.name.substring(1),
-              // Keep text size the same
-              style: textTheme.labelSmall?.copyWith(
-                color: colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecipeDetails(
-    RecipeModel recipe,
-    int index,
-    TextTheme textTheme,
-    ColorScheme colorScheme,
-  ) {
-    return Padding(
-      // Reduce padding
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            recipe.title,
-            // Keep text size the same
-            style: textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4), // Reduced spacing
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    // Keep icon size the same
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${recipe.estimatedTimeMinutes} min',
-                    // Keep text size the same
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.water_drop_outlined,
-                    // Keep icon size the same
-                    size: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${recipe.calories} calories',
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
-              IconButton(
-                icon: Icon(
-                  recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  // Keep icon size the same
-                  size: 24,
-                  color:
-                      recipe.isFavorite
-                          ? colorScheme.error
-                          : colorScheme.onSurfaceVariant,
-                ),
-                // Reduce padding around the button
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                padding: EdgeInsets.zero,
-                onPressed: () => _toggleFavorite(index),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
